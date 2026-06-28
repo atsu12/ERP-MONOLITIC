@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GLOBAL APP STYLING */
+
+body {
+  @apply bg-gray-100 text-gray-900 antialiased;
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* REUSABLE CARD */
+
+.erp-card {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-2;
+}
+
+/* REUSABLE SECTION */
+
+.erp-section {
+  @apply p-6;
+}
+
+/* REUSABLE TABLE */
+
+.erp-table-container {
+  @apply bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden;
+}
+
+.erp-table-scroll {
+  @apply overflow-auto max-h-[70vh];
+}
+
+.erp-table {
+  @apply w-full border-collapse;
+}
+
+.erp-table thead {
+  @apply sticky top-0 z-10 bg-white;
+}
+
+.erp-table thead tr {
+  @apply border-b border-gray-200;
+}
+
+.erp-table th {
+  @apply text-left text-sm font-bold text-gray-700 px-6 py-4 whitespace-nowrap bg-white;
+}
+
+.erp-table td {
+  @apply px-6 py-4 border-b border-gray-100 text-sm text-gray-700 whitespace-nowrap;
+}
+
+.erp-table tbody tr {
+  @apply hover:bg-gray-50 transition;
+}
+
+.erp-table-scroll {
+  @apply overflow-auto max-h-[70vh];
+}
+
+.erp-table {
+  @apply w-full border-collapse;
+}
+
+.erp-table thead {
+  @apply sticky top-0 z-10 bg-white;
+}
+
+.erp-table thead tr {
+  @apply border-b border-gray-200;
+}
+
+.erp-table th {
+  @apply text-left text-sm font-bold text-gray-700 px-6 py-4 whitespace-nowrap bg-white;
+}
+
+.erp-table td {
+  @apply px-6 py-4 border-b border-gray-100 text-sm text-gray-700 whitespace-nowrap;
+}
+
+.erp-table tbody tr {
+  @apply hover:bg-gray-50 transition;
+}
+
+/* REUSABLE BUTTONS */
+
+.erp-button-primary {
+  @apply bg-black text-white px-5 py-3 rounded-xl font-semibold shadow-sm hover:bg-gray-900 transition-all duration-200;
+}
+
+.erp-button-danger {
+  @apply bg-red-600 text-white px-5 py-3 rounded-xl font-semibold shadow-sm hover:bg-red-700 transition-all duration-200;
+}
+
+/* REUSABLE INPUTS */
+
+.erp-input {
+  @apply w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black transition;
+}
+
+.erp-select {
+  @apply w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black transition;
+}
+
+/* PAGE TITLES */
+
+.erp-page-title {
+  @apply text-4xl font-black text-gray-900;
+}
+
+.erp-page-description {
+  @apply text-gray-500 mt-2 mb-8;
+}
+
+/* STATUS BADGES */
+
+.erp-badge-success {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700;
+}
+
+.erp-badge-danger {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700;
+}
+
+.erp-badge-warning {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700;
+}
+
+/* ANIMATIONS */
+
+.erp-hover-lift {
+  @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+}
