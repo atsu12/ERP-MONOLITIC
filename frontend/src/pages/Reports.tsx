@@ -1,3 +1,7 @@
+import { useWarehouseStore } from "../store/warehouseStore";
+
+import { useProductStore } from "../store/productStore";
+
 import { useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -6,7 +10,11 @@ import { useSettingsStore } from "../store/settingsStore";
 
 import { FileText } from "lucide-react";
 
+import { useDebounce } from "../hooks/useDebounce";
+
 import PageHeader from "../components/PageHeader";
+
+import WarehouseReportTable from "../components/reports/WarehouseReportTable";
 
 import InventoryValuationTable from "../components/reports/InventoryValuationTable";
 
@@ -26,9 +34,13 @@ function Reports() {
   const navigate = useNavigate();
 
   const [period, setPeriod] = useState("30");
+
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
+
   const [warehouse, setWarehouse] = useState("");
   const [category, setCategory] = useState("");
+
   const [brand, setBrand] = useState("");
 
   const {
@@ -42,10 +54,28 @@ function Reports() {
     slowMovingProducts,
     recentMovements,
     inventoryValuation,
+    warehouseSummary,
     loading,
     fetchDashboard,
     fetchInventoryValuation,
+    fetchWarehouseSummary,
   } = useReportStore();
+
+  const { warehouses, fetchWarehouses } = useWarehouseStore();
+
+  const { products, fetchProducts } = useProductStore();
+
+  const categories = Array.from(
+    new Set(
+      products
+        .map((p) => p.category)
+        .filter((category): category is string => Boolean(category)),
+    ),
+  ).sort();
+
+  const brands = Array.from(
+    new Set(products.map((p) => p.brand).filter(Boolean)),
+  ).sort();
 
   const { settings, fetchSettings } = useSettingsStore();
 
@@ -55,17 +85,26 @@ function Reports() {
       warehouse,
       category,
       brand,
-      search,
+      search: debouncedSearch,
     };
 
     fetchDashboard(filters);
 
     fetchInventoryValuation(filters);
+
+    fetchWarehouseSummary(filters);
   };
 
   useEffect(() => {
     refreshReports();
+  }, [period, warehouse, category, brand, debouncedSearch]);
+
+  useEffect(() => {
     fetchSettings();
+
+    fetchProducts();
+
+    fetchWarehouses();
   }, []);
 
   return (
@@ -76,56 +115,99 @@ function Reports() {
         description="Generate operational reports and inventory analytics."
       />
 
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={refreshReports}
-          className="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-100"
-        >
-          Refresh Refresh
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="erp-card">Loading reports...</div>
-      ) : (
-        <>
-          <ReportsKPIs
-            totalProducts={totalProducts}
-            totalQuantity={totalQuantity}
-            inventoryValue={inventoryValue}
-            stockIn={stockIn}
-            stockOut={stockOut}
-            lowStockProducts={lowStockProducts}
-            fastMovingProduct={fastMovingProducts[0]}
-            slowMovingProduct={slowMovingProducts[0]}
-            settings={settings}
-            onLowStockClick={() => navigate("/products?filter=lowstock")}
-          />
-
-          <ReportsFilters
-            period={period}
-            search={search}
-            warehouse={warehouse}
-            category={category}
-            brand={brand}
-            onPeriodChange={setPeriod}
-            onSearchChange={setSearch}
-            onWarehouseChange={setWarehouse}
-            onCategoryChange={setCategory}
-            onBrandChange={setBrand}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FastMovingTable products={fastMovingProducts} />
-
-            <SlowMovingTable products={slowMovingProducts} />
-
-            <RecentMovementsTable movements={recentMovements} />
-
-            <InventoryValuationTable items={inventoryValuation} />
-          </div>
-        </>
+      {loading && (
+        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          Updating reports...
+        </div>
       )}
+
+      <ReportsKPIs
+        totalProducts={totalProducts}
+        totalQuantity={totalQuantity}
+        inventoryValue={inventoryValue}
+        stockIn={stockIn}
+        stockOut={stockOut}
+        lowStockProducts={lowStockProducts}
+        fastMovingProduct={fastMovingProducts[0]}
+        slowMovingProduct={slowMovingProducts[0]}
+        settings={settings}
+        onLowStockClick={() => navigate("/products?filter=lowstock")}
+      />
+
+      <ReportsFilters
+        period={period}
+        search={search}
+        warehouse={warehouse}
+        category={category}
+        brand={brand}
+        warehouses={warehouses}
+        categories={categories}
+        brands={brands}
+        onPeriodChange={setPeriod}
+        onSearchChange={setSearch}
+        onWarehouseChange={setWarehouse}
+        onCategoryChange={setCategory}
+        onBrandChange={setBrand}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FastMovingTable
+          products={fastMovingProducts}
+          filters={{
+            Period: period,
+            Warehouse: warehouse,
+            Category: category,
+            Brand: brand,
+            Search: debouncedSearch,
+          }}
+        />
+
+        <SlowMovingTable
+          products={slowMovingProducts}
+          filters={{
+            Period: period,
+            Warehouse: warehouse,
+            Category: category,
+            Brand: brand,
+            Search: debouncedSearch,
+          }}
+        />
+
+        <RecentMovementsTable
+          movements={recentMovements}
+          filters={{
+            Period: period,
+            Warehouse: warehouse,
+            Category: category,
+            Brand: brand,
+            Search: debouncedSearch,
+          }}
+        />
+
+        <InventoryValuationTable
+          items={inventoryValuation}
+          filters={{
+            Period: period,
+            Warehouse: warehouse,
+            Category: category,
+            Brand: brand,
+            Search: debouncedSearch,
+          }}
+        />
+
+        <div className="lg:col-span-2">
+          <WarehouseReportTable
+            warehouses={warehouseSummary}
+            filters={{
+              Period: period,
+              Warehouse: warehouse,
+              Category: category,
+              Brand: brand,
+              Search: debouncedSearch,
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

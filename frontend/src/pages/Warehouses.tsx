@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-import { apiRequest } from "../services/api";
+import { useWarehouseStore } from "../store/warehouseStore";
 
 import PageHeader from "../components/PageHeader";
 
@@ -13,68 +13,46 @@ function Warehouses() {
   const navigate = useNavigate();
 
   const [editingWarehouse, setEditingWarehouse] = useState<any>(null);
-  const [warehouses, setWarehouses] = useState<any[]>([]);
-
-  const [loading, setLoading] = useState(true);
-
+  const {
+    warehouses,
+    loading,
+    fetchWarehouses,
+    createWarehouse,
+    updateWarehouse,
+    deleteWarehouse,
+  } = useWarehouseStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [name, setName] = useState("");
 
   useEffect(() => {
-    const fetchWarehouses = async () => {
-      try {
-        const data = await apiRequest("/warehouses", {
-          auth: true,
-        });
-
-        console.log(data.warehouses);
-
-        setWarehouses(data.warehouses || []);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWarehouses();
-  }, []);
+  }, [fetchWarehouses]);
 
   const handleCreateWarehouse = async () => {
-    try {
-      if (editingWarehouse) {
-        await apiRequest(`/warehouses/${editingWarehouse.id}`, {
-          method: "PUT",
+    let success = false;
 
-          auth: true,
+    if (editingWarehouse) {
+      success = await updateWarehouse(editingWarehouse.id, {
+        name,
+        code: name,
+        location: null,
+        status: editingWarehouse.status,
+      });
+    } else {
+      success = await createWarehouse({
+        name,
+        code: name,
+        location: null,
+      });
+    }
 
-          body: {
-            name,
-            code: name,
-            location: null,
-            status: editingWarehouse.status,
-          },
-        });
-      } else {
-        await apiRequest("/warehouses", {
-          method: "POST",
+    if (success) {
+      setShowCreateModal(false);
 
-          auth: true,
+      setEditingWarehouse(null);
 
-          body: {
-            name,
-            code: name,
-            location: null,
-          },
-        });
-      }
-
-      window.location.reload();
-    } catch (error: any) {
-      console.log(error);
-
-      alert(error?.message || "Failed to save warehouse.");
+      setName("");
     }
   };
 
@@ -85,18 +63,7 @@ function Warehouses() {
       return;
     }
 
-    try {
-      await apiRequest(`/warehouses/${id}`, {
-        method: "DELETE",
-        auth: true,
-      });
-
-      window.location.reload();
-    } catch (error: any) {
-      console.log(error);
-
-      alert(error?.message || "Failed to delete warehouse.");
-    }
+    await deleteWarehouse(id);
   };
 
   return (

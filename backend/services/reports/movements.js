@@ -1,6 +1,12 @@
 const query = require("./query");
+const { buildFilters } = require("./filters");
 
 async function getFastMoving(filters = {}) {
+  const { where, params } = buildFilters(filters, {
+    product: "p",
+    movement: "sm",
+  });
+
   const sql = `
     SELECT
       p.id,
@@ -10,15 +16,23 @@ async function getFastMoving(filters = {}) {
     JOIN products p
       ON p.id = sm.product_id
     WHERE sm.type IN ('OUT','SCANNED_OUT')
-    GROUP BY p.id
+    ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
+    GROUP BY
+      p.id,
+      p.name
     ORDER BY totalOut DESC
     LIMIT 10
   `;
 
-  return await query(sql);
+  return await query(sql, params);
 }
 
 async function getSlowMoving(filters = {}) {
+  const { where, params } = buildFilters(filters, {
+    product: "p",
+    movement: "sm",
+  });
+
   const sql = `
     SELECT
       p.id,
@@ -28,15 +42,23 @@ async function getSlowMoving(filters = {}) {
     JOIN products p
       ON p.id = sm.product_id
     WHERE sm.type IN ('OUT','SCANNED_OUT')
-    GROUP BY p.id
+    ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
+    GROUP BY
+      p.id,
+      p.name
     ORDER BY totalOut ASC
     LIMIT 10
   `;
 
-  return await query(sql);
+  return await query(sql, params);
 }
 
 async function getRecentMovements(filters = {}) {
+  const { where, params } = buildFilters(filters, {
+    product: "p",
+    movement: "sm",
+  });
+
   const sql = `
     SELECT
       sm.id,
@@ -47,11 +69,12 @@ async function getRecentMovements(filters = {}) {
     FROM stock_movements sm
     JOIN products p
       ON p.id = sm.product_id
+    ${where}
     ORDER BY sm.created_at DESC
     LIMIT 10
   `;
 
-  return await query(sql);
+  return await query(sql, params);
 }
 
 module.exports = {

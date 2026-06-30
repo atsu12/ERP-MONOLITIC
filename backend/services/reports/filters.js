@@ -78,30 +78,31 @@ function buildFilters(filters = {}, aliases = {}) {
   }
 
   /* =========================
-   PERIOD
-========================= */
+   MOVEMENT DATE FILTERS
+  ========================= */
 
-if (filters.period) {
-  where.push(
-    `${movement}.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`,
-  );
+  if (aliases.movement) {
+    if (filters.period) {
+      where.push(`${movement}.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`);
 
-  params.push(Number(filters.period));
-}
+      params.push(Number(filters.period));
+    }
 
-/* =========================
-   CUSTOM DATE RANGE
-========================= */
+    if (filters.fromDate) {
+      where.push(`${movement}.created_at >= ?`);
+      params.push(filters.fromDate);
+    }
 
-if (filters.fromDate) {
-  where.push(`${movement}.created_at >= ?`);
-  params.push(filters.fromDate);
-}
+    if (filters.toDate) {
+      where.push(`${movement}.created_at <= ?`);
+      params.push(filters.toDate);
+    }
+  }
 
-if (filters.toDate) {
-  where.push(`${movement}.created_at <= ?`);
-  params.push(filters.toDate);
-}
+  return {
+    where: where.length ? `WHERE ${where.join(" AND ")}` : "",
+    params,
+  };
 }
 
 module.exports = {

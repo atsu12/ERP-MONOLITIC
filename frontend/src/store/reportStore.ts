@@ -26,6 +26,14 @@ interface InventoryValuation {
   inventoryValue: number;
 }
 
+interface WarehouseSummary {
+  id: number;
+  name: string;
+  totalProducts: number;
+  totalQuantity: number;
+  inventoryValue: number;
+}
+
 interface ReportFilters {
   period?: string;
 
@@ -64,11 +72,15 @@ interface ReportState {
 
   inventoryValuation: InventoryValuation[];
 
+  warehouseSummary: WarehouseSummary[];
+
   loading: boolean;
 
   fetchDashboard: (filters?: ReportFilters) => Promise<void>;
 
   fetchInventoryValuation: (filters?: ReportFilters) => Promise<void>;
+
+  fetchWarehouseSummary: (filters?: ReportFilters) => Promise<void>;
 }
 
 export const useReportStore = create<ReportState>((set) => ({
@@ -90,6 +102,8 @@ export const useReportStore = create<ReportState>((set) => ({
 
   recentMovements: [],
   inventoryValuation: [],
+
+  warehouseSummary: [],
 
   loading: false,
 
@@ -181,4 +195,40 @@ export const useReportStore = create<ReportState>((set) => ({
       });
     }
   },
+
+  fetchWarehouseSummary: async (filters = {}) => {
+  try {
+    set({
+      loading: true,
+    });
+
+    const params = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        params.append(key, value);
+      }
+    });
+
+    const endpoint =
+      params.toString().length > 0
+        ? `/reports/warehouse?${params.toString()}`
+        : "/reports/warehouse";
+
+    const data = await apiRequest(endpoint, {
+      auth: true,
+    });
+
+    set({
+      warehouseSummary: data,
+      loading: false,
+    });
+  } catch (error) {
+    console.log(error);
+
+    set({
+      loading: false,
+    });
+  }
+},
 }));

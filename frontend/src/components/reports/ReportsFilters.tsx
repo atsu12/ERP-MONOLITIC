@@ -1,9 +1,15 @@
+import type { Warehouse } from "../../store/warehouseStore";
+
 type Props = {
   period: string;
   search: string;
   warehouse: string;
   category: string;
   brand: string;
+
+  warehouses: Warehouse[];
+  categories: string[];
+  brands: string[];
 
   onPeriodChange: (value: string) => void;
   onSearchChange: (value: string) => void;
@@ -18,6 +24,9 @@ function ReportsFilters({
   warehouse,
   category,
   brand,
+  warehouses,
+  categories,
+  brands,
   onPeriodChange,
   onSearchChange,
   onWarehouseChange,
@@ -28,9 +37,7 @@ function ReportsFilters({
     <div className="erp-card mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Period
-          </label>
+          <label className="block text-sm font-medium mb-1">Period</label>
 
           <select
             value={period}
@@ -47,50 +54,56 @@ function ReportsFilters({
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Warehouse
-          </label>
+          <label className="block text-sm font-medium mb-1">Warehouse</label>
 
           <select
             value={warehouse}
             onChange={(e) => onWarehouseChange(e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value="">
-              All Warehouses
-            </option>
+            <option value="">All Warehouses</option>
+
+            {warehouses.map((warehouse) => (
+              <option key={warehouse.id} value={warehouse.id}>
+                {warehouse.name}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Category
-          </label>
+          <label className="block text-sm font-medium mb-1">Category</label>
 
           <select
             value={category}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value="">
-              All Categories
-            </option>
+            <option value="">All Categories</option>
+
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Brand
-          </label>
+          <label className="block text-sm font-medium mb-1">Brand</label>
 
           <select
             value={brand}
             onChange={(e) => onBrandChange(e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value="">
-              All Brands
-            </option>
+            <option value="">All Brands</option>
+
+            {brands.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
           </select>
         </div>
 

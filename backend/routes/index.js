@@ -88,6 +88,7 @@ const {
   getMovements,
   getProductMovements,
   getDashboardReport,
+  getWarehouseReport,
   getInventoryValuation,
 } = require("../controllers/ReportsController");
 
@@ -214,6 +215,16 @@ router.get(
     "MANAGER"
   ]),
   getDashboardReport
+);
+
+router.get(
+  "/reports/warehouse",
+  authMiddleware,
+  roleMiddleware([
+    "ADMIN",
+    "MANAGER",
+  ]),
+  getWarehouseReport,
 );
 
 router.get(
