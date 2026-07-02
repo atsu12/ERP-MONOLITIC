@@ -73,8 +73,6 @@ function UsersPage() {
 
       setUsers(data.users || []);
     } catch (error: any) {
-      console.log(error);
-
       toast.error(error.message || "Failed to delete user");
     } finally {
       setLoading(false);
@@ -113,10 +111,8 @@ function UsersPage() {
         role: "STAFF",
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
-      console.log(error);
-
       toast.error(error.message || "Failed to create user");
     } finally {
       setCreating(false);
@@ -159,10 +155,8 @@ function UsersPage() {
         role: "STAFF",
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
-      console.log(error);
-
       toast.error(error.message || "Failed to update user");
     } finally {
       setUpdating(false);
@@ -191,8 +185,6 @@ function UsersPage() {
 
       setUsers((prev) => prev.filter((user) => user.id !== selectedUser.id));
     } catch (error) {
-      console.log(error);
-
       toast.error("Failed to delete user");
     } finally {
       setDeletingId(null);
@@ -296,18 +288,39 @@ function UsersPage() {
           </select>
         </div>
 
-        <button
-          onClick={editingUser ? updateUser : createUser}
-          disabled={creating || updating}
-          className="erp-button-primary mt-6 inline-flex items-center gap-2"
-        >
-          {creating || updating ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <UserPlus size={18} />
+        <div className="mt-6 flex gap-3">
+          {editingUser && (
+            <button
+              onClick={() => {
+                setEditingUser(null);
+
+                setForm({
+                  username: "",
+                  email: "",
+                  password: "",
+                  role: "STAFF",
+                });
+              }}
+              className="erp-button-secondary"
+            >
+              Cancel
+            </button>
           )}
-          {editingUser ? "Update User" : "Create User"}
-        </button>
+
+          <button
+            onClick={editingUser ? updateUser : createUser}
+            disabled={creating || updating}
+            className="erp-button-primary inline-flex items-center gap-2"
+          >
+            {creating || updating ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <UserPlus size={18} />
+            )}
+
+            {editingUser ? "Update User" : "Create User"}
+          </button>
+        </div>
       </div>
 
       {/* USERS TABLE */}
@@ -365,7 +378,7 @@ function UsersPage() {
                     </span>
                   </td>
 
-                  <td>{new Date(user.created_at).toLocaleString()}</td>
+                  <td>{new Date(user.created_at).toLocaleString("en-GB")}</td>
 
                   <td>
                     {currentUser.role === "ADMIN" && (

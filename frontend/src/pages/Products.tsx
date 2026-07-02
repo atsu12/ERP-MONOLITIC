@@ -6,8 +6,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
 
-import toast from "react-hot-toast";
-
 import { useDebounce } from "../hooks/useDebounce";
 
 import { Package, Boxes, Trash2, Pencil, Loader2, Plus } from "lucide-react";
@@ -379,11 +377,7 @@ function Products() {
                                 return;
                               }
 
-                              const success = await deleteProduct(product.id);
-
-                              if (success) {
-                                toast.success("Product deleted successfully");
-                              }
+                              await deleteProduct(product.id);
                             }}
                             className={`w-10 h-10 rounded-xl transition flex items-center justify-center ${
                               isDeleting

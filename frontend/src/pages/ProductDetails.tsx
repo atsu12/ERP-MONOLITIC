@@ -30,24 +30,18 @@ function ProductDetails() {
   const { settings, fetchSettings } = useSettingsStore();
 
   useEffect(() => {
-  socket.connect();
+    socket.connect();
 
-  const handleSettingsUpdate = () => {
-    fetchSettings();
-  };
+    const handleSettingsUpdate = () => {
+      fetchSettings();
+    };
 
-  socket.on(
-    "settings-updated",
-    handleSettingsUpdate,
-  );
+    socket.on("settings-updated", handleSettingsUpdate);
 
-  return () => {
-    socket.off(
-      "settings-updated",
-      handleSettingsUpdate,
-    );
-  };
-}, []);
+    return () => {
+      socket.off("settings-updated", handleSettingsUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -204,7 +198,7 @@ function ProductDetails() {
 
             {movements.map((movement) => (
               <tr key={movement.id}>
-                <td>{new Date(movement.created_at).toLocaleString()}</td>
+                <td>{new Date(movement.created_at).toLocaleString("en-GB")}</td>
 
                 <td>{movement.type}</td>
 
@@ -218,9 +212,7 @@ function ProductDetails() {
       {!!product.track_serial && Array.isArray(product.serials) && (
         <div className="erp-card">
           <h2 className="text-xl font-bold mb-4">
-            <h2 className="text-xl font-bold mb-4">
-              Serialized Items ({product.serials?.length || 0})
-            </h2>
+            Serialized Items ({product.serials?.length || 0})
           </h2>
 
           <table className="erp-table">

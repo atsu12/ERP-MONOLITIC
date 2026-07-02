@@ -10,12 +10,17 @@ type Props = {
   warehouses: Warehouse[];
   categories: string[];
   brands: string[];
+  fromDate: string;
+  toDate: string;
 
   onPeriodChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onWarehouseChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onBrandChange: (value: string) => void;
+
+  onFromDateChange: (value: string) => void;
+  onToDateChange: (value: string) => void;
 };
 
 function ReportsFilters({
@@ -32,6 +37,10 @@ function ReportsFilters({
   onWarehouseChange,
   onCategoryChange,
   onBrandChange,
+  fromDate,
+  toDate,
+  onFromDateChange,
+  onToDateChange,
 }: Props) {
   return (
     <div className="erp-card mb-6">
@@ -44,7 +53,7 @@ function ReportsFilters({
             onChange={(e) => onPeriodChange(e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value="today">Today</option>
+            <option value="1">Today</option>
             <option value="7">Last 7 Days</option>
             <option value="30">Last 30 Days</option>
             <option value="90">Last 90 Days</option>
@@ -121,6 +130,31 @@ function ReportsFilters({
           />
         </div>
       </div>
+      {period === "custom" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">From Date</label>
+
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => onFromDateChange(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">To Date</label>
+
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => onToDateChange(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

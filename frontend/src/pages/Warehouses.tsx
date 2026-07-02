@@ -24,6 +24,10 @@ function Warehouses() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [name, setName] = useState("");
+  const totalUnits = warehouses.reduce(
+    (total, warehouse) => total + Number(warehouse.quantity || 0),
+    0,
+  );
 
   useEffect(() => {
     fetchWarehouses();
@@ -133,9 +137,19 @@ function Warehouses() {
         <div className="erp-card erp-section">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-2">Stored Products</p>
+              <p className="text-sm text-gray-500 mb-2">Total Units Stored</p>
 
-              <h2 className="text-4xl font-black text-gray-900">Coming Soon</h2>
+              <h2 className="text-4xl font-black text-gray-900">
+                {totalUnits.toLocaleString()}
+                <p className="text-sm text-gray-500 mt-2">
+                  {warehouses.reduce(
+                    (total, warehouse) =>
+                      total + Number(warehouse.products || 0),
+                    0,
+                  )}{" "}
+                  allocated product records
+                </p>
+              </h2>
             </div>
 
             <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center">
@@ -196,9 +210,14 @@ function Warehouses() {
                           <Warehouse size={18} className="text-gray-700" />
                         </div>
 
-                        <span className="font-semibold text-gray-900">
+                        <button
+                          onClick={() =>
+                            navigate(`/warehouses/${warehouse.id}/inventory`)
+                          }
+                          className="font-semibold text-gray-900 hover:text-blue-600 hover:underline"
+                        >
                           {warehouse.name}
-                        </span>
+                        </button>
                       </div>
                     </td>
 
@@ -239,14 +258,7 @@ function Warehouses() {
                           Delete
                         </button>
 
-                        <button
-                          onClick={() =>
-                            navigate(`/warehouses/${warehouse.id}/inventory`)
-                          }
-                          className="px-3 py-1 rounded-lg bg-purple-100 text-purple-700 text-sm font-medium"
-                        >
-                          Inventory
-                        </button>
+                        
                       </div>
                     </td>
                   </tr>
@@ -276,7 +288,13 @@ function Warehouses() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+
+                  setEditingWarehouse(null);
+
+                  setName("");
+                }}
                 className="erp-button-secondary"
               >
                 Cancel

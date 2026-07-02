@@ -38,9 +38,7 @@ function StockIn() {
       const data = await response.json();
 
       setProducts(data.products || []);
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       toast.error("Failed to load products");
     } finally {
       setLoading(false);
@@ -179,9 +177,7 @@ function StockIn() {
       setSerials([]);
 
       inputRef.current?.focus();
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       toast.error("Server connection failed");
     }
   };

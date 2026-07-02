@@ -35,6 +35,10 @@ function Reports() {
 
   const [period, setPeriod] = useState("30");
 
+  const [fromDate, setFromDate] = useState("");
+
+  const [toDate, setToDate] = useState("");
+
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
 
@@ -80,24 +84,28 @@ function Reports() {
   const { settings, fetchSettings } = useSettingsStore();
 
   const refreshReports = () => {
-    const filters = {
-      period,
+    const filters: any = {
       warehouse,
       category,
       brand,
       search: debouncedSearch,
     };
 
+    if (period === "custom") {
+      filters.fromDate = fromDate;
+      filters.toDate = toDate;
+    } else {
+      filters.period = period;
+    }
+
     fetchDashboard(filters);
-
     fetchInventoryValuation(filters);
-
     fetchWarehouseSummary(filters);
   };
 
   useEffect(() => {
     refreshReports();
-  }, [period, warehouse, category, brand, debouncedSearch]);
+  }, [period, warehouse, category, brand, debouncedSearch, fromDate, toDate]);
 
   useEffect(() => {
     fetchSettings();
@@ -148,6 +156,10 @@ function Reports() {
         onWarehouseChange={setWarehouse}
         onCategoryChange={setCategory}
         onBrandChange={setBrand}
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

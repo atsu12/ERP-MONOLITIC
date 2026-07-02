@@ -94,7 +94,7 @@ function buildFilters(filters = {}, aliases = {}) {
     }
 
     if (filters.toDate) {
-      where.push(`${movement}.created_at <= ?`);
+      where.push(`${movement}.created_at < DATE_ADD(?, INTERVAL 1 DAY)`);
       params.push(filters.toDate);
     }
   }

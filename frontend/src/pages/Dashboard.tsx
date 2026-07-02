@@ -16,8 +16,6 @@ import {
   Legend,
 } from "recharts";
 
-import { useActivityStore } from "../store/activityStore";
-
 import {
   Package,
   Boxes,
@@ -29,18 +27,12 @@ import {
 
 import { useProductStore } from "../store/productStore";
 
-import { useMovementStore } from "../store/movementStore";
-
 function Dashboard() {
   /* =========================
      GLOBAL STORES
   ========================= */
 
-  const { fetchActivities } = useActivityStore();
-
   const { products, fetchProducts } = useProductStore();
-
-  const { fetchMovements } = useMovementStore();
 
   /* =========================
      LOCAL STATE
@@ -59,18 +51,15 @@ function Dashboard() {
       try {
         setLoading(true);
 
-        await Promise.all([
-          fetchProducts(),
-          fetchMovements(),
-          fetchActivities(),
-        ]);
+        await fetchProducts();
+
         const dashboard = await apiRequest("/reports/dashboard", {
           auth: true,
         });
 
         setReport(dashboard);
       } catch (error) {
-        console.log("Dashboard loading error:", error);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -84,7 +73,6 @@ function Dashboard() {
   ========================= */
 
   const totalProducts = products.length;
-
 
   const lowStockItems = products.filter(
     (product) => Number(product.quantity) < 5,
@@ -439,7 +427,7 @@ function Dashboard() {
               </div>
 
               <div className="text-sm text-gray-500">
-                {new Date(movement.created_at).toLocaleString()}
+                {new Date(movement.created_at).toLocaleString("en-GB")}
               </div>
             </div>
           ))}

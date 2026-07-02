@@ -317,20 +317,6 @@ WITHOUT SERIALS
         }
 
         /* =========================
-NON SERIALIZED
-========================= */
-
-        if (!track_serial || !Array.isArray(serials) || serials.length === 0) {
-          getIO().emit("product-created");
-
-          return res.json({
-            message: "Product created",
-
-            id: productId,
-          });
-        }
-
-        /* =========================
 SERIALIZED PRODUCTS
 ========================= */
 

@@ -32,18 +32,14 @@ function WarehouseInventory() {
       const data = await apiRequest("/warehouses", { auth: true });
       const current = data.warehouses.find((w: any) => String(w.id) === id);
       setWarehouse(current || null);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   const fetchProducts = async () => {
     try {
       const data = await apiRequest("/products", { auth: true });
       setProducts(data.products || []);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   const fetchInventory = async () => {
@@ -53,9 +49,7 @@ function WarehouseInventory() {
       });
 
       setInventory(data);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   const handleAllocate = async () => {
@@ -84,14 +78,11 @@ function WarehouseInventory() {
 
       alert("Inventory allocated successfully.");
     } catch (error: any) {
-      console.log(error);
-
       alert(error?.message || "Allocation failed.");
     }
   };
 
   const handleAdjust = async () => {
-    console.log("handleAdjust called");
     if (!adjustingItem || adjustQty === "") {
       alert("Enter a quantity.");
       return;
@@ -106,16 +97,17 @@ function WarehouseInventory() {
         },
       });
 
+      setShowAdjustModal(false);
+
       setAdjustingItem(null);
       setAdjustQty("");
 
-      fetchInventory();
-      fetchProducts();
+      await fetchInventory();
+      await fetchProducts();
 
       alert("Allocation updated successfully.");
+      setShowAdjustModal(false);
     } catch (error: any) {
-      console.log(error);
-
       alert(error?.message || "Failed to update allocation.");
     }
   };
@@ -133,25 +125,21 @@ function WarehouseInventory() {
         auth: true,
       });
 
-      fetchInventory();
-      fetchProducts();
+      await fetchInventory();
+      await fetchProducts();
 
       alert("Allocation removed successfully.");
     } catch (error: any) {
-      console.log(error);
-
       alert(error?.message || "Failed to remove allocation.");
     }
   };
 
   const filteredProducts = products.filter(
     (product) =>
-      product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.brand.toLowerCase().includes(search.toLowerCase()) ||
-      product.category.toLowerCase().includes(search.toLowerCase()),
+      (product.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (product.brand || "").toLowerCase().includes(search.toLowerCase()) ||
+      (product.category || "").toLowerCase().includes(search.toLowerCase()),
   );
-
-  console.log("adjustingItem:", adjustingItem);
 
   return (
     <div>

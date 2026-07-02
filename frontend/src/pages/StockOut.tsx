@@ -9,7 +9,6 @@ import { PackageMinus, Boxes, ScanLine, Hash } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function StockOut() {
-
   const { fetchProducts: refreshProducts } = useProductStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,9 +116,7 @@ function StockOut() {
       await refreshProducts();
 
       setQuantity("");
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       toast.error("Server connection failed");
     }
   };
@@ -159,15 +156,14 @@ function StockOut() {
       }
 
       toast.success(`${data.product} scanned out`);
+      await refreshProducts();
 
       setRecentScans((prev) => [cleaned, ...prev.slice(0, 19)]);
 
       setSerialInput("");
 
       inputRef.current?.focus();
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       toast.error("Server connection failed");
     }
   };

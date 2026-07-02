@@ -24,7 +24,7 @@ exports.getUsers = async (req, res) => {
       users,
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to fetch users",
@@ -97,7 +97,7 @@ exports.createUser = async (req, res) => {
       message: "User created successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to create user",
@@ -170,7 +170,7 @@ exports.updateUser = async (req, res) => {
       message: "User updated successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to update user",
@@ -249,7 +249,7 @@ exports.deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to delete user",
@@ -262,18 +262,10 @@ exports.deleteUser = async (req, res) => {
 ========================= */
 
 exports.changePassword = async (req, res) => {
-  console.log("=================================");
-  console.log("BODY:", JSON.stringify(req.body));
-  console.log("USER:", JSON.stringify(req.user));
-  console.log("=================================");
-
+  
   try {
     const { currentPassword, newPassword } = req.body;
-
-    console.log("currentPassword =", currentPassword);
-
-    console.log("newPassword =", newPassword);
-
+    
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         message: "All fields are required",
@@ -336,7 +328,7 @@ exports.changePassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to update password",
