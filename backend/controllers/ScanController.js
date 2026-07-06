@@ -70,7 +70,7 @@ exports.scanItem = (req, res) => {
 
             // Log movement
             connection.query(
-              'INSERT INTO stock_movements (product_id, type, quantity) VALUES (?, "SCANNED_OUT", 1)',
+              'INSERT INTO stock_movements (product_id, type, quantity) VALUES (?, "STOCK_OUT", 1)',
               [item.product_id],
               (err) => {
                 if (err) {

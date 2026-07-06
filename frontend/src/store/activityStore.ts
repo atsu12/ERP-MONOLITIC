@@ -1,80 +1,62 @@
-import {
-  create
-} from "zustand";
+import { create } from "zustand";
 
-import {
-  apiRequest
-} from "../services/api";
+import { apiRequest } from "../services/api";
+
+interface Activity {
+  id: number;
+
+  user_id: number;
+
+  username?: string;
+
+  action: string;
+
+  created_at: string;
+}
 
 interface ActivityState {
-
-  activities: any[];
+  activities: Activity[];
 
   loading: boolean;
 
   error: string;
 
-  fetchActivities:
-    () => Promise<void>;
-
+  fetchActivities: () => Promise<void>;
 }
 
-export const useActivityStore =
-  create<ActivityState>((set) => ({
+export const useActivityStore = create<ActivityState>((set) => ({
+  activities: [],
 
-    activities: [],
+  loading: false,
 
-    loading: false,
+  error: "",
 
-    error: "",
+  fetchActivities: async () => {
+    try {
+      set({
+        loading: true,
 
-    fetchActivities:
-      async () => {
+        error: "",
+      });
 
-        try {
+      const data = await apiRequest("/activity", {
+        auth: true,
+      });
 
-          set({
+      set({
+        activities: data.logs || [],
 
-            loading: true,
+        loading: false,
+      });
+    } catch (error) {
+      console.log(error);
 
-            error: "",
+      set({
+        loading: false,
 
-          });
-
-          const data =
-            await apiRequest(
-              "/activity",
-              {
-                auth: true,
-              }
-            );
-
-          set({
-
-            activities:
-              data.activities || [],
-
-            loading: false,
-
-          });
-
-        } catch (error) {
-
-          console.log(error);
-
-          set({
-
-            loading: false,
-
-            error:
-              error instanceof Error
-                ? error.message
-                : "Failed to load activities",
-
-          });
-
-        }
-
-      },
-
-  }));
+        error:
+          error instanceof Error ? error.message : "Failed to load activities",
+      });
+    }
+  },
+}));

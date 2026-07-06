@@ -115,7 +115,13 @@ function StockOut() {
 
       await refreshProducts();
 
+      await fetchProducts();
+
       setQuantity("");
+
+      setSelectedProduct(null);
+      
+      inputRef.current?.focus();
     } catch {
       toast.error("Server connection failed");
     }
@@ -265,7 +271,7 @@ function StockOut() {
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 placeholder="Enter quantity"
-                className="erp-input pl-12"
+                className="erp-input pl-14 indent-7"
               />
             </div>
           </div>
@@ -273,7 +279,7 @@ function StockOut() {
 
         {/* SERIALIZED */}
 
-        {selectedProduct && selectedProduct.track_serial && (
+        {selectedProduct && !!selectedProduct.track_serial && (
           <div>
             <label className="block mb-2 font-semibold text-gray-700">
               Serial Scanner
@@ -314,7 +320,7 @@ function StockOut() {
 
       {/* RECENT SCANS */}
 
-      {selectedProduct?.track_serial && (
+      {Boolean(selectedProduct?.track_serial) && (
         <div className="erp-card erp-section">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">

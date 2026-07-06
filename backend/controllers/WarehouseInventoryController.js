@@ -1,5 +1,6 @@
 const db = require("../configs/db").promise();
 
+const logger = require("../utils/logger");
 
 /* =========================
 GET WAREHOUSE INVENTORY
@@ -30,7 +31,7 @@ exports.getWarehouseInventory = async (req, res) => {
 
     res.json(rows);
   } catch (error) {
-    console.error("Get Warehouse Inventory Error:", error);
+    logger.error(error);
     res.status(500).json({
       message: "Failed to fetch warehouse inventory",
     });
@@ -148,10 +149,7 @@ exports.assignInventory = async (req, res) => {
       message: "Inventory allocated successfully",
     });
   } catch (error) {
-    console.error(
-      "Assign Inventory Error:",
-      error
-    );
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to allocate inventory",
@@ -199,7 +197,7 @@ exports.updateAllocation = async (req, res) => {
       message: "Allocation updated successfully",
     });
   } catch (error) {
-    console.error("Update Allocation Error:", error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to update allocation",
@@ -233,10 +231,7 @@ exports.deleteAllocation = async (req, res) => {
       message: "Allocation removed successfully",
     });
   } catch (error) {
-    console.error(
-      "Delete Allocation Error:",
-      error
-    );
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to remove allocation",

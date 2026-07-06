@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useState } from "react";
 
-import { Bell, Search, X, Wifi, WifiOff } from "lucide-react";
+import { Bell, Wifi, WifiOff } from "lucide-react";
 
 import { useLayoutStore } from "../store/layoutStore";
 
@@ -16,11 +16,7 @@ import { useLowStockAlerts } from "../hooks/useLowStockAlerts";
 
 import { useApiHealth } from "../hooks/useApiHealth";
 
-import { useAuthStore } from "../store/authStore";
-
 import { useNotificationStore } from "../store/notificationStore";
-
-import { useSearchStore } from "../store/searchStore";
 
 interface LayoutProps {
   children: ReactNode;
@@ -55,13 +51,7 @@ function Layout({ children }: LayoutProps) {
      AUTH
   ========================= */
 
-  const user = useAuthStore((state) => state.user);
-
-  const sidebarCollapsed =
-  useLayoutStore(
-    (state) =>
-      state.sidebarCollapsed
-  );
+  const sidebarCollapsed = useLayoutStore((state) => state.sidebarCollapsed);
 
   /* =========================
      NOTIFICATIONS
@@ -70,48 +60,6 @@ function Layout({ children }: LayoutProps) {
   const notifications = useNotificationStore((state) => state.notifications);
 
   const [showNotifications, setShowNotifications] = useState(false);
-
-  /* =========================
-     SEARCH
-  ========================= */
-
-  const {
-    getSearch,
-
-    setSearch,
-
-    clearSearch,
-  } = useSearchStore();
-
-  const search = getSearch(location.pathname);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  /* =========================
-     SHORTCUT
-  ========================= */
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const isShortcut =
-        (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
-
-      if (!isShortcut) {
-        return;
-      }
-
-      event.preventDefault();
-
-      searchInputRef.current?.focus();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
 
   /* =========================
      PAGE CONFIG
@@ -141,13 +89,13 @@ function Layout({ children }: LayoutProps) {
       title: "Inventory Movements",
 
       description:
-        "Track stock movement operations and warehouse transactions.",
+        "Track inventory movements, warehouse operations, and stock history.",
     },
 
     "/activity": {
-      title: "Activity Logs",
+      title: "Audit Log",
 
-      description: "Monitor ERP activity and operational audit trails.",
+      description: "Monitor user activity and maintain a complete audit trail.",
     },
 
     "/scan": {
@@ -164,9 +112,9 @@ function Layout({ children }: LayoutProps) {
   };
 
   const currentPage = pageConfig[location.pathname] || {
-    title: "ZICO STOCK",
+    title: "Business-MGT ERP",
 
-    description: "Enterprise inventory & warehouse platform.",
+    description: "Enterprise inventory & warehouse Platform.",
   };
 
   return (
@@ -178,12 +126,10 @@ function Layout({ children }: LayoutProps) {
       {/* MAIN */}
 
       <main
-  className={`min-h-screen transition-all duration-300 ${
-    sidebarCollapsed
-      ? "ml-24"
-      : "ml-72"
-  }`}
->
+        className={`min-h-screen transition-all duration-300 ${
+          sidebarCollapsed ? "ml-24" : "ml-72"
+        }`}
+      >
         {/* HEADER */}
 
         <header className="h-auto min-h-20 bg-white border-b border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4 px-4 md:px-8 py-4 sticky top-0 z-20">
@@ -202,43 +148,7 @@ function Layout({ children }: LayoutProps) {
           {/* RIGHT */}
 
           <div className="flex items-center gap-4">
-            {/* SEARCH */}
-
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(location.pathname, e.target.value)}
-                placeholder="Search inventory..."
-                className="bg-gray-100 border border-gray-200 rounded-xl pl-10 pr-20 py-2 focus:outline-none focus:ring-2 focus:ring-black transition w-48 md:w-72"
-              />
-
-              {/* SHORTCUT */}
-
-              {!search && (
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 border border-gray-300 rounded px-1.5 py-0.5">
-                  Ctrl K
-                </div>
-              )}
-
-              {/* CLEAR */}
-
-              {search && (
-                <button
-                  onClick={() => clearSearch(location.pathname)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
+          
             {/* API STATUS */}
 
             <div
@@ -270,16 +180,6 @@ function Layout({ children }: LayoutProps) {
               </button>
 
               {showNotifications && <NotificationPanel />}
-            </div>
-
-            {/* USER */}
-
-            <div className="bg-black text-white px-4 py-2 rounded-xl shadow-lg">
-              <p className="font-semibold text-sm">
-                {user?.username || "User"}
-              </p>
-
-              <p className="text-xs text-gray-300">{user?.role || "Role"}</p>
             </div>
           </div>
         </header>

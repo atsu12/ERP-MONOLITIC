@@ -2,20 +2,33 @@ const db = require("../configs/db");
 
 const reports = require("../services/reports");
 
+const logger = require("../utils/logger");
+
 /* =========================
    ALL MOVEMENTS
 ========================= */
 
 exports.getMovements = (req, res) => {
   const q = `
-    SELECT
-      stock_movements.*,
-      products.name AS product_name
-    FROM stock_movements
-    JOIN products
-      ON products.id = stock_movements.product_id
-    ORDER BY stock_movements.created_at DESC
-  `;
+  SELECT
+    sm.id,
+    sm.product_id,
+    p.name AS product_name,
+    sm.serial_number,
+    sm.type,
+    sm.quantity,
+    sm.reference,
+    sm.created_at,
+    sm.updated_at,
+    sm.user_id,
+    u.username
+  FROM stock_movements sm
+  JOIN products p
+    ON p.id = sm.product_id
+  LEFT JOIN users u
+    ON u.id = sm.user_id
+  ORDER BY sm.created_at DESC
+`;
 
   db.query(q, (err, results) => {
     if (err) {
@@ -68,10 +81,12 @@ exports.getDashboardReport = async (req, res) => {
 
     res.json(dashboard);
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
+  logger.error(error);
+
+  res.status(500).json({
+    error: error.message,
+  });
+}
 };
 
 /* =========================
@@ -84,10 +99,12 @@ exports.getWarehouseReport = async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
+  logger.error(error);
+
+  res.status(500).json({
+    error: error.message,
+  });
+}
 };
 
 /* =========================
@@ -100,8 +117,10 @@ exports.getInventoryValuation = async (req, res) => {
 
     res.json(inventory);
   } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
+  logger.error(error);
+
+  res.status(500).json({
+    error: error.message,
+  });
+}
 };

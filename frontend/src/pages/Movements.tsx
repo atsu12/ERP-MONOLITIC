@@ -8,8 +8,6 @@ import { ArrowLeftRight } from "lucide-react";
 
 import { useMovementStore } from "../store/movementStore";
 
-import { useSearchStore } from "../store/searchStore";
-
 import PageHeader from "../components/PageHeader";
 
 import { DatePicker } from "antd";
@@ -32,7 +30,7 @@ function Movements() {
     fetchMovements,
   } = useMovementStore();
 
-  const search = useSearchStore((state) => state.getSearch("/movements"));
+  const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounce(search);
 
@@ -55,21 +53,27 @@ function Movements() {
 
   const [selectedMovements, setSelectedMovements] = useState<number[]>([]);
 
+  const movementLabels: Record<string, string> = {
+    RECEIVED: "Received",
+    STOCK_OUT: "Stock Out",
+    RETURNED: "Returned",
+    DAMAGED: "Damaged",
+    TRANSFERRED: "Transferred",
+    ADJUSTMENT_IN: "Adjustment In",
+    ADJUSTMENT_OUT: "Adjustment Out",
+  };
+
   const filteredMovements = useMemo(() => {
     const term = debouncedSearch.toLowerCase();
 
     return movements.filter((movement) => {
-      const normalizedType =
-        movement.type === "SCANNED_IN" || movement.type === "RECEIVED"
-          ? "IN"
-          : movement.type === "SCANNED_OUT"
-            ? "OUT"
-            : movement.type;
-
       const matchesSearch =
         !term ||
         movement.product_name?.toLowerCase().includes(term) ||
-        normalizedType.toLowerCase().includes(term);
+        movement.serial_number?.toLowerCase().includes(term) ||
+        movement.reference?.toLowerCase().includes(term) ||
+        movement.username?.toLowerCase().includes(term) ||
+        movementLabels[movement.type].toLowerCase().includes(term);
 
       const movementDate = movement.created_at.slice(0, 10);
 
@@ -78,7 +82,7 @@ function Movements() {
         (!toDate || movementDate <= toDate);
 
       const matchesType =
-        filterType !== "type" || !filterValue || normalizedType === filterValue;
+        filterType !== "type" || !filterValue || movement.type === filterValue;
 
       return matchesSearch && matchesDate && matchesType;
     });
@@ -130,6 +134,22 @@ function Movements() {
         </div>
       )}
 
+      {/* SEARCH */}
+
+      <div className="mb-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Search
+        </label>
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by product, serial number, reference, user or movement..."
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+        />
+      </div>
+
       {/* TOOL BAR */}
 
       <div className="mb-4 flex items-center gap-3 flex-wrap">
@@ -154,7 +174,7 @@ function Movements() {
         >
           Export
         </button>
-        <span className="text-sm font-medium text-gray-700">From:</span>
+        <span className="text-sm font-medium text-gray-700">Date From</span>
 
         <DatePicker
           format="DD/MM/YYYY"
@@ -164,7 +184,7 @@ function Movements() {
           }
         />
 
-        <span className="text-sm font-medium text-gray-700">To:</span>
+        <span className="text-sm font-medium text-gray-700">Date To</span>
 
         <DatePicker
           format="DD/MM/YYYY"
@@ -172,7 +192,7 @@ function Movements() {
           onChange={(date) => setToDate(date ? date.format("YYYY-MM-DD") : "")}
         />
 
-        <span className="text-sm font-medium text-gray-700">Filter By:</span>
+        <span className="text-sm font-medium text-gray-700">Movement</span>
 
         <select
           value={filterType}
@@ -182,7 +202,7 @@ function Movements() {
           }}
           className="px-3 py-2 rounded-xl border border-gray-300"
         >
-          <option value="all">All</option>
+          <option value="all">All Movements</option>
           <option value="type">Type</option>
         </select>
 
@@ -193,8 +213,13 @@ function Movements() {
             className="px-3 py-2 rounded-xl border border-gray-300"
           >
             <option value="">All Types</option>
-            <option value="IN">IN</option>
-            <option value="OUT">OUT</option>
+            <option value="RECEIVED">Received</option>
+            <option value="STOCK_OUT">Stock Out</option>
+            <option value="RETURNED">Returned</option>
+            <option value="DAMAGED">Damaged</option>
+            <option value="ADJUSTMENT_IN">Adjustment In</option>
+            <option value="ADJUSTMENT_OUT">Adjustment Out</option>
+            <option value="TRANSFERRED">Transferred</option>
           </select>
         )}
       </div>
@@ -222,18 +247,21 @@ function Movements() {
                 />
               </th>
 
-              <th>ID</th>
               <th>Product</th>
-              <th>Status</th>
+              <th>Serial No.</th>
+              <th>Movement</th>
+              <th>Reference</th>
+              <th>User</th>
               <th>Quantity</th>
               <th>Date</th>
+              <th>Time</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredMovements.length === 0 && (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={9}>
                   <EmptyState
                     title="No matching movements"
                     description="Try adjusting your search keywords."
@@ -263,32 +291,46 @@ function Movements() {
                   />
                 </td>
 
-                <td>{movement.id}</td>
                 <td>{movement.product_name}</td>
+
+                <td>{movement.serial_number || "-"}</td>
 
                 <td>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      ["IN", "SCANNED_IN", "RECEIVED"].includes(movement.type)
+                      movement.type === "RECEIVED"
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : movement.type === "STOCK_OUT"
+                          ? "bg-red-100 text-red-700"
+                          : movement.type === "RETURNED"
+                            ? "bg-blue-100 text-blue-700"
+                            : movement.type === "DAMAGED"
+                              ? "bg-orange-100 text-orange-700"
+                              : movement.type === "TRANSFERRED"
+                                ? "bg-purple-100 text-purple-700"
+                                : movement.type === "ADJUSTMENT_IN"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : movement.type === "ADJUSTMENT_OUT"
+                                    ? "bg-rose-100 text-rose-700"
+                                    : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {movement.type === "RECEIVED"
-                      ? "IN"
-                      : movement.type === "SCANNED_OUT"
-                        ? "OUT"
-                        : movement.type}
+                    {movementLabels[movement.type] || movement.type}
                   </span>
                 </td>
+
+                <td>{movement.reference || "-"}</td>
+
+                <td>{movement.username || "-"}</td>
 
                 <td>{movement.quantity}</td>
 
                 <td>
-                  {new Date(movement.created_at).toLocaleString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
+                  {new Date(movement.created_at).toLocaleDateString("en-GB")}
+                </td>
+
+                <td>
+                  {new Date(movement.created_at).toLocaleTimeString("en-GB", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}

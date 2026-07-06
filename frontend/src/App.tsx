@@ -22,8 +22,6 @@ import StockIn from "./pages/StockIn";
 
 import StockOut from "./pages/StockOut";
 
-import Transfers from "./pages/Transfers";
-
 import Adjustments from "./pages/Adjustments";
 
 import Reports from "./pages/Reports";
@@ -31,8 +29,6 @@ import Reports from "./pages/Reports";
 import Warehouses from "./pages/Warehouses";
 
 import WarehouseInventory from "./pages/WarehouseInventory";
-
-import Help from "./pages/Help";
 
 import UsersPage from "./pages/Users";
 
@@ -150,19 +146,6 @@ function App() {
           }
         />
 
-        {/* TRANSFERS */}
-
-        <Route
-          path="/transfers"
-          element={
-            <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
-              <Layout>
-                <Transfers />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
         {/* ADJUSTMENTS */}
 
         <Route
@@ -210,19 +193,6 @@ function App() {
             <ProtectedRoute allowedRoles={["ADMIN"]}>
               <Layout>
                 <WarehouseInventory />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* HELP */}
-
-        <Route
-          path="/help"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Help />
               </Layout>
             </ProtectedRoute>
           }

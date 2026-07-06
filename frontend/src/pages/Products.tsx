@@ -12,8 +12,6 @@ import { Package, Boxes, Trash2, Pencil, Loader2, Plus } from "lucide-react";
 
 import { useProductStore } from "../store/productStore";
 
-import { useSearchStore } from "../store/searchStore";
-
 import PageHeader from "../components/PageHeader";
 
 import { exportProductsToExcel } from "../utils/exportProducts";
@@ -65,7 +63,7 @@ function Products() {
     deleteProduct,
   } = useProductStore();
 
-  const search = useSearchStore((state) => state.getSearch("/products"));
+  const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounce(search);
 
@@ -90,17 +88,29 @@ function Products() {
   }, []);
 
   useEffect(() => {
-    fetchProducts(debouncedSearch);
+    fetchProducts();
 
     fetchSettings();
+
     const params = new URLSearchParams(location.search);
 
     if (params.get("filter") === "lowstock") {
       setFilterType("lowstock");
     }
-  }, [debouncedSearch]);
+  }, []);
 
   const filteredProducts = products.filter((product) => {
+    const term = debouncedSearch.toLowerCase();
+
+    const matchesSearch =
+      !term ||
+      product.name.toLowerCase().includes(term) ||
+      product.brand.toLowerCase().includes(term) ||
+      (product.category ?? "").toLowerCase().includes(term);
+
+    if (!matchesSearch) {
+      return false;
+    }
     if (filterType === "brand" && filterValue) {
       return product.brand === filterValue;
     }
@@ -131,6 +141,35 @@ function Products() {
         title="Products"
         description="Manage inventory products, stock quantities, and serialized inventory."
       />
+
+      {debouncedSearch && (
+        <div className="mb-4 text-sm text-gray-500">
+          Found
+          <span className="font-semibold text-gray-900 mx-1">
+            {filteredProducts.length}
+          </span>
+          matching product(s) for
+          <span className="font-semibold text-black ml-1">
+            "{debouncedSearch}"
+          </span>
+        </div>
+      )}
+
+      {/* SEARCH */}
+
+      <div className="mb-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          Search
+        </label>
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by product name, brand or category..."
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+        />
+      </div>
 
       <div className="mb-6">
         <div className="mb-6 flex items-center justify-between">
@@ -216,19 +255,6 @@ function Products() {
           </button>
         </div>
       </div>
-
-      {debouncedSearch && (
-        <div className="mb-4 text-sm text-gray-500">
-          Found
-          <span className="font-semibold text-gray-900 mx-1">
-            {filteredProducts.length}
-          </span>
-          matching product(s) for
-          <span className="font-semibold text-black ml-1">
-            "{debouncedSearch}"
-          </span>
-        </div>
-      )}
 
       <div className="erp-table-container">
         <div className="erp-table-scroll">

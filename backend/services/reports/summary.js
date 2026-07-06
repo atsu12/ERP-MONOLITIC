@@ -1,10 +1,23 @@
 const query = require("./query");
 
+const { buildFilters } = require("./filters");
+
 async function getSummary(filters = {}) {
+  const { where, params } = buildFilters(filters, {
+    product: "p",
+    movement: "sm",
+  });
+
+  const { where: productWhere, params: productParams } = buildFilters(filters, {
+    product: "p",
+  });
+
   const totalProductsQuery = `
-    SELECT COUNT(*) AS totalProducts
-    FROM products
-  `;
+  SELECT
+    COUNT(*) AS totalProducts
+  FROM products p
+  ${productWhere}
+`;
 
   const totalQuantityQuery = `
     SELECT
@@ -21,7 +34,8 @@ async function getSummary(filters = {}) {
         END
       ) AS totalQuantity
     FROM products p
-  `;
+${productWhere}
+`;
 
   const inventoryValueQuery = `
     SELECT
@@ -40,27 +54,45 @@ async function getSummary(filters = {}) {
         ) * COALESCE(p.price,0)
       ) AS inventoryValue
     FROM products p
-  `;
+${productWhere}
+`;
 
   const stockInQuery = `
-    SELECT
-      COALESCE(SUM(quantity),0) AS stockIn
-    FROM stock_movements
-    WHERE type IN ('IN','RECEIVED','SCANNED_IN')
-  `;
+  SELECT
+    COALESCE(SUM(sm.quantity),0) AS stockIn
+  FROM stock_movements sm
+  JOIN products p
+    ON p.id = sm.product_id
+  WHERE sm.type IN ('IN','RECEIVED','SCANNED_IN')
+  ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
+`;
 
   const stockOutQuery = `
-    SELECT
-      COALESCE(SUM(quantity),0) AS stockOut
-    FROM stock_movements
-    WHERE type IN ('OUT','SCANNED_OUT')
-  `;
-
+  SELECT
+    COALESCE(SUM(sm.quantity),0) AS stockOut
+  FROM stock_movements sm
+  JOIN products p
+    ON p.id = sm.product_id
+  WHERE sm.type IN ('OUT','SCANNED_OUT')
+  ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
+`;
   const lowStockProductsQuery = `
-    SELECT COUNT(*) AS lowStockProducts
-    FROM products
-    WHERE quantity <= 10
-  `;
+  SELECT
+    COUNT(*) AS lowStockProducts
+  FROM products p
+  ${productWhere}
+  ${productWhere ? "AND" : "WHERE"}
+    CASE
+      WHEN p.track_serial = TRUE
+      THEN (
+        SELECT COUNT(*)
+        FROM product_items pi
+        WHERE pi.product_id = p.id
+        AND pi.status = 'IN_STOCK'
+      )
+      ELSE p.quantity
+    END <= 10
+`;
 
   const [
     totalProducts,
@@ -70,12 +102,12 @@ async function getSummary(filters = {}) {
     stockOut,
     lowStockProducts,
   ] = await Promise.all([
-    query(totalProductsQuery),
-    query(totalQuantityQuery),
-    query(inventoryValueQuery),
-    query(stockInQuery),
-    query(stockOutQuery),
-    query(lowStockProductsQuery),
+    query(totalProductsQuery, productParams),
+    query(totalQuantityQuery, productParams),
+    query(inventoryValueQuery, productParams),
+    query(stockInQuery, params),
+    query(stockOutQuery, params),
+    query(lowStockProductsQuery, productParams),
   ]);
 
   return {

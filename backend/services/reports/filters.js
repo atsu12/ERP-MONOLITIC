@@ -57,16 +57,42 @@ function buildFilters(filters = {}, aliases = {}) {
   ========================= */
 
   if (filters.lowStock && aliases.product) {
-    where.push(`${product}.quantity <= 10`);
-  }
+  where.push(`
+    (
+      CASE
+        WHEN ${product}.track_serial = TRUE
+        THEN (
+          SELECT COUNT(*)
+          FROM product_items pi
+          WHERE pi.product_id = ${product}.id
+          AND pi.status = 'IN_STOCK'
+        )
+        ELSE ${product}.quantity
+      END
+    ) <= 10
+  `);
+}
 
   /* =========================
      OUT OF STOCK
   ========================= */
 
   if (filters.outOfStock && aliases.product) {
-    where.push(`${product}.quantity = 0`);
-  }
+  where.push(`
+    (
+      CASE
+        WHEN ${product}.track_serial = TRUE
+        THEN (
+          SELECT COUNT(*)
+          FROM product_items pi
+          WHERE pi.product_id = ${product}.id
+          AND pi.status = 'IN_STOCK'
+        )
+        ELSE ${product}.quantity
+      END
+    ) = 0
+  `);
+}
 
   /* =========================
      WAREHOUSE

@@ -389,4 +389,16 @@ CREATE TABLE warehouse_inventory (
   )
 );
 
-
+-- Add foreign key constraints to the warehouse_inventory table to ensure referential integrity between warehouses and products. 
+-- This will prevent orphaned records and maintain consistent relationships between inventory data.
+ALTER TABLE stock_movements
+MODIFY COLUMN type ENUM(
+  'RECEIVED',
+  'SCANNED_OUT',
+  'STOCK_OUT',
+  'RETURNED',
+  'DAMAGED',
+  'TRANSFERRED',
+  'ADJUSTMENT_IN',
+  'ADJUSTMENT_OUT'
+) NOT NULL;

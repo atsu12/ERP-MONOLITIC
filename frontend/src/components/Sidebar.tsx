@@ -6,6 +6,8 @@ import { Menu } from "lucide-react";
 
 import { useLayoutStore } from "../store/layoutStore";
 
+import logo from "../assets/logo.png";
+
 import {
   LayoutDashboard,
   Package,
@@ -18,9 +20,7 @@ import {
   FileText,
   SlidersHorizontal,
   Users,
-  CircleHelp,
   LogOut,
-  Truck,
   UserCog,
 } from "lucide-react";
 
@@ -61,7 +61,7 @@ function Sidebar() {
         },
 
         {
-          label: "Movements",
+          label: "Inventory Movements",
           path: "/movements",
           icon: ArrowLeftRight,
           roles: ["ADMIN", "MANAGER"],
@@ -93,13 +93,6 @@ function Sidebar() {
           icon: ScanLine,
           roles: ["ADMIN", "MANAGER", "STAFF"],
         },
-
-        {
-          label: "Transfers",
-          path: "/transfers",
-          icon: Truck,
-          roles: ["ADMIN", "MANAGER"],
-        },
       ],
     },
 
@@ -108,7 +101,7 @@ function Sidebar() {
 
       items: [
         {
-          label: "Activity",
+          label: "Audit Log",
           path: "/activity",
           icon: Activity,
           roles: ["ADMIN"],
@@ -141,13 +134,6 @@ function Sidebar() {
           icon: Users,
           roles: ["ADMIN"],
         },
-
-        {
-          label: "Help",
-          path: "/help",
-          icon: CircleHelp,
-          roles: ["ADMIN", "MANAGER", "STAFF"],
-        },
       ],
     },
   ];
@@ -174,8 +160,12 @@ function Sidebar() {
 
         <div className="px-6 py-8 border-b border-gray-800 shrink-0">
           {sidebarCollapsed ? (
-            <div className="text-center">
-              <h1 className="text-3xl font-black">Z</h1>
+            <div className="flex justify-center">
+              <img
+                src={logo}
+                alt="Business-MGT ERP"
+                className="h-10 w-10 object-contain"
+              />
             </div>
           ) : (
             <>

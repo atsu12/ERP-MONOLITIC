@@ -2,6 +2,8 @@ const db = require("../configs/db");
 
 const { getIO } = require("../socket");
 
+const logActivity = require("../utils/logActivity");
+
 /* =========================
 GET PRODUCTS
 ========================= */
@@ -296,6 +298,12 @@ STANDARD PRODUCT
         if (!track_serial) {
           getIO().emit("product-created");
 
+          logActivity(
+            req.user.id,
+            req.user.username,
+            `Created product: ${name}`,
+          );
+
           return res.json({
             message: "Product created",
             id: productId,
@@ -309,6 +317,12 @@ WITHOUT SERIALS
 
         if (!Array.isArray(serials) || serials.length === 0) {
           getIO().emit("product-created");
+
+          logActivity(
+            req.user.id,
+            req.user.username,
+            `Created serialized product: ${name}`,
+          );
 
           return res.json({
             message: "Serialized product created",
@@ -346,6 +360,12 @@ VALUES ?
           }
 
           getIO().emit("product-created");
+
+          logActivity(
+            req.user.id,
+            req.user.username,
+            `Created serialized product: ${name}`,
+          );
 
           return res.json({
             message: "Serialized product created",
@@ -470,6 +490,8 @@ WHERE id = ?
         }
 
         getIO().emit("product-updated");
+
+        logActivity(req.user.id, req.user.username, `Updated product: ${name}`);
 
         res.json({
           message: "Product updated successfully",

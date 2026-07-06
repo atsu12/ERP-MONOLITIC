@@ -312,13 +312,23 @@ exports.removeStock = (
   res
 ) => {
 
-  const {
+  let {
 
-    product_id,
+  product_id,
 
-    quantity,
+  quantity,
 
-  } = req.body;
+} = req.body;
+
+quantity = Number(quantity) || 0;
+
+if (quantity <= 0) {
+
+  return res.status(400).json({
+    error: "Quantity must be greater than zero",
+  });
+
+}
 
   const query = `
     UPDATE products
@@ -372,7 +382,7 @@ exports.removeStock = (
           type,
           quantity
         )
-        VALUES (?, 'SCANNED_OUT', ?)
+        VALUES (?, 'STOCK_OUT', ?)
       `;
 
       db.query(
