@@ -83,12 +83,15 @@ function WarehouseInventory() {
   };
 
   const handleAdjust = async () => {
+    console.log("Adjust clicked", adjustingItem, adjustQty);
+
     if (!adjustingItem || adjustQty === "") {
       alert("Enter a quantity.");
       return;
     }
 
     try {
+      console.log("Before apiRequest");
       await apiRequest(`/warehouses/inventory/${adjustingItem.id}`, {
         method: "PUT",
         auth: true,
@@ -96,6 +99,7 @@ function WarehouseInventory() {
           quantity: Number(adjustQty),
         },
       });
+      console.log("After apiRequest");
 
       setShowAdjustModal(false);
 

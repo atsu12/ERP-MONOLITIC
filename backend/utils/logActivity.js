@@ -1,10 +1,7 @@
-const pool = require('../configs/db');
+const pool = require("../configs/db");
 
-const logActivity = (
-  userId,
-  username,
-  action
-) => {
+const logActivity = (userId, username, action) => {
+
 
   pool.query(
     `
@@ -14,15 +11,10 @@ const logActivity = (
     `,
     [userId, username, action],
     (err) => {
-
       if (err) {
-        console.log(
-          'Activity log error:',
-          err
-        );
+        console.log("Activity log error:", err);
       }
-
-    }
+    },
   );
 };
 

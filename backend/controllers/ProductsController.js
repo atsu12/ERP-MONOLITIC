@@ -508,6 +508,12 @@ DELETE PRODUCT
 exports.deleteProduct = (req, res) => {
   const productId = req.params.id;
 
+  const productQuery = `
+SELECT name
+FROM products
+WHERE id = ?
+`;
+
   const deleteItemsQuery = `
 DELETE
 FROM product_items
@@ -520,24 +526,114 @@ FROM products
 WHERE id = ?
 `;
 
-  db.query(deleteItemsQuery, [productId], (err) => {
+  db.query(productQuery, [productId], (err, productResult) => {
     if (err) {
       return res.status(500).json({
         error: err.message,
       });
     }
 
-    db.query(deleteProductQuery, [productId], (err2) => {
-      if (err2) {
+    if (productResult.length === 0) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
+
+    const productName = productResult[0].name;
+
+    db.query(deleteItemsQuery, [productId], (err) => {
+      if (err) {
         return res.status(500).json({
-          error: err2.message,
+          error: err.message,
         });
       }
 
-      getIO().emit("product-deleted");
+      db.query(deleteProductQuery, [productId], (err2) => {
+        if (err2) {
+          return res.status(500).json({
+            error: err2.message,
+          });
+        }
 
-      res.json({
-        message: "Product deleted successfully",
+        getIO().emit("product-deleted");
+
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Deleted product: ${productName}`,
+        );
+
+        res.json({
+          message: "Product deleted successfully",
+        });
+      });
+    });
+  });
+};/* =========================
+DELETE PRODUCT
+========================= */
+
+exports.deleteProduct = (req, res) => {
+  const productId = req.params.id;
+
+  const productQuery = `
+SELECT name
+FROM products
+WHERE id = ?
+`;
+
+  const deleteItemsQuery = `
+DELETE
+FROM product_items
+WHERE product_id = ?
+`;
+
+  const deleteProductQuery = `
+DELETE
+FROM products
+WHERE id = ?
+`;
+
+  db.query(productQuery, [productId], (err, productResult) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
+
+    if (productResult.length === 0) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
+
+    const productName = productResult[0].name;
+
+    db.query(deleteItemsQuery, [productId], (err) => {
+      if (err) {
+        return res.status(500).json({
+          error: err.message,
+        });
+      }
+
+      db.query(deleteProductQuery, [productId], (err2) => {
+        if (err2) {
+          return res.status(500).json({
+            error: err2.message,
+          });
+        }
+
+        getIO().emit("product-deleted");
+
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Deleted product: ${productName}`,
+        );
+
+        res.json({
+          message: "Product deleted successfully",
+        });
       });
     });
   });

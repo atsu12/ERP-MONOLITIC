@@ -2,6 +2,8 @@ const db = require("../configs/db").promise();
 
 const logger = require("../utils/logger");
 
+const logActivity = require("../utils/logActivity");
+
 /* =========================
 GET WAREHOUSE INVENTORY
 ========================= */
@@ -26,7 +28,7 @@ exports.getWarehouseInventory = async (req, res) => {
       WHERE wi.warehouse_id = ?
       ORDER BY p.name ASC
       `,
-      [warehouseId]
+      [warehouseId],
     );
 
     res.json(rows);
@@ -84,7 +86,7 @@ exports.assignInventory = async (req, res) => {
       FROM products p
       WHERE p.id = ?
       `,
-      [product_id]
+      [product_id],
     );
 
     if (productRows.length === 0) {
@@ -106,20 +108,33 @@ exports.assignInventory = async (req, res) => {
       FROM warehouse_inventory
       WHERE product_id = ?
       `,
-      [product_id]
+      [product_id],
     );
 
-    const allocated =
-      Number(allocationRows[0].allocated) || 0;
+    const allocated = Number(allocationRows[0].allocated) || 0;
 
-    const available =
-      Number(product.total_inventory) - allocated;
+    const available = Number(product.total_inventory) - allocated;
 
     if (assignQty > available) {
       return res.status(400).json({
         message: `Only ${available} available for allocation`,
       });
     }
+
+    const [infoRows] = await db.query(
+      `
+  SELECT
+    p.name AS product_name,
+    w.name AS warehouse_name
+  FROM products p
+  JOIN warehouses w
+    ON w.id = ?
+  WHERE p.id = ?
+  `,
+      [warehouse_id, product_id],
+    );
+
+    const info = infoRows[0];
 
     /* =========================
        UPSERT
@@ -138,11 +153,13 @@ exports.assignInventory = async (req, res) => {
       ON DUPLICATE KEY UPDATE
       quantity = quantity + VALUES(quantity)
       `,
-      [
-        warehouse_id,
-        product_id,
-        assignQty,
-      ]
+      [warehouse_id, product_id, assignQty],
+    );
+
+    logActivity(
+      req.user.id,
+      req.user.username,
+      `Allocated ${assignQty} of ${info.product_name} to ${info.warehouse_name}`,
     );
 
     res.json({
@@ -158,11 +175,37 @@ exports.assignInventory = async (req, res) => {
 };
 
 exports.updateAllocation = async (req, res) => {
+  console.log(">>> updateAllocation() reached");
+  
   try {
     const { id } = req.params;
     const { quantity } = req.body;
 
     const newQty = Number(quantity);
+
+    const [allocationRows] = await db.query(
+      `
+  SELECT
+    wi.quantity,
+    p.name AS product_name,
+    w.name AS warehouse_name
+  FROM warehouse_inventory wi
+  JOIN products p
+    ON p.id = wi.product_id
+  JOIN warehouses w
+    ON w.id = wi.warehouse_id
+  WHERE wi.id = ?
+  `,
+      [id],
+    );
+
+    if (allocationRows.length === 0) {
+      return res.status(404).json({
+        message: "Allocation not found",
+      });
+    }
+
+    const allocation = allocationRows[0];
 
     if (newQty < 0) {
       return res.status(400).json({
@@ -173,10 +216,16 @@ exports.updateAllocation = async (req, res) => {
     if (newQty === 0) {
       await db.query(
         `
-        DELETE FROM warehouse_inventory
-        WHERE id = ?
-        `,
-        [id]
+    DELETE FROM warehouse_inventory
+    WHERE id = ?
+    `,
+        [id],
+      );
+
+      logActivity(
+        req.user.id,
+        req.user.username,
+        `Removed allocation of ${allocation.product_name} from ${allocation.warehouse_name}`,
       );
 
       return res.json({
@@ -190,7 +239,13 @@ exports.updateAllocation = async (req, res) => {
       SET quantity = ?
       WHERE id = ?
       `,
-      [newQty, id]
+      [newQty, id],
+    );
+
+    logActivity(
+      req.user.id,
+      req.user.username,
+      `Updated allocation of ${allocation.product_name} in ${allocation.warehouse_name} to ${newQty}`,
     );
 
     res.json({
@@ -213,12 +268,35 @@ exports.deleteAllocation = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const [allocationRows] = await db.query(
+      `
+  SELECT
+    p.name AS product_name,
+    w.name AS warehouse_name
+  FROM warehouse_inventory wi
+  JOIN products p
+    ON p.id = wi.product_id
+  JOIN warehouses w
+    ON w.id = wi.warehouse_id
+  WHERE wi.id = ?
+  `,
+      [id],
+    );
+
+    if (allocationRows.length === 0) {
+      return res.status(404).json({
+        message: "Allocation not found",
+      });
+    }
+
+    const allocation = allocationRows[0];
+
     const [result] = await db.query(
       `
       DELETE FROM warehouse_inventory
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
 
     if (result.affectedRows === 0) {
@@ -226,6 +304,12 @@ exports.deleteAllocation = async (req, res) => {
         message: "Allocation not found",
       });
     }
+
+    logActivity(
+      req.user.id,
+      req.user.username,
+      `Removed allocation of ${allocation.product_name} from ${allocation.warehouse_name}`,
+    );
 
     res.json({
       message: "Allocation removed successfully",

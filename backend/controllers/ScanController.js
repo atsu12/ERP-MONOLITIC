@@ -2,6 +2,8 @@ const { getIO } = require("../socket");
 
 const db = require("../configs/db");
 
+const logActivity = require("../utils/logActivity");
+
 // SCAN SERIAL NUMBER (SAFE + TRANSACTION)
 exports.scanItem = (req, res) => {
   const { serial_number } = req.body;
@@ -92,6 +94,12 @@ exports.scanItem = (req, res) => {
                   connection.release();
 
                   getIO().emit("product-updated");
+
+                  logActivity(
+                    req.user.id,
+                    req.user.username,
+                    `Scanned out: ${item.name} (${serial_number})`,
+                  );
 
                   res.json({
                     message: "Item scanned successfully",

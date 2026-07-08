@@ -1,43 +1,32 @@
-const db =
-  require('../configs/db');
+const db = require("../configs/db");
 
-const {
-  getIO
-} = require('../socket');
+const { getIO } = require("../socket");
+
+const logActivity = require("../utils/logActivity");
 
 /* =========================
    STOCK IN
 ========================= */
 
-exports.addStock = (
-  req,
-  res
-) => {
-
+exports.addStock = (req, res) => {
   let {
-
     product_id,
 
     quantity,
 
     serials,
-
   } = req.body;
 
-  quantity =
-    Number(quantity) || 0;
+  quantity = Number(quantity) || 0;
 
   /* =========================
      VALIDATION
   ========================= */
 
   if (!product_id) {
-
     return res.status(400).json({
-      error:
-        'Product ID is required'
+      error: "Product ID is required",
     });
-
   }
 
   /* =========================
@@ -53,73 +42,41 @@ exports.addStock = (
     WHERE id = ?
   `;
 
-  db.query(
-    productQuery,
-    [product_id],
-    (
-      productErr,
-      productResult
-    ) => {
+  db.query(productQuery, [product_id], (productErr, productResult) => {
+    if (productErr) {
+      return res.status(500).json({
+        error: productErr.message,
+      });
+    }
 
-      if (productErr) {
+    if (productResult.length === 0) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
 
-        return res.status(500).json({
-          error:
-            productErr.message
-        });
+    const product = productResult[0];
 
-      }
-
-      if (
-        productResult.length === 0
-      ) {
-
-        return res.status(404).json({
-          error:
-            'Product not found'
-        });
-
-      }
-
-      const product =
-        productResult[0];
-
-      /* =========================
+    /* =========================
          SERIALIZED PRODUCTS
       ========================= */
 
-      if (
-        product.track_serial
-      ) {
+    if (product.track_serial) {
+      if (!Array.isArray(serials) || serials.length === 0) {
+        return res.status(400).json({
+          error: "Serialized products require serial numbers",
+        });
+      }
 
-        if (
-          !Array.isArray(serials) ||
-          serials.length === 0
-        ) {
+      const values = serials.map((serial) => [
+        product_id,
 
-          return res.status(400).json({
+        serial.trim(),
 
-            error:
-              'Serialized products require serial numbers'
+        "IN_STOCK",
+      ]);
 
-          });
-
-        }
-
-        const values =
-          serials.map(
-            (serial) => [
-
-              product_id,
-
-              serial.trim(),
-
-              'IN_STOCK',
-
-            ]
-          );
-
-        const serialQuery = `
+      const serialQuery = `
           INSERT INTO product_items
           (
             product_id,
@@ -129,39 +86,24 @@ exports.addStock = (
           VALUES ?
         `;
 
-        db.query(
-          serialQuery,
-          [values],
-          (serialErr) => {
+      db.query(serialQuery, [values], (serialErr) => {
+        if (serialErr) {
+          if (serialErr.code === "ER_DUP_ENTRY") {
+            return res.status(400).json({
+              error: "One or more serial numbers already exist",
+            });
+          }
 
-            if (serialErr) {
+          return res.status(500).json({
+            error: serialErr.message,
+          });
+        }
 
-              if (
-                serialErr.code ===
-                'ER_DUP_ENTRY'
-              ) {
-
-                return res.status(400).json({
-
-                  error:
-                    'One or more serial numbers already exist'
-
-                });
-
-              }
-
-              return res.status(500).json({
-                error:
-                  serialErr.message
-              });
-
-            }
-
-            /* =========================
+        /* =========================
                MOVEMENT LOG
             ========================= */
 
-            const movementQuery = `
+        const movementQuery = `
               INSERT INTO stock_movements
               (
                 product_id,
@@ -171,90 +113,59 @@ exports.addStock = (
               VALUES (?, 'RECEIVED', ?)
             `;
 
-            db.query(
-              movementQuery,
-              [
-                product_id,
-                serials.length
-              ],
-              (movementErr) => {
-
-                if (movementErr) {
-
-                  return res.status(500).json({
-                    error:
-                      movementErr.message
-                  });
-
-                }
-
-                getIO().emit(
-                  'product-updated'
-                );
-
-                return res.json({
-
-                  message:
-                    'Serialized stock added successfully'
-
-                });
-
-              }
-            );
-
+        db.query(movementQuery, [product_id, serials.length], (movementErr) => {
+          if (movementErr) {
+            return res.status(500).json({
+              error: movementErr.message,
+            });
           }
-        );
 
-        return;
+          getIO().emit("product-updated");
 
-      }
+          logActivity(
+            req.user.id,
+            req.user.username,
+            `Received stock: ${product.name} (${serials.length})`,
+          );
 
-      /* =========================
+          return res.json({
+            message: "Serialized stock added successfully",
+          });
+        });
+      });
+
+      return;
+    }
+
+    /* =========================
          STANDARD PRODUCTS
       ========================= */
 
-      if (
-        quantity <= 0
-      ) {
+    if (quantity <= 0) {
+      return res.status(400).json({
+        error: "Quantity must be greater than zero",
+      });
+    }
 
-        return res.status(400).json({
-
-          error:
-            'Quantity must be greater than zero'
-
-        });
-
-      }
-
-      const stockQuery = `
+    const stockQuery = `
         UPDATE products
         SET quantity =
           quantity + ?
         WHERE id = ?
       `;
 
-      db.query(
-        stockQuery,
-        [
-          quantity,
-          product_id
-        ],
-        (stockErr) => {
+    db.query(stockQuery, [quantity, product_id], (stockErr) => {
+      if (stockErr) {
+        return res.status(500).json({
+          error: stockErr.message,
+        });
+      }
 
-          if (stockErr) {
-
-            return res.status(500).json({
-              error:
-                stockErr.message
-            });
-
-          }
-
-          /* =========================
+      /* =========================
              MOVEMENT LOG
           ========================= */
 
-          const movementQuery = `
+      const movementQuery = `
             INSERT INTO stock_movements
             (
               product_id,
@@ -264,71 +175,54 @@ exports.addStock = (
             VALUES (?, 'RECEIVED', ?)
           `;
 
-          db.query(
-            movementQuery,
-            [
-              product_id,
-              quantity
-            ],
-            (movementErr) => {
-
-              if (movementErr) {
-
-                return res.status(500).json({
-                  error:
-                    movementErr.message
-                });
-
-              }
-
-              getIO().emit(
-                'product-updated'
-              );
-
-              res.json({
-
-                message:
-                  'Stock added successfully'
-
-              });
-
-            }
-          );
-
+      db.query(movementQuery, [product_id, quantity], (movementErr) => {
+        if (movementErr) {
+          return res.status(500).json({
+            error: movementErr.message,
+          });
         }
-      );
 
-    }
-  );
+        getIO().emit("product-updated");
 
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Received stock: ${product.name} (${quantity})`,
+        );
+
+        return res.json({
+          message: "Stock added successfully",
+        });
+      });
+    });
+  });
 };
 
 /* =========================
    STOCK OUT
 ========================= */
 
-exports.removeStock = (
-  req,
-  res
-) => {
+exports.removeStock = (req, res) => {
+  const productQuery = `
+SELECT
+  name
+FROM products
+WHERE id = ?
+`;
 
   let {
+    product_id,
 
-  product_id,
+    quantity,
+  } = req.body;
 
-  quantity,
+  quantity = Number(quantity) || 0;
 
-} = req.body;
-
-quantity = Number(quantity) || 0;
-
-if (quantity <= 0) {
-
-  return res.status(400).json({
-    error: "Quantity must be greater than zero",
-  });
-
-}
+  if (quantity <= 0) {
+    return res.status(400).json({
+      error: "Quantity must be greater than zero",
+    });
+  }
 
   const query = `
     UPDATE products
@@ -338,37 +232,32 @@ if (quantity <= 0) {
     AND quantity >= ?
   `;
 
-  db.query(
-    query,
-    [
-      quantity,
-      product_id,
-      quantity
-    ],
-    (
-      err,
-      result
-    ) => {
+  db.query(productQuery, [product_id], (productErr, productResult) => {
+    if (productErr) {
+      return res.status(500).json({
+        error: productErr.message,
+      });
+    }
 
+    if (productResult.length === 0) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
+    }
+
+    const product = productResult[0];
+
+    db.query(query, [quantity, product_id, quantity], (err, result) => {
       if (err) {
-
         return res.status(500).json({
-          error: err.message
+          error: err.message,
         });
-
       }
 
-      if (
-        result.affectedRows === 0
-      ) {
-
+      if (result.affectedRows === 0) {
         return res.status(400).json({
-
-          error:
-            'Insufficient stock'
-
+          error: "Insufficient stock",
         });
-
       }
 
       /* =========================
@@ -385,38 +274,25 @@ if (quantity <= 0) {
         VALUES (?, 'STOCK_OUT', ?)
       `;
 
-      db.query(
-        movementQuery,
-        [
-          product_id,
-          quantity
-        ],
-        (movementErr) => {
-
-          if (movementErr) {
-
-            return res.status(500).json({
-              error:
-                movementErr.message
-            });
-
-          }
-
-          getIO().emit(
-            'product-updated'
-          );
-
-          res.json({
-
-            message:
-              'Stock removed successfully'
-
+      db.query(movementQuery, [product_id, quantity], (movementErr) => {
+        if (movementErr) {
+          return res.status(500).json({
+            error: movementErr.message,
           });
-
         }
-      );
 
-    }
-  );
+        getIO().emit("product-updated");
 
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Removed stock: ${product.name} (${quantity})`,
+        );
+
+        return res.json({
+          message: "Stock removed successfully",
+        });
+      });
+    });
+  });
 };
