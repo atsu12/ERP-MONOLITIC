@@ -191,6 +191,23 @@ exports.deleteWarehouse = async (req, res) => {
     const { id } = req.params;
 
     /* =========================
+   CHECK LAST WAREHOUSE
+========================= */
+
+const [[warehouseCount]] = await db.query(
+  `
+  SELECT COUNT(*) AS total
+  FROM warehouses
+  `,
+);
+
+if (warehouseCount.total <= 1) {
+  return res.status(400).json({
+    message: "You cannot delete the last warehouse.",
+  });
+}
+
+    /* =========================
          CHECK INVENTORY
        ========================= */
 

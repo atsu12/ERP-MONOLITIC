@@ -509,22 +509,40 @@ exports.deleteProduct = (req, res) => {
   const productId = req.params.id;
 
   const productQuery = `
-SELECT name
-FROM products
-WHERE id = ?
-`;
+    SELECT name
+    FROM products
+    WHERE id = ?
+  `;
+
+  const movementQuery = `
+    SELECT COUNT(*) AS total
+    FROM stock_movements
+    WHERE product_id = ?
+  `;
+
+  const warehouseQuery = `
+    SELECT COUNT(*) AS total
+    FROM warehouse_inventory
+    WHERE product_id = ?
+  `;
+
+  const serializedQuery = `
+    SELECT COUNT(*) AS total
+    FROM product_items
+    WHERE product_id = ?
+  `;
 
   const deleteItemsQuery = `
-DELETE
-FROM product_items
-WHERE product_id = ?
-`;
+    DELETE
+    FROM product_items
+    WHERE product_id = ?
+  `;
 
   const deleteProductQuery = `
-DELETE
-FROM products
-WHERE id = ?
-`;
+    DELETE
+    FROM products
+    WHERE id = ?
+  `;
 
   db.query(productQuery, [productId], (err, productResult) => {
     if (err) {
@@ -541,100 +559,88 @@ WHERE id = ?
 
     const productName = productResult[0].name;
 
-    db.query(deleteItemsQuery, [productId], (err) => {
-      if (err) {
+    db.query(movementQuery, [productId], (movementErr, movementResult) => {
+      if (movementErr) {
         return res.status(500).json({
-          error: err.message,
+          error: movementErr.message,
         });
       }
 
-      db.query(deleteProductQuery, [productId], (err2) => {
-        if (err2) {
-          return res.status(500).json({
-            error: err2.message,
-          });
-        }
+      db.query(
+        warehouseQuery,
+        [productId],
+        (warehouseErr, warehouseResult) => {
+          if (warehouseErr) {
+            return res.status(500).json({
+              error: warehouseErr.message,
+            });
+          }
 
-        getIO().emit("product-deleted");
+          db.query(
+            serializedQuery,
+            [productId],
+            (serializedErr, serializedResult) => {
+              if (serializedErr) {
+                return res.status(500).json({
+                  error: serializedErr.message,
+                });
+              }
 
-        logActivity(
-          req.user.id,
-          req.user.username,
-          `Deleted product: ${productName}`,
-        );
+              const hasMovements =
+                movementResult[0].total > 0;
 
-        res.json({
-          message: "Product deleted successfully",
-        });
-      });
-    });
-  });
-};/* =========================
-DELETE PRODUCT
-========================= */
+              const hasWarehouseInventory =
+                warehouseResult[0].total > 0;
 
-exports.deleteProduct = (req, res) => {
-  const productId = req.params.id;
+              const hasSerializedItems =
+                serializedResult[0].total > 0;
 
-  const productQuery = `
-SELECT name
-FROM products
-WHERE id = ?
-`;
+              if (
+                hasMovements ||
+                hasWarehouseInventory ||
+                hasSerializedItems
+              ) {
+                return res.status(400).json({
+                  error:
+                    "This product cannot be deleted because it has inventory history or warehouse allocations.",
+                });
+              }
 
-  const deleteItemsQuery = `
-DELETE
-FROM product_items
-WHERE product_id = ?
-`;
+              db.query(deleteItemsQuery, [productId], (err) => {
+                if (err) {
+                  return res.status(500).json({
+                    error: err.message,
+                  });
+                }
 
-  const deleteProductQuery = `
-DELETE
-FROM products
-WHERE id = ?
-`;
+                db.query(
+                  deleteProductQuery,
+                  [productId],
+                  (err2) => {
+                    if (err2) {
+                      return res.status(500).json({
+                        error: err2.message,
+                      });
+                    }
 
-  db.query(productQuery, [productId], (err, productResult) => {
-    if (err) {
-      return res.status(500).json({
-        error: err.message,
-      });
-    }
+                    getIO().emit("product-deleted");
 
-    if (productResult.length === 0) {
-      return res.status(404).json({
-        error: "Product not found",
-      });
-    }
+                    logActivity(
+                      req.user.id,
+                      req.user.username,
+                      `Deleted product: ${productName}`,
+                    );
 
-    const productName = productResult[0].name;
-
-    db.query(deleteItemsQuery, [productId], (err) => {
-      if (err) {
-        return res.status(500).json({
-          error: err.message,
-        });
-      }
-
-      db.query(deleteProductQuery, [productId], (err2) => {
-        if (err2) {
-          return res.status(500).json({
-            error: err2.message,
-          });
-        }
-
-        getIO().emit("product-deleted");
-
-        logActivity(
-          req.user.id,
-          req.user.username,
-          `Deleted product: ${productName}`,
-        );
-
-        res.json({
-          message: "Product deleted successfully",
-        });
-      });
+                    res.json({
+                      message: "Product deleted successfully",
+                    });
+                  },
+                );
+              });
+            },
+          );
+        },
+      );
     });
   });
 };

@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 
-const db = require("../configs/db").promise();
+const logger = require("../utils/logger");
 
+const db = require("../configs/db").promise();
 
 /* =========================
    GET USERS
@@ -182,10 +183,6 @@ exports.updateUser = async (req, res) => {
    DELETE USER
 ========================= */
 
-/* =========================
-   DELETE USER
-========================= */
-
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -235,6 +232,33 @@ exports.deleteUser = async (req, res) => {
       }
     }
 
+    /* PREVENT DELETING USERS WITH HISTORY */
+
+    const [[activityCount]] = await db.query(
+      `
+    SELECT COUNT(*) AS total
+    FROM activity_logs
+    WHERE user_id = ?
+  `,
+      [id],
+    );
+
+    const [[movementCount]] = await db.query(
+      `
+    SELECT COUNT(*) AS total
+    FROM stock_movements
+    WHERE user_id = ?
+  `,
+      [id],
+    );
+
+    if (activityCount.total > 0 || movementCount.total > 0) {
+      return res.status(400).json({
+        message:
+          "This user cannot be deleted because they have historical activity.",
+      });
+    }
+
     /* DELETE USER */
 
     await db.query(
@@ -262,10 +286,9 @@ exports.deleteUser = async (req, res) => {
 ========================= */
 
 exports.changePassword = async (req, res) => {
-  
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         message: "All fields are required",
@@ -326,7 +349,6 @@ exports.changePassword = async (req, res) => {
       message: "Password updated successfully",
       requireRelogin: true,
     });
-
   } catch (error) {
     logger.error(error);
 

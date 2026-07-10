@@ -1,0 +1,3 @@
+-- BUSINESS-MGT ERP schema.sql
+-- Generated starter schema
+-- Replace backend/db.sql with this file and continue refining.

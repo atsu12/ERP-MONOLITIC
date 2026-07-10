@@ -1,0 +1,2 @@
+-- seed.sql
+-- TODO: add default settings, admin user and warehouse.
