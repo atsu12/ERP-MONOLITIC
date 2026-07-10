@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuthStore } from "../store/authStore";
 
@@ -22,6 +22,14 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  
+  const [hasLoggedBefore, setHasLoggedBefore] = useState(false);
+  
+  useEffect(() => {
+    const remembered = localStorage.getItem("hasLoggedBefore");
+
+    setHasLoggedBefore(remembered === "true");
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -30,6 +38,8 @@ function Login() {
 
     try {
       await login(username, password);
+	  
+		localStorage.setItem("hasLoggedBefore", "true");
 
       toast.dismiss(toastId);
 
@@ -107,8 +117,8 @@ function Login() {
           <div className="w-full max-w-md">
             <div className="mb-10">
               <h2 className="text-4xl font-black text-gray-900 mb-3">
-                Welcome Back
-              </h2>
+  {hasLoggedBefore ? "Welcome Back" : "Welcome"}
+</h2>
 
               <p className="text-gray-500">
                 Sign in to access your inventory dashboard.
@@ -217,7 +227,7 @@ function Login() {
             {/* FOOTER */}
 
             <div className="mt-10 text-center text-sm text-gray-400">
-              ZICO Business ERP • Secure Inventory Platform
+              Secure Inventory and Login Platform
             </div>
           </div>
         </div>

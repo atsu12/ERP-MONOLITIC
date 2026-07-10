@@ -35,6 +35,8 @@ Reports
 ===============================================================================
 */
 
+DROP DATABASE IF EXISTS inventory_app;
+
 CREATE DATABASE IF NOT EXISTS inventory_app
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_0900_ai_ci;
@@ -68,7 +70,7 @@ CREATE TABLE users (
 
     username VARCHAR(100) NOT NULL,
 
-    email VARCHAR(255) DEFAULT NULL,
+    email VARCHAR(255) NOT NULL,
 
     password_hash VARCHAR(255) NOT NULL,
 
@@ -79,9 +81,6 @@ CREATE TABLE users (
     ) NOT NULL DEFAULT 'STAFF',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (id),
 
