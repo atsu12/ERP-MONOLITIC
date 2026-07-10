@@ -16,3 +16,7 @@ PORT=5000
 
 Default Username = admin
 Default Password = admin123
+
+
+
+Project root on windows10: C:\apps\erp-monolitic>
