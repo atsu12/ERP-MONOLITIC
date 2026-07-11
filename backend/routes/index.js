@@ -116,7 +116,12 @@ PRODUCTS
 
 // GET ALL PRODUCTS
 
-router.get("/products", getProducts);
+router.get(
+  "/products",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  getProducts,
+);
 
 // GET SINGLE PRODUCT
 
@@ -210,20 +215,14 @@ REPORTS DASHBOARD
 router.get(
   "/reports/dashboard",
   authMiddleware,
-  roleMiddleware([
-    "ADMIN",
-    "MANAGER"
-  ]),
-  getDashboardReport
+  roleMiddleware(["ADMIN", "MANAGER"]),
+  getDashboardReport,
 );
 
 router.get(
   "/reports/warehouse",
   authMiddleware,
-  roleMiddleware([
-    "ADMIN",
-    "MANAGER",
-  ]),
+  roleMiddleware(["ADMIN", "MANAGER"]),
   getWarehouseReport,
 );
 
@@ -263,11 +262,7 @@ router.post(
   createUser,
 );
 
-router.put(
-  "/users/change-password",
-  authMiddleware,
-  changePassword,
-);
+router.put("/users/change-password", authMiddleware, changePassword);
 
 router.put(
   "/users/:id",
@@ -287,11 +282,7 @@ router.delete(
 WAREHOUSES
 ========================= */
 
-router.get(
-  "/warehouses",
-  authMiddleware,
-  getWarehouses,
-);
+router.get("/warehouses", authMiddleware, getWarehouses);
 
 router.get(
   "/warehouses/:warehouseId/inventory",
