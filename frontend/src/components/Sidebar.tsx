@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../store/authStore";
 
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { useLayoutStore } from "../store/layoutStore";
 
@@ -33,7 +33,8 @@ function Sidebar() {
 
   const logout = useAuthStore((state) => state.logout);
 
-  const { sidebarCollapsed, toggleSidebar } = useLayoutStore();
+  const { sidebarCollapsed, mobileMenuOpen, toggleSidebar, closeMobileMenu } =
+    useLayoutStore();
 
   const handleLogout = () => {
     logout();
@@ -140,25 +141,32 @@ function Sidebar() {
 
   return (
     <aside
-      className={`h-screen fixed top-0 left-0 bg-gradient-to-b from-gray-950 via-black to-gray-900 text-white border-r border-gray-800 shadow-2xl flex flex-col justify-between overflow-hidden transition-all duration-300 ${
-        sidebarCollapsed ? "w-24" : "w-72"
-      }`}
+      className={`fixed top-0 left-0 z-40 h-screen bg-gradient-to-b from-gray-950 via-black to-gray-900 text-white border-r border-gray-800 shadow-2xl flex flex-col justify-between overflow-hidden transition-all duration-300 ease-in-out
+    ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+    ${sidebarCollapsed ? "w-20" : "w-[78vw] max-w-[240px]"}
+  `}
     >
       {/* TOP */}
 
       <div className="flex justify-end p-3">
         <button
-          onClick={toggleSidebar}
+          onClick={() => {
+            if (window.innerWidth < 1024) {
+              closeMobileMenu();
+            } else {
+              toggleSidebar();
+            }
+          }}
           className="p-2 rounded-xl hover:bg-gray-800 transition"
         >
-          <Menu size={20} />
+          {window.innerWidth < 1024 ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       <div className="flex flex-col h-full overflow-hidden">
         {/* BRAND */}
 
-        <div className="px-6 py-8 border-b border-gray-800 shrink-0">
+        <div className="px-6 py-6 border-b border-gray-800 shrink-0">
           {sidebarCollapsed ? (
             <div className="flex justify-center">
               <img
@@ -169,9 +177,11 @@ function Sidebar() {
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-black tracking-wide">ZICO STOCK</h1>
+              <h1 className="text-2xl font-black tracking-wide">
+                ZICO Business
+              </h1>
 
-              <p className="text-gray-400 text-sm mt-2">
+              <p className="text-gray-400 text-xs mt-2 leading-relaxed">
                 Enterprise inventory & warehouse platform
               </p>
             </>
@@ -196,7 +206,7 @@ function Sidebar() {
                   {/* SECTION TITLE */}
 
                   {!sidebarCollapsed && (
-                    <p className="text-xs font-bold tracking-[0.2em] text-gray-500 mb-3 px-3">
+                    <p className="text-xs font-bold tracking-wider text-gray-500 mb-3 px-3">
                       {section.title}
                     </p>
                   )}
@@ -213,13 +223,14 @@ function Sidebar() {
                         <Link
                           key={item.path}
                           to={item.path}
+                          onClick={closeMobileMenu}
                           title={sidebarCollapsed ? item.label : ""}
                           className={`flex items-center ${
                             sidebarCollapsed ? "justify-center" : "gap-3"
-                          } px-4 py-4 rounded-2xl transition-all duration-200 ${
+                          } px-3 py-3 rounded-xl transition-all duration-200 ${
                             isActive
-                              ? "bg-white text-black font-bold shadow-xl"
-                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                              ? "bg-slate-800 text-white border border-slate-700 shadow-lg"
+                              : "text-gray-300 hover:bg-slate-800/70 hover:text-white"
                           }`}
                         >
                           <Icon size={sidebarCollapsed ? 28 : 20} />
@@ -240,7 +251,7 @@ function Sidebar() {
 
       <div className="p-4 border-t border-gray-800 shrink-0">
         {!sidebarCollapsed && (
-          <div className="bg-gray-900 rounded-2xl p-4 mb-4 border border-gray-800">
+          <div className="bg-gray-900 rounded-xl p-3 mb-3 border border-gray-800">
             <p className="font-semibold text-lg">{user?.username || "User"}</p>
 
             <p className="text-sm text-gray-400 mt-1">{user?.role || "Role"}</p>

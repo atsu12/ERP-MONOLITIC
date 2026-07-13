@@ -3,16 +3,32 @@ import { create } from "zustand";
 interface LayoutStore {
   sidebarCollapsed: boolean;
 
+  mobileMenuOpen: boolean;
+
   toggleSidebar: () => void;
+
+  toggleMobileMenu: () => void;
+
+  closeMobileMenu: () => void;
 }
 
-export const useLayoutStore =
-  create<LayoutStore>((set) => ({
-    sidebarCollapsed: false,
+export const useLayoutStore = create<LayoutStore>((set) => ({
+  sidebarCollapsed: false,
 
-    toggleSidebar: () =>
-      set((state) => ({
-        sidebarCollapsed:
-          !state.sidebarCollapsed,
-      })),
-  }));
+  mobileMenuOpen: false,
+
+  toggleSidebar: () =>
+    set((state) => ({
+      sidebarCollapsed: !state.sidebarCollapsed,
+    })),
+
+  toggleMobileMenu: () =>
+    set((state) => ({
+      mobileMenuOpen: !state.mobileMenuOpen,
+    })),
+
+  closeMobileMenu: () =>
+    set({
+      mobileMenuOpen: false,
+    }),
+}));

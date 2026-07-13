@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 
-import { Bell, Wifi, WifiOff } from "lucide-react";
+import { Bell, Wifi, WifiOff, Menu, X } from "lucide-react";
 
 import { useLayoutStore } from "../store/layoutStore";
 
@@ -51,7 +51,12 @@ function Layout({ children }: LayoutProps) {
      AUTH
   ========================= */
 
-  const sidebarCollapsed = useLayoutStore((state) => state.sidebarCollapsed);
+  const {
+    sidebarCollapsed,
+    mobileMenuOpen,
+    toggleMobileMenu,
+    closeMobileMenu,
+  } = useLayoutStore();
 
   /* =========================
      NOTIFICATIONS
@@ -123,32 +128,47 @@ function Layout({ children }: LayoutProps) {
 
       <Sidebar />
 
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
       {/* MAIN */}
 
       <main
         className={`min-h-screen transition-all duration-300 ${
-          sidebarCollapsed ? "ml-24" : "ml-72"
+          sidebarCollapsed ? "lg:ml-24" : "lg:ml-72"
         }`}
       >
         {/* HEADER */}
 
-        <header className="h-auto min-h-20 bg-white border-b border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-4 px-4 md:px-8 py-4 sticky top-0 z-20">
+        <header className="bg-white border-b border-gray-200 shadow-sm flex flex-wrap items-center justify-between gap-3 px-4 md:px-8 py-3 sticky top-0 z-20">
           {/* LEFT */}
 
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {currentPage.title}
-            </h1>
+          <div className="flex items-start gap-3">
+            <button
+              onClick={toggleMobileMenu}
+              className="lg:hidden w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 transition flex items-center justify-center"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
 
-            <p className="text-sm text-gray-500 mt-1">
-              {currentPage.description}
-            </p>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {currentPage.title}
+              </h1>
+
+              <p className="hidden md:block text-sm text-gray-500 mt-1">
+                {currentPage.description}
+              </p>
+            </div>
           </div>
 
           {/* RIGHT */}
 
           <div className="flex items-center gap-4">
-          
             {/* API STATUS */}
 
             <div
@@ -186,7 +206,7 @@ function Layout({ children }: LayoutProps) {
 
         {/* CONTENT */}
 
-        <div className="p-8">
+        <div className="px-4 py-4 md:px-6 md:py-6 lg:p-8">
           <div className="max-w-7xl mx-auto">{children}</div>
         </div>
       </main>
