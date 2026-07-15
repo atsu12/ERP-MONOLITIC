@@ -98,11 +98,24 @@ const {
 } = require("../controllers/SettingsController");
 
 const {
+  createDispatch,
+
+  getPendingDispatches,
+
+  getDispatchById,
+
+  confirmPayment,
+
+  completeDispatch,
+} = require("../controllers/DispatchController");
+
+const {
   getWarehouses,
   createWarehouse,
   updateWarehouse,
   deleteWarehouse,
 } = require("../controllers/WarehousesController");
+
 
 /* =========================
 AUTH
@@ -343,6 +356,73 @@ router.put(
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   updateSettings,
+);
+
+/* =========================
+DISPATCH
+========================= */
+
+router.post(
+  "/dispatch",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  createDispatch,
+);
+
+router.get(
+  "/dispatch/pending",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getPendingDispatches,
+);
+
+router.get(
+  "/dispatch/:id",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getDispatchById,
+);
+
+router.put(
+  "/dispatch/:id/confirm-payment",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  confirmPayment,
+);
+
+router.put(
+  "/dispatch/:id/remove-stock",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  completeDispatch,
+);
+
+router.get(
+  "/dispatch/pending",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getPendingDispatches,
+);
+
+router.get(
+  "/dispatch/:id",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  getDispatchById,
+);
+
+router.put(
+  "/dispatch/:id/confirm-payment",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  confirmPayment,
+);
+
+router.put(
+  "/dispatch/:id/remove-stock",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  completeDispatch,
 );
 
 module.exports = router;
