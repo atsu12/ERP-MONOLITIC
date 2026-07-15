@@ -33,7 +33,11 @@ function StockIn() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/products`);
+      const response = await fetch(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       const data = await response.json();
 

@@ -25,6 +25,14 @@ function StockOut() {
 
   const [recentScans, setRecentScans] = useState<string[]>([]);
 
+  const [customerName, setCustomerName] = useState("");
+
+  const [customerContact, setCustomerContact] = useState("");
+
+  const [contactPerson, setContactPerson] = useState("");
+
+  const [customerLocation, setCustomerLocation] = useState("");
+
   /* =========================
      LOAD PRODUCTS
   ========================= */
@@ -69,6 +77,97 @@ function StockOut() {
     inputRef.current?.focus();
   };
 
+  /* =========================
+   SUBMIT DISPATCH
+========================= */
+
+const submitDispatch = async () => {
+  if (!customerName.trim()) {
+    toast.error("Customer name is required");
+
+    return;
+  }
+
+  if (!selectedProduct) {
+    toast.error("Select a product");
+
+    return;
+  }
+
+  if (
+    !selectedProduct.track_serial &&
+    (!quantity || Number(quantity) <= 0)
+  ) {
+    toast.error("Enter valid quantity");
+
+    return;
+  }
+
+  try {
+    const payload = {
+      customer_name: customerName,
+
+      contact: customerContact,
+
+      contact_person: contactPerson,
+
+      location: customerLocation,
+
+      items: selectedProduct.track_serial
+        ? []
+        : [
+            {
+              product_id: selectedProduct.id,
+
+              quantity: Number(quantity),
+            },
+          ],
+
+      serials: [],
+    };
+
+    const response = await fetch(`${API_URL}/dispatch`, {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      toast.error(
+        data.error || "Failed to create dispatch",
+      );
+
+      return;
+    }
+
+    toast.success(
+      `Submitted for payment (${data.reference})`,
+    );
+
+    setCustomerName("");
+
+    setCustomerContact("");
+
+    setContactPerson("");
+
+    setCustomerLocation("");
+
+    setQuantity("");
+
+    setSelectedProduct(null);
+  } catch {
+    toast.error("Server connection failed");
+  }
+};
+  
   /* =========================
      STANDARD STOCK OUT
   ========================= */
@@ -226,6 +325,72 @@ function StockOut() {
           </div>
         </div>
 
+        {/* CUSTOMER INFORMATION */}
+
+<div className="mb-8">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    Customer Information
+  </h3>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <div>
+      <label className="block mb-2 font-semibold text-gray-700">
+        Customer Name *
+      </label>
+
+      <input
+        type="text"
+        value={customerName}
+        onChange={(e) => setCustomerName(e.target.value)}
+        className="erp-input"
+        placeholder="Customer name"
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-semibold text-gray-700">
+        Contact
+      </label>
+
+      <input
+        type="text"
+        value={customerContact}
+        onChange={(e) => setCustomerContact(e.target.value)}
+        className="erp-input"
+        placeholder="Phone number"
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-semibold text-gray-700">
+        Contact Person
+      </label>
+
+      <input
+        type="text"
+        value={contactPerson}
+        onChange={(e) => setContactPerson(e.target.value)}
+        className="erp-input"
+        placeholder="Contact person"
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-semibold text-gray-700">
+        Location
+      </label>
+
+      <input
+        type="text"
+        value={customerLocation}
+        onChange={(e) => setCustomerLocation(e.target.value)}
+        className="erp-input"
+        placeholder="Location"
+      />
+    </div>
+  </div>
+</div>
+
         {/* PRODUCT */}
 
         <div className="mb-6">
@@ -309,10 +474,10 @@ function StockOut() {
         <div className="pt-8 flex justify-end">
           {!selectedProduct?.track_serial && (
             <button
-              onClick={removeBulkStock}
+              onClick={submitDispatch}
               className="bg-black hover:bg-gray-800 transition text-white px-6 py-3 rounded-2xl font-semibold"
             >
-              Remove Stock
+              Submit for Payment
             </button>
           )}
         </div>

@@ -1,3 +1,5 @@
+import Cashier from "./pages/Cashier";
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -40,6 +42,25 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route
+          path="/cashier"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "ADMIN",
+                "MANAGER",
+                "STAFF",
+              ]}
+            >
+              <Layout>
+                <Cashier />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* STOCK OUT */}
+
         <Route
           path="/stock-out"
           element={
