@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 
+import { socket } from "../socket/socket";
+
 import { useProductStore } from "../store/productStore";
 
 import { PackageMinus, Boxes, ScanLine, Hash } from "lucide-react";
@@ -14,6 +16,8 @@ function StockOut() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [products, setProducts] = useState<any[]>([]);
+
+  const [paidDispatches, setPaidDispatches] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +45,11 @@ function StockOut() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/products`);
+      const response = await fetch(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       const data = await response.json();
 
@@ -55,12 +63,47 @@ function StockOut() {
     }
   };
 
+  const fetchPaidDispatches = async () => {
+    try {
+      const response = await fetch(`${API_URL}/dispatch/paid`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to load dispatches");
+
+        return;
+      }
+
+      setPaidDispatches(data.dispatches || []);
+    } catch {
+      toast.error("Failed to load dispatches");
+    }
+  };
+
   useEffect(() => {
-    fetchProducts();
+  socket.connect();
 
-    inputRef.current?.focus();
-  }, []);
+  fetchProducts();
 
+  fetchPaidDispatches();
+
+  socket.on("dispatch-paid", fetchPaidDispatches);
+
+  socket.on("dispatch-completed", fetchPaidDispatches);
+
+  inputRef.current?.focus();
+
+  return () => {
+    socket.off("dispatch-paid", fetchPaidDispatches);
+
+    socket.off("dispatch-completed", fetchPaidDispatches);
+  };
+}, []);
   /* =========================
      PRODUCT SELECT
   ========================= */
@@ -81,93 +124,86 @@ function StockOut() {
    SUBMIT DISPATCH
 ========================= */
 
-const submitDispatch = async () => {
-  if (!customerName.trim()) {
-    toast.error("Customer name is required");
-
-    return;
-  }
-
-  if (!selectedProduct) {
-    toast.error("Select a product");
-
-    return;
-  }
-
-  if (
-    !selectedProduct.track_serial &&
-    (!quantity || Number(quantity) <= 0)
-  ) {
-    toast.error("Enter valid quantity");
-
-    return;
-  }
-
-  try {
-    const payload = {
-      customer_name: customerName,
-
-      contact: customerContact,
-
-      contact_person: contactPerson,
-
-      location: customerLocation,
-
-      items: selectedProduct.track_serial
-        ? []
-        : [
-            {
-              product_id: selectedProduct.id,
-
-              quantity: Number(quantity),
-            },
-          ],
-
-      serials: [],
-    };
-
-    const response = await fetch(`${API_URL}/dispatch`, {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      toast.error(
-        data.error || "Failed to create dispatch",
-      );
+  const submitDispatch = async () => {
+    if (!customerName.trim()) {
+      toast.error("Customer name is required");
 
       return;
     }
 
-    toast.success(
-      `Submitted for payment (${data.reference})`,
-    );
+    if (!selectedProduct) {
+      toast.error("Select a product");
 
-    setCustomerName("");
+      return;
+    }
 
-    setCustomerContact("");
+    if (!selectedProduct.track_serial && (!quantity || Number(quantity) <= 0)) {
+      toast.error("Enter valid quantity");
 
-    setContactPerson("");
+      return;
+    }
 
-    setCustomerLocation("");
+    try {
+      const payload = {
+        customer_name: customerName,
 
-    setQuantity("");
+        contact: customerContact,
 
-    setSelectedProduct(null);
-  } catch {
-    toast.error("Server connection failed");
-  }
-};
-  
+        contact_person: contactPerson,
+
+        location: customerLocation,
+
+        items: selectedProduct.track_serial
+          ? []
+          : [
+              {
+                product_id: selectedProduct.id,
+
+                quantity: Number(quantity),
+              },
+            ],
+
+        serials: [],
+      };
+
+      const response = await fetch(`${API_URL}/dispatch`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to create dispatch");
+
+        return;
+      }
+
+      toast.success(`Submitted for payment (${data.reference})`);
+
+      setCustomerName("");
+
+      setCustomerContact("");
+
+      setContactPerson("");
+
+      setCustomerLocation("");
+
+      setQuantity("");
+
+      setSelectedProduct(null);
+    } catch {
+      toast.error("Server connection failed");
+    }
+  };
+
   /* =========================
      STANDARD STOCK OUT
   ========================= */
@@ -219,7 +255,7 @@ const submitDispatch = async () => {
       setQuantity("");
 
       setSelectedProduct(null);
-      
+
       inputRef.current?.focus();
     } catch {
       toast.error("Server connection failed");
@@ -327,69 +363,69 @@ const submitDispatch = async () => {
 
         {/* CUSTOMER INFORMATION */}
 
-<div className="mb-8">
-  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-    Customer Information
-  </h3>
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Customer Information
+          </h3>
 
-  <div className="grid gap-4 md:grid-cols-2">
-    <div>
-      <label className="block mb-2 font-semibold text-gray-700">
-        Customer Name *
-      </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">
+                Customer Name *
+              </label>
 
-      <input
-        type="text"
-        value={customerName}
-        onChange={(e) => setCustomerName(e.target.value)}
-        className="erp-input"
-        placeholder="Customer name"
-      />
-    </div>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="erp-input"
+                placeholder="Customer name"
+              />
+            </div>
 
-    <div>
-      <label className="block mb-2 font-semibold text-gray-700">
-        Contact
-      </label>
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">
+                Contact
+              </label>
 
-      <input
-        type="text"
-        value={customerContact}
-        onChange={(e) => setCustomerContact(e.target.value)}
-        className="erp-input"
-        placeholder="Phone number"
-      />
-    </div>
+              <input
+                type="text"
+                value={customerContact}
+                onChange={(e) => setCustomerContact(e.target.value)}
+                className="erp-input"
+                placeholder="Phone number"
+              />
+            </div>
 
-    <div>
-      <label className="block mb-2 font-semibold text-gray-700">
-        Contact Person
-      </label>
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">
+                Contact Person
+              </label>
 
-      <input
-        type="text"
-        value={contactPerson}
-        onChange={(e) => setContactPerson(e.target.value)}
-        className="erp-input"
-        placeholder="Contact person"
-      />
-    </div>
+              <input
+                type="text"
+                value={contactPerson}
+                onChange={(e) => setContactPerson(e.target.value)}
+                className="erp-input"
+                placeholder="Contact person"
+              />
+            </div>
 
-    <div>
-      <label className="block mb-2 font-semibold text-gray-700">
-        Location
-      </label>
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">
+                Location
+              </label>
 
-      <input
-        type="text"
-        value={customerLocation}
-        onChange={(e) => setCustomerLocation(e.target.value)}
-        className="erp-input"
-        placeholder="Location"
-      />
-    </div>
-  </div>
-</div>
+              <input
+                type="text"
+                value={customerLocation}
+                onChange={(e) => setCustomerLocation(e.target.value)}
+                className="erp-input"
+                placeholder="Location"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* PRODUCT */}
 
@@ -512,6 +548,31 @@ const submitDispatch = async () => {
                 <span className="font-medium text-gray-800 break-all">
                   {serial}
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {paidDispatches.length > 0 && (
+        <div className="erp-card erp-section mt-8">
+          <h2 className="text-2xl font-bold mb-4">Ready For Delivery</h2>
+
+          <div className="space-y-3">
+            {paidDispatches.map((dispatch) => (
+              <div
+                key={dispatch.id}
+                className="border border-green-200 bg-green-50 rounded-2xl p-4"
+              >
+                <p className="font-bold">{dispatch.reference}</p>
+
+                <p className="text-sm text-gray-600">
+                  {dispatch.customer_name}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  {dispatch.contact_person}
+                </p>
               </div>
             ))}
           </div>

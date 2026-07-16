@@ -191,6 +191,8 @@ exports.createDispatch = (req, res) => {
               `Created dispatch ${reference}`,
             );
 
+            getIO().emit("dispatch-updated");
+
             return res.status(201).json({
               message: "Dispatch created successfully",
 
@@ -242,6 +244,8 @@ exports.createDispatch = (req, res) => {
                   req.user.username,
                   `Created dispatch ${reference}`,
                 );
+
+                getIO().emit("dispatch-updated");
 
                 return res.status(201).json({
                   message: "Dispatch created successfully",
@@ -303,10 +307,119 @@ exports.getPendingDispatches = (req, res) => {
 };
 
 /* =========================
+   GET PAID DISPATCHES
+========================= */
+
+exports.getPaidDispatches = (req, res) => {
+  const query = `
+    SELECT
+      dt.id,
+      dt.reference,
+      dt.customer_name,
+      dt.contact,
+      dt.contact_person,
+      dt.location,
+      dt.subtotal,
+      dt.grand_total,
+      dt.status,
+      dt.created_at,
+
+      u.username AS staff_name
+
+    FROM dispatch_transactions dt
+
+    JOIN users u
+      ON u.id = dt.staff_id
+
+    WHERE dt.status = 'PAYMENT_CONFIRMED'
+
+    ORDER BY dt.payment_confirmed_at ASC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
+
+    return res.json({
+      dispatches: results,
+    });
+  });
+};
+
+/* =========================
    GET DISPATCH DETAILS
 ========================= */
 
-exports.getDispatchById = (req, res) => {};
+exports.getDispatchById = (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    SELECT
+      dt.id,
+      dt.reference,
+      dt.customer_name,
+      dt.contact,
+      dt.contact_person,
+      dt.location,
+      dt.status,
+      dt.subtotal,
+      dt.grand_total,
+      dt.created_at
+    FROM dispatch_transactions dt
+    WHERE dt.id = ?
+  `;
+
+  db.query(query, [id], (err, dispatchRows) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
+
+    if (dispatchRows.length === 0) {
+      return res.status(404).json({
+        error: "Dispatch not found",
+      });
+    }
+
+    const dispatch = dispatchRows[0];
+
+    const itemsQuery = `
+      SELECT
+        di.id,
+        di.quantity,
+        di.unit_price,
+        di.line_total,
+
+        p.id AS product_id,
+        p.name,
+        p.track_serial
+
+      FROM dispatch_items di
+
+      JOIN products p
+        ON p.id = di.product_id
+
+      WHERE di.transaction_id = ?
+    `;
+
+    db.query(itemsQuery, [id], (itemsErr, items) => {
+      if (itemsErr) {
+        return res.status(500).json({
+          error: itemsErr.message,
+        });
+      }
+
+      return res.json({
+        dispatch,
+        items,
+      });
+    });
+  });
+};
 
 /* =========================
    CONFIRM PAYMENT
@@ -351,6 +464,8 @@ exports.confirmPayment = (req, res) => {
     return res.json({
       message: "Payment confirmed successfully",
     });
+
+    getIO().emit("dispatch-paid");
   });
 };
 /* =========================
@@ -669,10 +784,11 @@ exports.completeDispatch = (req, res) => {
 
                         connection.release();
 
-                    
                         return res.json({
                           message: "Dispatch completed successfully",
                         });
+
+                        getIO().emit("dispatch-completed");
                       });
                     });
                   })

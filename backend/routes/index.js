@@ -102,6 +102,8 @@ const {
 
   getPendingDispatches,
 
+  getPaidDispatches,
+
   getDispatchById,
 
   confirmPayment,
@@ -377,31 +379,10 @@ router.get(
 );
 
 router.get(
-  "/dispatch/:id",
+  "/dispatch/paid",
   authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  getDispatchById,
-);
-
-router.put(
-  "/dispatch/:id/confirm-payment",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  confirmPayment,
-);
-
-router.put(
-  "/dispatch/:id/remove-stock",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  completeDispatch,
-);
-
-router.get(
-  "/dispatch/pending",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  getPendingDispatches,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  getPaidDispatches,
 );
 
 router.get(
@@ -412,17 +393,17 @@ router.get(
 );
 
 router.put(
-  "/dispatch/:id/confirm-payment",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  confirmPayment,
-);
-
-router.put(
   "/dispatch/:id/remove-stock",
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   completeDispatch,
+);
+
+router.put(
+  "/dispatch/:id/confirm-payment",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  confirmPayment,
 );
 
 module.exports = router;
