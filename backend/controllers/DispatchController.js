@@ -461,11 +461,11 @@ exports.confirmPayment = (req, res) => {
       `Confirmed payment for dispatch #${id}`,
     );
 
+    getIO().emit("dispatch-paid");
+
     return res.json({
       message: "Payment confirmed successfully",
     });
-
-    getIO().emit("dispatch-paid");
   });
 };
 /* =========================
@@ -784,11 +784,11 @@ exports.completeDispatch = (req, res) => {
 
                         connection.release();
 
+                        getIO().emit("dispatch-completed");
+
                         return res.json({
                           message: "Dispatch completed successfully",
                         });
-
-                        getIO().emit("dispatch-completed");
                       });
                     });
                   })

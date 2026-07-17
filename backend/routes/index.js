@@ -392,10 +392,10 @@ router.get(
   getDispatchById,
 );
 
-router.put(
-  "/dispatch/:id/remove-stock",
+router.post(
+  "/dispatch/:id/complete",
   authMiddleware,
-  roleMiddleware(["ADMIN"]),
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
   completeDispatch,
 );
 

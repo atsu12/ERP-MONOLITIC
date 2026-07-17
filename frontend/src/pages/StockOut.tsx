@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 
 import { socket } from "../socket/socket";
 
+import DispatchDetailsModal from "../components/DispatchDetailsModal";
+
 import { useProductStore } from "../store/productStore";
 
 import { PackageMinus, Boxes, ScanLine, Hash } from "lucide-react";
@@ -18,6 +20,10 @@ function StockOut() {
   const [products, setProducts] = useState<any[]>([]);
 
   const [paidDispatches, setPaidDispatches] = useState<any[]>([]);
+
+  const [selectedDispatch, setSelectedDispatch] = useState<any>(null);
+
+  const [dispatchItems, setDispatchItems] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -85,25 +91,85 @@ function StockOut() {
     }
   };
 
-  useEffect(() => {
-  socket.connect();
+  const openDispatch = async (dispatchId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/dispatch/${dispatchId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-  fetchProducts();
+      const data = await response.json();
 
-  fetchPaidDispatches();
+      if (!response.ok) {
+        toast.error(data.error || "Failed to load dispatch");
 
-  socket.on("dispatch-paid", fetchPaidDispatches);
+        return;
+      }
 
-  socket.on("dispatch-completed", fetchPaidDispatches);
+      setSelectedDispatch(data.dispatch);
 
-  inputRef.current?.focus();
-
-  return () => {
-    socket.off("dispatch-paid", fetchPaidDispatches);
-
-    socket.off("dispatch-completed", fetchPaidDispatches);
+      setDispatchItems(data.items || []);
+    } catch {
+      toast.error("Failed to load dispatch");
+    }
   };
-}, []);
+
+  const completeDispatch = async () => {
+    if (!selectedDispatch) return;
+
+    try {
+      const response = await fetch(
+        `${API_URL}/dispatch/${selectedDispatch.id}/complete`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to complete dispatch");
+
+        return;
+      }
+
+      toast.success("Dispatch completed");
+
+      setSelectedDispatch(null);
+
+      setDispatchItems([]);
+
+      fetchProducts();
+
+      fetchPaidDispatches();
+    } catch {
+      toast.error("Failed to complete dispatch");
+    }
+  };
+
+  useEffect(() => {
+    socket.connect();
+
+    fetchProducts();
+
+    fetchPaidDispatches();
+
+    socket.on("dispatch-paid", fetchPaidDispatches);
+
+    socket.on("dispatch-completed", fetchPaidDispatches);
+
+    inputRef.current?.focus();
+
+    return () => {
+      socket.off("dispatch-paid", fetchPaidDispatches);
+
+      socket.off("dispatch-completed", fetchPaidDispatches);
+    };
+  }, []);
   /* =========================
      PRODUCT SELECT
   ========================= */
@@ -342,6 +408,42 @@ function StockOut() {
         </p>
       </div>
 
+      {paidDispatches.length > 0 && (
+        <div className="erp-card erp-section mt-8">
+          <h2 className="text-2xl font-bold mb-4">
+            Pending Deliveries ({paidDispatches.length})
+          </h2>
+
+          <div className="space-y-3">
+            {paidDispatches.map((dispatch) => (
+              <div
+                key={dispatch.id}
+                onClick={() => openDispatch(dispatch.id)}
+                className="
+    border border-green-200
+    bg-green-50
+    rounded-2xl
+    p-4
+    cursor-pointer
+    hover:bg-green-100
+    transition
+  "
+              >
+                <p className="font-bold">{dispatch.reference}</p>
+
+                <p className="text-sm text-gray-600">
+                  {dispatch.customer_name}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  {dispatch.contact_person}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* PANEL */}
 
       <div className="erp-card erp-section mb-8">
@@ -391,7 +493,11 @@ function StockOut() {
               <input
                 type="text"
                 value={customerContact}
-                onChange={(e) => setCustomerContact(e.target.value)}
+                onChange={(e) => {
+                  if (/^\d*$/.test(e.target.value)) {
+                    setCustomerContact(e.target.value);
+                  }
+                }}
                 className="erp-input"
                 placeholder="Phone number"
               />
@@ -554,29 +660,16 @@ function StockOut() {
         </div>
       )}
 
-      {paidDispatches.length > 0 && (
-        <div className="erp-card erp-section mt-8">
-          <h2 className="text-2xl font-bold mb-4">Ready For Delivery</h2>
-
-          <div className="space-y-3">
-            {paidDispatches.map((dispatch) => (
-              <div
-                key={dispatch.id}
-                className="border border-green-200 bg-green-50 rounded-2xl p-4"
-              >
-                <p className="font-bold">{dispatch.reference}</p>
-
-                <p className="text-sm text-gray-600">
-                  {dispatch.customer_name}
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  {dispatch.contact_person}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+      {selectedDispatch && (
+        <DispatchDetailsModal
+          dispatch={selectedDispatch}
+          items={dispatchItems}
+          onClose={() => {
+            setSelectedDispatch(null);
+            setDispatchItems([]);
+          }}
+          onComplete={completeDispatch}
+        />
       )}
     </div>
   );
