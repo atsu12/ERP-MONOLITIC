@@ -114,8 +114,8 @@ Warehouses:
 - Cannot delete warehouses with inventory.
 - Cannot delete the last warehouse.
 
----
-
 Version:
 
 1.0.0
+
+---

@@ -197,6 +197,12 @@ function StockOut() {
       return;
     }
 
+    if (!customerContact.trim()) {
+      toast.error("Contact is required");
+
+      return;
+    }
+
     if (!selectedProduct) {
       toast.error("Select a product");
 
@@ -222,12 +228,12 @@ function StockOut() {
         items: selectedProduct.track_serial
           ? []
           : [
-              {
-                product_id: selectedProduct.id,
+            {
+              product_id: selectedProduct.id,
 
-                quantity: Number(quantity),
-              },
-            ],
+              quantity: Number(quantity),
+            },
+          ],
 
         serials: [],
       };
@@ -420,14 +426,14 @@ function StockOut() {
                 key={dispatch.id}
                 onClick={() => openDispatch(dispatch.id)}
                 className="
-    border border-green-200
-    bg-green-50
-    rounded-2xl
-    p-4
-    cursor-pointer
-    hover:bg-green-100
-    transition
-  "
+                  border border-green-200
+                  bg-green-50
+                  rounded-2xl
+                  p-4
+                  cursor-pointer
+                  hover:bg-green-100
+                  transition
+                  "
               >
                 <p className="font-bold">{dispatch.reference}</p>
 
@@ -438,8 +444,36 @@ function StockOut() {
                 <p className="text-sm text-gray-500">
                   {dispatch.contact_person}
                 </p>
+
+                <div className="mt-3 space-y-1 text-sm text-gray-600">
+                  <p>
+                    <span className="font-semibold">Contact:</span>{" "}
+                    {dispatch.contact || "-"}
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">Location:</span>{" "}
+                    {dispatch.location || "-"}
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">Total:</span>{" "}
+                    {dispatch.currency} {dispatch.grand_total}
+                  </p>
+
+                  <p>
+                    <span className="font-semibold">Date:</span>{" "}
+                    {new Date(dispatch.created_at).toLocaleDateString("en-GB")}
+                  </p>
+                </div>
+
+
+
               </div>
             ))}
+
+
+
           </div>
         </div>
       )}

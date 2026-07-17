@@ -1,6 +1,9 @@
+
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../services/api";
+
+import { socket } from "../socket/socket";
 
 import {
   PieChart,
@@ -47,26 +50,34 @@ function Dashboard() {
   ========================= */
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-
-        await fetchProducts();
-
-        const dashboard = await apiRequest("/reports/dashboard", {
-          auth: true,
-        });
-
-        setReport(dashboard);
-      } catch (error) {
-        setLoading(false);
-      } finally {
-        setLoading(false);
-      }
-    };
+    socket.connect();
 
     loadDashboard();
+
+    socket.on("dispatch-completed", loadDashboard);
+
+    return () => {
+      socket.off("dispatch-completed", loadDashboard);
+    };
   }, []);
+
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+
+      await fetchProducts();
+
+      const dashboard = await apiRequest("/reports/dashboard", {
+        auth: true,
+      });
+
+      setReport(dashboard);
+    } catch (error) {
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* =========================
      ANALYTICS
@@ -115,14 +126,14 @@ function Dashboard() {
     brandStats.length <= maxBrands
       ? brandStats
       : [
-          ...brandStats.slice(0, maxBrands),
-          {
-            name: "Others",
-            value: brandStats
-              .slice(maxBrands)
-              .reduce((sum: number, item: any) => sum + item.value, 0),
-          },
-        ];
+        ...brandStats.slice(0, maxBrands),
+        {
+          name: "Others",
+          value: brandStats
+            .slice(maxBrands)
+            .reduce((sum: number, item: any) => sum + item.value, 0),
+        },
+      ];
 
   const recentMovements = report?.recentMovements || [];
 

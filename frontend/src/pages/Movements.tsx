@@ -2,6 +2,8 @@ import { useDebounce } from "../hooks/useDebounce";
 
 import { useEffect, useMemo, useState } from "react";
 
+import { socket } from "../socket/socket";
+
 import { exportMovementsToExcel } from "../utils/exportMovements";
 
 import { ArrowLeftRight } from "lucide-react";
@@ -35,7 +37,15 @@ function Movements() {
   const debouncedSearch = useDebounce(search);
 
   useEffect(() => {
+    socket.connect();
+
     fetchMovements();
+
+    socket.on("dispatch-completed", fetchMovements);
+
+    return () => {
+      socket.off("dispatch-completed", fetchMovements);
+    };
   }, []);
 
   /* =========================
@@ -166,11 +176,10 @@ function Movements() {
 
             exportMovementsToExcel(movementsToExport);
           }}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-            selectedMovements.length === 0
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${selectedMovements.length === 0
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-green-600 text-white hover:bg-green-700"
-          }`}
+            }`}
         >
           Export
         </button>
@@ -297,8 +306,7 @@ function Movements() {
 
                 <td>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      movement.type === "RECEIVED"
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${movement.type === "RECEIVED"
                         ? "bg-green-100 text-green-700"
                         : movement.type === "STOCK_OUT"
                           ? "bg-red-100 text-red-700"
@@ -313,7 +321,7 @@ function Movements() {
                                   : movement.type === "ADJUSTMENT_OUT"
                                     ? "bg-rose-100 text-rose-700"
                                     : "bg-gray-100 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {movementLabels[movement.type] || movement.type}
                   </span>

@@ -1,4 +1,3 @@
-cat  database/backups/inventory_app_20260716_080756.sql
 -- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
 --
 -- Host: localhost    Database: inventory_app
@@ -476,5 +475,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-16  8:08:02
-frank@home-desk:~$ 
+-- Dump completed on 2026-07-16  8:08:02  
