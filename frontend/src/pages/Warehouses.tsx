@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
+import { socket } from "../socket/socket";
+
 import { useWarehouseStore } from "../store/warehouseStore";
 
 import PageHeader from "../components/PageHeader";
@@ -30,8 +32,20 @@ function Warehouses() {
   );
 
   useEffect(() => {
+  socket.connect();
+
+  const handleProductUpdate = () => {
     fetchWarehouses();
-  }, [fetchWarehouses]);
+  };
+
+  fetchWarehouses();
+
+  socket.on("product-updated", handleProductUpdate);
+
+  return () => {
+    socket.off("product-updated", handleProductUpdate);
+  };
+}, [fetchWarehouses]);
 
   const handleCreateWarehouse = async () => {
     let success = false;

@@ -58,59 +58,26 @@ exports.scanItem = (req, res) => {
           });
         }
 
-        // Update status
-        connection.query(
-          'UPDATE product_items SET status = "OUT" WHERE id = ?',
-          [item.id],
-          (err) => {
-            if (err) {
-              return connection.rollback(() => {
-                connection.release();
-                res.status(500).json({ error: err.message });
-              });
-            }
+        // Nothing leaves inventory during scanning.
+        // We only validate that the serial is available.
 
-            // Log movement
-            connection.query(
-              'INSERT INTO stock_movements (product_id, type, quantity) VALUES (?, "STOCK_OUT", 1)',
-              [item.product_id],
-              (err) => {
-                if (err) {
-                  return connection.rollback(() => {
-                    connection.release();
-                    res.status(500).json({ error: err.message });
-                  });
-                }
+        connection.commit((err) => {
+          if (err) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ error: err.message });
+            });
+          }
 
-                // Commit transaction
-                connection.commit((err) => {
-                  if (err) {
-                    return connection.rollback(() => {
-                      connection.release();
-                      res.status(500).json({ error: err.message });
-                    });
-                  }
+          connection.release();
 
-                  connection.release();
-
-                  getIO().emit("product-updated");
-
-                  logActivity(
-                    req.user.id,
-                    req.user.username,
-                    `Scanned out: ${item.name} (${serial_number})`,
-                  );
-
-                  res.json({
-                    message: "Item scanned successfully",
-                    product: item.name,
-                    serial_number: serial_number,
-                  });
-                });
-              },
-            );
-          },
-        );
+          res.json({
+            message: "Item scanned successfully",
+            product: item.name,
+            product_id: item.product_id,
+            serial_number,
+          });
+        });
       });
     });
   });

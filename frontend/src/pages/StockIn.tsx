@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 
+import { socket } from "../socket/socket";
+
 import { useProductStore } from "../store/productStore";
 
 import { PackagePlus, Boxes, ScanLine, Hash } from "lucide-react";
@@ -50,11 +52,21 @@ function StockIn() {
   };
 
   useEffect(() => {
+    socket.connect();
+
+    const handleProductUpdate = () => {
+      fetchProducts();
+    };
+
     fetchProducts();
-
     inputRef.current?.focus();
-  }, []);
 
+    socket.on("product-updated", handleProductUpdate);
+
+    return () => {
+      socket.off("product-updated", handleProductUpdate);
+    };
+  }, []);
   /* =========================
      PRODUCT SELECT
   ========================= */
@@ -173,6 +185,7 @@ function StockIn() {
       toast.success(data.message || "Stock added successfully");
 
       await refreshProducts();
+      await fetchProducts();
 
       setQuantity("");
 

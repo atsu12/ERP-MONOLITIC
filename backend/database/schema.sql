@@ -1,513 +1,358 @@
-/*
-===============================================================================
-
-Business-MGT ERP
-Official Database Schema
-
-Version    : 1.0.0
-Database   : inventory_app
-Engine     : MySQL 8+
-Charset    : utf8mb4
-Collation  : utf8mb4_0900_ai_ci
-
-===============================================================================
-
-DATABASE PHILOSOPHY
-
-Products
-    → Product definitions only.
-
-Product Items
-    → Serialized inventory.
-
-Warehouse Inventory
-    → Warehouse allocation.
-
-Stock Movements
-    → Inventory history.
-
-Activity Logs
-    → User audit trail.
-
-Reports
-    → Read-only.
-
-===============================================================================
-*/
-
-DROP DATABASE IF EXISTS inventory_app;
-
-CREATE DATABASE IF NOT EXISTS inventory_app
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_0900_ai_ci;
-
-USE inventory_app;
-
-/* =============================================================================
-   TABLE: users
-
-   PURPOSE
-   -------
-   Stores ERP users and role-based access control information.
-
-   MODULE OWNER
-   ------------
-   Authentication
-
-   USED BY
-   -------
-   Login
-   Users
-   Stock In
-   Stock Out
-   Audit Log
-
-============================================================================= */
-
-CREATE TABLE users (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    username VARCHAR(100) NOT NULL,
-
-    email VARCHAR(255) NOT NULL,
-
-    password_hash VARCHAR(255) NOT NULL,
-
-    role ENUM(
-        'ADMIN',
-        'MANAGER',
-        'STAFF'
-    ) NOT NULL DEFAULT 'STAFF',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    UNIQUE KEY uk_users_username (username),
-
-    UNIQUE KEY uk_users_email (email)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-/* =============================================================================
-   TABLE: settings
-
-   PURPOSE
-   -------
-   Stores global ERP configuration.
-
-   MODULE OWNER
-   ------------
-   System Settings
-
-   USED BY
-   -------
-   Dashboard
-   Reports
-   Inventory Valuation
-
-============================================================================= */
-
-CREATE TABLE settings (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    display_currency VARCHAR(10) NOT NULL DEFAULT 'GHS',
-
-    currency_symbol VARCHAR(10) NOT NULL DEFAULT 'GH₵',
-
-    usd_exchange_rate DECIMAL(10,2) NOT NULL DEFAULT 15.50,
-
-    company_multiplier DECIMAL(10,2) NOT NULL DEFAULT 1.25,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-/* =============================================================================
-   TABLE: warehouses
-
-   PURPOSE
-   -------
-   Stores warehouse definitions.
-
-   MODULE OWNER
-   ------------
-   Warehouse Management
-
-   USED BY
-   -------
-   Warehouses
-   Warehouse Inventory
-   Stock In
-   Stock Out
-   Reports
-
-============================================================================= */
-
-CREATE TABLE warehouses (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    name VARCHAR(255) NOT NULL,
-
-    code VARCHAR(50) NOT NULL,
-
-    location VARCHAR(255) DEFAULT NULL,
-
-    status ENUM(
-        'ACTIVE',
-        'INACTIVE'
-    ) NOT NULL DEFAULT 'ACTIVE',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    UNIQUE KEY uk_warehouses_code (code),
-
-    UNIQUE KEY uk_warehouses_name (name),
-
-    INDEX idx_warehouses_status (status)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-/* =============================================================================
-   TABLE: products
-
-   PURPOSE
-   -------
-   Stores product definitions only.
-
-   DOES NOT STORE
-   --------------
-   Warehouse quantities.
-   Serialized inventory.
-
-   MODULE OWNER
-   ------------
-   Products
-
-   USED BY
-   -------
-   Products
-   Product Details
-   Stock In
-   Stock Out
-   Warehouse Inventory
-   Reports
-
-============================================================================= */
-
-CREATE TABLE products (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    name VARCHAR(255) NOT NULL,
-
-    brand VARCHAR(100) DEFAULT NULL,
-
-    category VARCHAR(100) DEFAULT NULL,
-
-    price DECIMAL(10,2) DEFAULT NULL,
-
-    track_serial BOOLEAN NOT NULL DEFAULT FALSE,
-
-    quantity INT NOT NULL DEFAULT 0,
-
-    stock_unit VARCHAR(50) NOT NULL DEFAULT 'Unit',
-
-    package_size INT NOT NULL DEFAULT 1,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    INDEX idx_products_name (name),
-
-    INDEX idx_products_category (category),
-
-    INDEX idx_products_brand (brand),
-
-    INDEX idx_products_track_serial (track_serial),
-
-    CONSTRAINT chk_products_price
-        CHECK (price IS NULL OR price >= 0),
-
-    CONSTRAINT chk_products_quantity
-        CHECK (quantity >= 0),
-
-    CONSTRAINT chk_products_package_size
-        CHECK (package_size > 0)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-/* =============================================================================
-   TABLE: product_items
-
-   PURPOSE
-   -------
-   Stores individual serialized inventory items.
-
-   MODULE OWNER
-   ------------
-   Serialized Inventory
-
-   USED BY
-   -------
-   Products
-   Product Details
-   Stock In
-   Stock Out
-   Warehouse Inventory
-   Reports
-
-============================================================================= */
-
-CREATE TABLE product_items (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    product_id INT NOT NULL,
-
-    serial_number VARCHAR(255) NOT NULL,
-
-    status ENUM(
-        'IN_STOCK',
-        'OUT',
-        'DAMAGED'
-    ) NOT NULL DEFAULT 'IN_STOCK',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    UNIQUE KEY uk_product_items_serial_number (serial_number),
-
-    INDEX idx_product_items_product (product_id),
-
-    INDEX idx_product_items_status (status),
-
-    CONSTRAINT fk_product_items_product
-        FOREIGN KEY (product_id)
-        REFERENCES products(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-/* =============================================================================
-   TABLE: warehouse_inventory
-
-   PURPOSE
-   -------
-   Stores the quantity of each product allocated to each warehouse.
-
-   This is the ONLY table that owns warehouse inventory.
-
-   MODULE OWNER
-   ------------
-   Warehouse Inventory
-
-   USED BY
-   -------
-   Warehouse Inventory
-   Stock In
-   Stock Out
-   Reports
-   Dashboard
-
-============================================================================= */
-
-CREATE TABLE warehouse_inventory (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    warehouse_id INT NOT NULL,
-
-    product_id INT NOT NULL,
-
-    quantity INT NOT NULL DEFAULT 0,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    UNIQUE KEY uk_warehouse_inventory
-        (warehouse_id, product_id),
-
-    INDEX idx_warehouse_inventory_product (product_id),
-
-    CONSTRAINT fk_warehouse_inventory_warehouse
-        FOREIGN KEY (warehouse_id)
-        REFERENCES warehouses(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE,
-
-    CONSTRAINT fk_warehouse_inventory_product
-        FOREIGN KEY (product_id)
-        REFERENCES products(id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE,
-
-    CONSTRAINT chk_warehouse_inventory_quantity
-        CHECK (quantity >= 0)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-
-/* =============================================================================
-   TABLE: stock_movements
-
-   PURPOSE
-   -------
-   Records every inventory movement performed in the ERP.
-
-   This table is an immutable business history.
-
-   Inventory quantities are updated elsewhere.
-   This table NEVER owns inventory.
-
-   MODULE OWNER
-   ------------
-   Inventory Movements
-
-   USED BY
-   -------
-   Stock In
-   Stock Out
-   Product Details
-   Reports
-   Dashboard
-
-============================================================================= */
-
-CREATE TABLE stock_movements (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    product_id INT NOT NULL,
-
-    user_id INT DEFAULT NULL,
-
-    serial_number VARCHAR(255) DEFAULT NULL,
-
-    type ENUM(
-        'RECEIVED',
-        'STOCK_OUT',
-        'RETURNED',
-        'TRANSFERRED',
-        'ADJUSTMENT_IN',
-        'ADJUSTMENT_OUT',
-        'DAMAGED'
-    ) NOT NULL,
-
-    quantity INT NOT NULL DEFAULT 1,
-
-    reference VARCHAR(255) DEFAULT NULL,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    INDEX idx_stock_movements_product (product_id),
-
-    INDEX idx_stock_movements_user (user_id),
-
-    INDEX idx_stock_movements_type (type),
-
-    INDEX idx_stock_movements_created (created_at),
-
-    CONSTRAINT chk_stock_movements_quantity
-        CHECK (quantity > 0)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
-
-
-
-/* =============================================================================
-   TABLE: activity_logs
-
-   PURPOSE
-   -------
-   Records user activity throughout the ERP.
-
-   This table is an immutable audit trail.
-
-   MODULE OWNER
-   ------------
-   Audit Log
-
-   USED BY
-   -------
-   Authentication
-   Users
-   Products
-   Warehouses
-   Reports
-   Audit Log
-
-============================================================================= */
-
-CREATE TABLE activity_logs (
-
-    id INT NOT NULL AUTO_INCREMENT,
-
-    user_id INT DEFAULT NULL,
-
-    username VARCHAR(100) DEFAULT NULL,
-
-    action TEXT NOT NULL,
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-
-    INDEX idx_activity_logs_user (user_id),
-
-    INDEX idx_activity_logs_created (created_at)
-
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_0900_ai_ci;
+-- MySQL dump 10.13  Distrib 8.0.46, for Linux (x86_64)
+--
+-- Host: localhost    Database: inventory_app
+-- ------------------------------------------------------
+-- Server version	8.0.46-0ubuntu0.24.04.2
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `activity_logs`
+--
+
+DROP TABLE IF EXISTS `activity_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `activity_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `username` varchar(100) DEFAULT NULL,
+  `action` text NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=148 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dispatch_items`
+--
+
+DROP TABLE IF EXISTS `dispatch_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dispatch_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `transaction_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` int NOT NULL,
+  `unit_price` decimal(12,2) NOT NULL,
+  `line_total` decimal(12,2) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_dispatch_item_transaction` (`transaction_id`),
+  KEY `fk_dispatch_item_product` (`product_id`),
+  CONSTRAINT `fk_dispatch_item_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
+  CONSTRAINT `fk_dispatch_item_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `dispatch_transactions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dispatch_serials`
+--
+
+DROP TABLE IF EXISTS `dispatch_serials`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dispatch_serials` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `transaction_id` int NOT NULL,
+  `product_item_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_dispatch_serial_transaction` (`transaction_id`),
+  KEY `fk_dispatch_serial_product_item` (`product_item_id`),
+  CONSTRAINT `fk_dispatch_serial_product_item` FOREIGN KEY (`product_item_id`) REFERENCES `product_items` (`id`),
+  CONSTRAINT `fk_dispatch_serial_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `dispatch_transactions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `dispatch_transactions`
+--
+
+DROP TABLE IF EXISTS `dispatch_transactions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dispatch_transactions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `reference` varchar(50) NOT NULL,
+  `customer_name` varchar(255) NOT NULL,
+  `contact` varchar(100) DEFAULT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('PENDING_PAYMENT','PAYMENT_CONFIRMED','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PENDING_PAYMENT',
+  `subtotal` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `discount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `grand_total` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `currency` varchar(10) NOT NULL DEFAULT 'GHS',
+  `staff_id` int NOT NULL,
+  `cashier_id` int DEFAULT NULL,
+  `payment_confirmed_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `reference` (`reference`),
+  KEY `fk_dispatch_staff` (`staff_id`),
+  KEY `fk_dispatch_cashier` (`cashier_id`),
+  CONSTRAINT `fk_dispatch_cashier` FOREIGN KEY (`cashier_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `fk_dispatch_staff` FOREIGN KEY (`staff_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `inventory_locations`
+--
+
+DROP TABLE IF EXISTS `inventory_locations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `inventory_locations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `location` enum('WAREHOUSE','SHOWROOM') NOT NULL,
+  `quantity` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_product_location` (`product_id`,`location`),
+  CONSTRAINT `inventory_locations_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `product_items`
+--
+
+DROP TABLE IF EXISTS `product_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `product_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `serial_number` varchar(255) NOT NULL,
+  `status` enum('IN_STOCK','OUT','DAMAGED') DEFAULT 'IN_STOCK',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `location` enum('WAREHOUSE','SHOWROOM') NOT NULL DEFAULT 'WAREHOUSE',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `serial_number` (`serial_number`),
+  UNIQUE KEY `unique_serial` (`serial_number`),
+  KEY `idx_product_items_product_id` (`product_id`),
+  KEY `idx_product_items_status` (`status`),
+  CONSTRAINT `product_items_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_product_items_before_insert` BEFORE INSERT ON `product_items` FOR EACH ROW BEGIN
+  DECLARE is_serial BOOLEAN;
+
+  SELECT track_serial INTO is_serial
+  FROM products WHERE id = NEW.product_id;
+
+  IF is_serial = FALSE THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Cannot add serial items to bulk product';
+  END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `products`
+--
+
+DROP TABLE IF EXISTS `products`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `products` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `brand` varchar(100) DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT NULL,
+  `track_serial` tinyint(1) NOT NULL DEFAULT '0',
+  `quantity` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `category` varchar(100) DEFAULT NULL,
+  `stock_unit` varchar(50) DEFAULT 'Unit',
+  `package_size` int NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_products_name` (`name`),
+  CONSTRAINT `products_chk_1` CHECK ((`price` >= 0)),
+  CONSTRAINT `products_chk_2` CHECK ((`quantity` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_products_before_insert` BEFORE INSERT ON `products` FOR EACH ROW BEGIN
+  IF NEW.track_serial = TRUE AND NEW.quantity != 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Serialized products must have quantity = 0';
+  END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_products_before_update` BEFORE UPDATE ON `products` FOR EACH ROW BEGIN
+  IF NEW.track_serial = TRUE AND NEW.quantity != 0 THEN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Serialized products must have quantity = 0';
+  END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `display_currency` varchar(10) NOT NULL DEFAULT 'GHS',
+  `currency_symbol` varchar(10) NOT NULL DEFAULT 'GH₵',
+  `usd_exchange_rate` decimal(10,2) NOT NULL DEFAULT '15.50',
+  `company_multiplier` decimal(10,2) NOT NULL DEFAULT '1.25',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `stock_movements`
+--
+
+DROP TABLE IF EXISTS `stock_movements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `stock_movements` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `serial_number` varchar(255) DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `type` enum('RECEIVED','STOCK_OUT','RETURNED','DAMAGED','TRANSFERRED','ADJUSTMENT_IN','ADJUSTMENT_OUT') NOT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `reference` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(100) NOT NULL,
+  `telephone` varchar(20) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role` enum('ADMIN','MANAGER','STAFF') DEFAULT 'STAFF',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `warehouse_inventory`
+--
+
+DROP TABLE IF EXISTS `warehouse_inventory`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `warehouse_inventory` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `warehouse_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_inventory` (`warehouse_id`,`product_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `warehouses`
+--
+
+DROP TABLE IF EXISTS `warehouses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `warehouses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `status` enum('ACTIVE','INACTIVE') DEFAULT 'ACTIVE',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping routines for database 'inventory_app'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-07-22 18:35:11

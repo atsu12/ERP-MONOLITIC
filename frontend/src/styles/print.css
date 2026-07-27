@@ -1,0 +1,93 @@
+/* =========================
+   PRINT STYLES
+========================= */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+  }
+
+  /* Hide controls */
+  button,
+  nav,
+  aside,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  /* Remove app styling */
+  .erp-card,
+  .erp-section {
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent awkward page breaks */
+  table,
+  .dispatch-item,
+  .dispatch-summary {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  /* Make tables print cleanly */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #000;
+    padding: 6px;
+    text-align: left;
+  }
+
+  th {
+    background: #f2f2f2 !important;
+  }
+
+  /* Totals section */
+  .print-total {
+    margin-top: 20px;
+    border-top: 2px solid #000;
+    padding-top: 10px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  /* Signature area */
+  .signature-section {
+    margin-top: 50px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .signature-box {
+    width: 200px;
+    border-top: 1px solid #000;
+    padding-top: 6px;
+    text-align: center;
+  }
+}

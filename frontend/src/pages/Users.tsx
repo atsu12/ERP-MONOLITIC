@@ -19,7 +19,7 @@ interface User {
 
   username: string;
 
-  email: string;
+  telephone: string;
 
   role: string;
 
@@ -50,7 +50,7 @@ function UsersPage() {
   const [form, setForm] = useState({
     username: "",
 
-    email: "",
+    telephone: "",
 
     password: "",
 
@@ -104,7 +104,7 @@ function UsersPage() {
       setForm({
         username: "",
 
-        email: "",
+        telephone: "",
 
         password: "",
 
@@ -135,7 +135,7 @@ function UsersPage() {
         body: JSON.stringify({
           username: form.username,
 
-          email: form.email,
+          telephone: form.telephone,
 
           role: form.role,
         }),
@@ -148,7 +148,7 @@ function UsersPage() {
       setForm({
         username: "",
 
-        email: "",
+        telephone: "",
 
         password: "",
 
@@ -239,13 +239,13 @@ function UsersPage() {
           />
 
           <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
+            type="text"
+            placeholder="Telephone Number"
+            value={form.telephone}
             onChange={(e) =>
               setForm({
                 ...form,
-                email: e.target.value,
+                telephone: e.target.value.replace(/\D/g, ""),
               })
             }
             className="erp-input"
@@ -296,7 +296,7 @@ function UsersPage() {
 
                 setForm({
                   username: "",
-                  email: "",
+                  telephone: "",
                   password: "",
                   role: "STAFF",
                 });
@@ -332,7 +332,7 @@ function UsersPage() {
               <tr>
                 <th>User</th>
 
-                <th>Email</th>
+                <th>Telephone</th>
 
                 <th>Role</th>
 
@@ -360,7 +360,7 @@ function UsersPage() {
                     {user.username}
                   </td>
 
-                  <td>{user.email}</td>
+                  <td>{user.telephone}</td>
 
                   <td>
                     <span
@@ -390,7 +390,7 @@ function UsersPage() {
                             setForm({
                               username: user.username,
 
-                              email: user.email,
+                              telephone: user.telephone,
 
                               password: "",
 

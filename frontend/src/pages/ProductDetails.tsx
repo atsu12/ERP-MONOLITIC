@@ -36,10 +36,16 @@ function ProductDetails() {
       fetchSettings();
     };
 
+    const handleProductUpdate = () => {
+      loadData();
+    };
+
     socket.on("settings-updated", handleSettingsUpdate);
+    socket.on("product-updated", handleProductUpdate);
 
     return () => {
       socket.off("settings-updated", handleSettingsUpdate);
+      socket.off("product-updated", handleProductUpdate);
     };
   }, []);
 

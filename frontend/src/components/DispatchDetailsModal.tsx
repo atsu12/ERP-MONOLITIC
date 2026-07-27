@@ -5,6 +5,7 @@ type Props = {
   items: any[];
   onClose: () => void;
   onComplete: () => void;
+  showCompleteButton?: boolean;
 };
 
 function DispatchDetailsModal({
@@ -12,7 +13,35 @@ function DispatchDetailsModal({
   items,
   onClose,
   onComplete,
+  showCompleteButton = true,
 }: Props) {
+  const handlePrint = async () => {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/dispatch/${dispatch.id}/print`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!response.ok) {
+      alert("Unable to generate dispatch.");
+      return;
+    }
+
+    const html = await response.text();
+
+    const printWindow = window.open("", "_blank");
+
+    if (!printWindow) return;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
   return (
     <Modal title={dispatch.reference} onClose={onClose}>
       <div className="space-y-6">
@@ -20,52 +49,35 @@ function DispatchDetailsModal({
           <div>
             <p className="text-sm text-gray-500">Customer</p>
 
-            <p className="font-semibold">
-              {dispatch.customer_name}
-            </p>
+            <p className="font-semibold">{dispatch.customer_name}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">
-              Contact Person
-            </p>
+            <p className="text-sm text-gray-500">Contact Person</p>
 
-            <p className="font-semibold">
-              {dispatch.contact_person || "-"}
-            </p>
+            <p className="font-semibold">{dispatch.contact_person || "-"}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Contact</p>
 
-            <p className="font-semibold">
-              {dispatch.contact || "-"}
-            </p>
+            <p className="font-semibold">{dispatch.contact || "-"}</p>
           </div>
 
           <div>
             <p className="text-sm text-gray-500">Location</p>
 
-            <p className="font-semibold">
-              {dispatch.location || "-"}
-            </p>
+            <p className="font-semibold">{dispatch.location || "-"}</p>
           </div>
         </div>
 
         <div>
-          <h3 className="text-lg font-bold mb-3">
-            Products
-          </h3>
+          <h3 className="text-lg font-bold mb-3">Products</h3>
 
           <div className="space-y-3">
             {items.map((item) => (
-              <div
-                key={item.id}
-                className="border rounded-2xl p-4"
-              >
-                <p className="font-semibold">
-                  {item.name}
-                </p>
+              <div key={item.id} className="border rounded-2xl p-4">
+                <p className="font-semibold">{item.name}</p>
 
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
                   <p>
@@ -93,10 +105,7 @@ function DispatchDetailsModal({
             <span className="text-gray-500">Total Items</span>
 
             <span className="font-semibold">
-              {items.reduce(
-                (sum, item) => sum + Number(item.quantity),
-                0
-              )}
+              {items.reduce((sum, item) => sum + Number(item.quantity), 0)}
             </span>
           </div>
 
@@ -110,18 +119,24 @@ function DispatchDetailsModal({
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <button
-            onClick={onClose}
-            className="px-5 py-3 rounded-xl border"
-          >
+          <button onClick={onClose} className="px-5 py-3 rounded-xl border">
             Close
           </button>
 
-          <button
-            onClick={onComplete}
-            className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-medium"
+          {showCompleteButton && (
+            <button
+              onClick={onComplete}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-medium"
+            >
+              Complete Dispatch
+            </button>
+          )}
+
+                    <button
+            onClick={handlePrint}
+            className="px-5 py-3 rounded-xl border border-gray-300"
           >
-            Complete Dispatch
+            Print Dispatch
           </button>
         </div>
       </div>

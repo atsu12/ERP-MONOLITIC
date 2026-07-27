@@ -80,10 +80,16 @@ function Products() {
       fetchSettings();
     };
 
+    const handleProductUpdate = () => {
+      fetchProducts();
+    };
+
     socket.on("settings-updated", handleSettingsUpdate);
+    socket.on("product-updated", handleProductUpdate);
 
     return () => {
       socket.off("settings-updated", handleSettingsUpdate);
+      socket.off("product-updated", handleProductUpdate);
     };
   }, []);
 

@@ -2,18 +2,18 @@ import { useEffect, useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 
+import DispatchSummary from "../components/DispatchSummary";
+
 import { socket } from "../socket/socket";
 
 import DispatchDetailsModal from "../components/DispatchDetailsModal";
 
-import { useProductStore } from "../store/productStore";
-
-import { PackageMinus, Boxes, ScanLine, Hash } from "lucide-react";
+import { PackageMinus, ScanLine, Hash } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function StockOut() {
-  const { fetchProducts: refreshProducts } = useProductStore();
+  
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,6 +25,10 @@ function StockOut() {
 
   const [dispatchItems, setDispatchItems] = useState<any[]>([]);
 
+  const [cartItems, setCartItems] = useState<any[]>([]);
+
+  const [scannedSerials, setScannedSerials] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -32,8 +36,6 @@ function StockOut() {
   const [quantity, setQuantity] = useState("");
 
   const [serialInput, setSerialInput] = useState("");
-
-  const [recentScans, setRecentScans] = useState<string[]>([]);
 
   const [customerName, setCustomerName] = useState("");
 
@@ -183,7 +185,107 @@ function StockOut() {
 
     setSerialInput("");
 
+    setScannedSerials([]);
+
     inputRef.current?.focus();
+  };
+
+  const addToCart = () => {
+    if (!selectedProduct) {
+      toast.error("Select a product");
+      return;
+    }
+
+    if (!quantity || Number(quantity) <= 0) {
+      toast.error("Enter valid quantity");
+      return;
+    }
+
+    setCartItems((prev) => {
+      const existing = prev.find(
+        (item) => item.product_id === selectedProduct.id,
+      );
+
+      if (existing) {
+        return prev.map((item) =>
+          item.product_id === selectedProduct.id
+            ? {
+                ...item,
+                quantity: Number(item.quantity) + Number(quantity),
+              }
+            : item,
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          product_id: selectedProduct.id,
+          name: selectedProduct.name,
+          quantity: Number(quantity),
+          unit_price: Number(selectedProduct.price),
+        },
+      ];
+    });
+
+    setQuantity("");
+    setSelectedProduct(null);
+  };
+
+  const addSerializedToCart = () => {
+    if (!selectedProduct) {
+      toast.error("Select a product");
+
+      return;
+    }
+
+    if (scannedSerials.length === 0) {
+      toast.error("Scan at least one serial");
+
+      return;
+    }
+
+    setCartItems((prev) => {
+      const existing = prev.find(
+        (item) => item.product_id === selectedProduct.id,
+      );
+
+      if (existing) {
+        return prev.map((item) =>
+          item.product_id === selectedProduct.id
+            ? {
+                ...item,
+                serials: [...item.serials, ...scannedSerials],
+
+                quantity: item.serials.length + scannedSerials.length,
+
+                unit_price: Number(selectedProduct.price),
+              }
+            : item,
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          product_id: selectedProduct.id,
+
+          name: selectedProduct.name,
+
+          quantity: scannedSerials.length,
+
+          serials: scannedSerials,
+
+          unit_price: Number(selectedProduct.price),
+        },
+      ];
+    });
+
+    setScannedSerials([]);
+
+    setSerialInput("");
+
+    setSelectedProduct(null);
   };
 
   /* =========================
@@ -192,7 +294,7 @@ function StockOut() {
 
   const submitDispatch = async () => {
     if (!customerName.trim()) {
-      toast.error("Customer name is required");
+      toast.error("Customer details are required");
 
       return;
     }
@@ -203,19 +305,18 @@ function StockOut() {
       return;
     }
 
-    if (!selectedProduct) {
-      toast.error("Select a product");
-
-      return;
-    }
-
-    if (!selectedProduct.track_serial && (!quantity || Number(quantity) <= 0)) {
-      toast.error("Enter valid quantity");
+    if (cartItems.length === 0) {
+      toast.error("Add at least one product");
 
       return;
     }
 
     try {
+      const grandTotal = cartItems.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price,
+        0,
+      );
+
       const payload = {
         customer_name: customerName,
 
@@ -225,17 +326,19 @@ function StockOut() {
 
         location: customerLocation,
 
-        items: selectedProduct.track_serial
-          ? []
-          : [
-            {
-              product_id: selectedProduct.id,
+        grand_total: grandTotal,
 
-              quantity: Number(quantity),
-            },
-          ],
-
-        serials: [],
+        items: cartItems.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          line_total: item.quantity * item.unit_price,
+        })),
+        serials: cartItems.flatMap((item) =>
+          (item.serials || []).map((serial: string) => ({
+            serial_number: serial,
+          })),
+        ),
       };
 
       const response = await fetch(`${API_URL}/dispatch`, {
@@ -271,6 +374,8 @@ function StockOut() {
       setQuantity("");
 
       setSelectedProduct(null);
+
+      setCartItems([]);
     } catch {
       toast.error("Server connection failed");
     }
@@ -280,65 +385,11 @@ function StockOut() {
      STANDARD STOCK OUT
   ========================= */
 
-  const removeBulkStock = async () => {
-    if (!selectedProduct) {
-      toast.error("Select a product");
-
-      return;
-    }
-
-    if (!quantity || Number(quantity) <= 0) {
-      toast.error("Enter valid quantity");
-
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/stock/out`, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-
-        body: JSON.stringify({
-          product_id: selectedProduct.id,
-
-          quantity: Number(quantity),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Stock removal failed");
-
-        return;
-      }
-
-      toast.success(data.message);
-
-      await refreshProducts();
-
-      await fetchProducts();
-
-      setQuantity("");
-
-      setSelectedProduct(null);
-
-      inputRef.current?.focus();
-    } catch {
-      toast.error("Server connection failed");
-    }
-  };
-
   /* =========================
      SERIALIZED SCAN OUT
   ========================= */
 
-  const scanOutSerial = async () => {
+  const addSerialToCart = async () => {
     const cleaned = serialInput.trim();
 
     if (!cleaned) {
@@ -368,10 +419,15 @@ function StockOut() {
         return;
       }
 
-      toast.success(`${data.product} scanned out`);
-      await refreshProducts();
+      if (scannedSerials.includes(cleaned)) {
+        toast.error("Serial already scanned");
 
-      setRecentScans((prev) => [cleaned, ...prev.slice(0, 19)]);
+        return;
+      }
+
+      setScannedSerials((prev) => [...prev, cleaned]);
+
+      toast.success(`${data.product} added`);
 
       setSerialInput("");
 
@@ -389,7 +445,7 @@ function StockOut() {
     if (e.key === "Enter") {
       e.preventDefault();
 
-      scanOutSerial();
+      addSerialToCart();
     }
   };
 
@@ -466,14 +522,8 @@ function StockOut() {
                     {new Date(dispatch.created_at).toLocaleDateString("en-GB")}
                   </p>
                 </div>
-
-
-
               </div>
             ))}
-
-
-
           </div>
         </div>
       )}
@@ -521,7 +571,7 @@ function StockOut() {
 
             <div>
               <label className="block mb-2 font-semibold text-gray-700">
-                Contact
+                Contact *
               </label>
 
               <input
@@ -539,7 +589,7 @@ function StockOut() {
 
             <div>
               <label className="block mb-2 font-semibold text-gray-700">
-                Contact Person
+                Contact Person *
               </label>
 
               <input
@@ -553,7 +603,7 @@ function StockOut() {
 
             <div>
               <label className="block mb-2 font-semibold text-gray-700">
-                Location
+                Location *
               </label>
 
               <input
@@ -595,104 +645,112 @@ function StockOut() {
 
         {/* STANDARD */}
 
-        {selectedProduct && !selectedProduct.track_serial && (
-          <div className="mb-6">
-            <label className="block mb-2 font-semibold text-gray-700">
-              Quantity
-            </label>
+        {selectedProduct && selectedProduct.track_serial === 0 && (
+          <>
+            <div className="mb-6">
+              <label className="block mb-2 font-semibold text-gray-700">
+                Quantity
+              </label>
 
-            <div className="relative">
-              <Hash
-                size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <div className="relative">
+                <Hash
+                  size={20}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
 
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="Enter quantity"
-                className="erp-input pl-14 indent-7"
-              />
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="Enter quantity"
+                  className="erp-input pl-14 indent-7"
+                />
+              </div>
             </div>
-          </div>
+
+            <div className="pt-4 flex justify-end">
+              <button
+                onClick={addToCart}
+                className="border border-gray-300 hover:bg-gray-100 px-6 py-3 rounded-2xl font-semibold"
+              >
+                Add to Dispatch
+              </button>
+            </div>
+          </>
         )}
 
         {/* SERIALIZED */}
 
-        {selectedProduct && !!selectedProduct.track_serial && (
-          <div>
-            <label className="block mb-2 font-semibold text-gray-700">
-              Serial Scanner
-            </label>
+        {selectedProduct && selectedProduct.track_serial === 1 && (
+          <>
+            <div>
+              <label className="block mb-2 font-semibold text-gray-700">
+                Serial Scanner
+              </label>
 
-            <div className="relative mb-4">
-              <ScanLine
-                size={22}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <div className="relative mb-4">
+                <ScanLine
+                  size={22}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
 
-              <input
-                ref={inputRef}
-                type="text"
-                value={serialInput}
-                onChange={(e) => setSerialInput(e.target.value)}
-                onKeyDown={handleSerialKeyDown}
-                placeholder="Scan serial number..."
-                className="erp-input pl-14 text-xl font-semibold tracking-wide"
-              />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={serialInput}
+                  onChange={(e) => setSerialInput(e.target.value)}
+                  onKeyDown={handleSerialKeyDown}
+                  placeholder="Scan serial number..."
+                  className="erp-input pl-14 text-xl font-semibold tracking-wide"
+                />
+              </div>
+
+              {scannedSerials.length > 0 && (
+                <div className="mt-4 border border-gray-200 rounded-xl p-3">
+                  <p className="font-semibold mb-2">
+                    Selected Serials ({scannedSerials.length})
+                  </p>
+
+                  <div className="space-y-1">
+                    {scannedSerials.map((serial) => (
+                      <p
+                        key={serial}
+                        className="text-sm text-gray-600 break-all"
+                      >
+                        {serial}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 flex justify-end">
+                <button
+                  onClick={addSerializedToCart}
+                  className="border border-gray-300 hover:bg-gray-100 px-6 py-3 rounded-2xl font-semibold"
+                >
+                  Add to Dispatch
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
-        {/* ACTIONS */}
-
-        <div className="pt-8 flex justify-end">
-          {!selectedProduct?.track_serial && (
-            <button
-              onClick={submitDispatch}
-              className="bg-black hover:bg-gray-800 transition text-white px-6 py-3 rounded-2xl font-semibold"
-            >
-              Submit for Payment
-            </button>
-          )}
-        </div>
+        {cartItems.length > 0 && (
+          <DispatchSummary
+            cartItems={cartItems}
+            setCartItems={setCartItems}
+            onClearDispatch={() => {
+              setCartItems([]);
+              setSelectedProduct(null);
+              setQuantity("");
+              setSerialInput("");
+              setScannedSerials([]);
+            }}
+            onSubmit={submitDispatch}
+          />
+        )}
       </div>
-
-      {/* RECENT SCANS */}
-
-      {Boolean(selectedProduct?.track_serial) && (
-        <div className="erp-card erp-section">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Boxes size={24} className="text-gray-700" />
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Recent Scans</h2>
-
-              <p className="text-sm text-gray-500 mt-1">
-                Recently scanned serialized inventory.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {recentScans.map((serial, index) => (
-              <div
-                key={index}
-                className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-3"
-              >
-                <Boxes size={18} className="text-gray-600" />
-
-                <span className="font-medium text-gray-800 break-all">
-                  {serial}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {selectedDispatch && (
         <DispatchDetailsModal

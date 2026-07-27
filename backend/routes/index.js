@@ -31,9 +31,15 @@ const {
 
   changePassword,
 } = require("../controllers/UsersController");
+
 // AUTH
 
 const { login } = require("../controllers/AuthController");
+
+const {
+  getSetupStatus,
+  createFirstAdmin,
+} = require("../controllers/SetupController");
 
 // WAREHOUSES
 
@@ -106,9 +112,13 @@ const {
 
   getDispatchById,
 
+  printDispatch,
+
   confirmPayment,
 
   completeDispatch,
+
+  cancelDispatch,
 } = require("../controllers/DispatchController");
 
 const {
@@ -118,10 +128,13 @@ const {
   deleteWarehouse,
 } = require("../controllers/WarehousesController");
 
-
 /* =========================
 AUTH
 ========================= */
+
+router.get("/setup/status", getSetupStatus);
+
+router.post("/setup/admin", createFirstAdmin);
 
 router.post("/login", login);
 
@@ -174,6 +187,13 @@ router.delete(
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   deleteProduct,
+);
+
+router.get(
+  "/dispatch/:id/print",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  printDispatch,
 );
 
 /* =========================
@@ -404,6 +424,10 @@ router.put(
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   confirmPayment,
+);
+
+router.put(
+  "/dispatch/:id/cancel", authMiddleware, cancelDispatch
 );
 
 module.exports = router;

@@ -14,7 +14,7 @@ exports.getUsers = async (req, res) => {
           SELECT
             id,
             username,
-            email,
+            telephone,
             role,
             created_at
           FROM users
@@ -39,11 +39,16 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, telephone, password, role } = req.body;
 
     /* VALIDATION */
 
-    if (!username || !email || !password) {
+    if (!username || !telephone || !password) {
+      if (!/^\d+$/.test(telephone)) {
+        return res.status(400).json({
+          message: "Telephone number must contain digits only",
+        });
+      }
       return res.status(400).json({
         message: "All fields are required",
       });
@@ -63,10 +68,10 @@ exports.createUser = async (req, res) => {
       `
           SELECT id
           FROM users
-          WHERE email = ?
+          WHERE telephone = ?
           OR username = ?
         `,
-      [email, username],
+      [telephone, username],
     );
 
     if (existing.length > 0) {
@@ -85,13 +90,13 @@ exports.createUser = async (req, res) => {
       `
         INSERT INTO users (
           username,
-          email,
-          password_hash,
-          role
+         telephone,
+         password_hash,
+         role
         )
         VALUES (?, ?, ?, ?)
       `,
-      [username, email, password_hash, role || "STAFF"],
+      [username, telephone, password_hash, role || "STAFF"],
     );
 
     res.status(201).json({
@@ -114,13 +119,19 @@ exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { username, email, role } = req.body;
+    const { username, telephone, role } = req.body;
 
     /* VALIDATION */
 
-    if (!username || !email || !role) {
+    if (!username || !telephone || !role) {
       return res.status(400).json({
         message: "All fields are required",
+      });
+    }
+
+    if (!/^\d+$/.test(telephone)) {
+      return res.status(400).json({
+        message: "Telephone number must contain digits only",
       });
     }
 
@@ -136,15 +147,15 @@ exports.updateUser = async (req, res) => {
 
     const [existing] = await db.query(
       `
-          SELECT id
-          FROM users
-          WHERE (
-            email = ?
-            OR username = ?
-          )
-          AND id != ?
-        `,
-      [email, username, id],
+      SELECT id
+      FROM users
+      WHERE (
+        telephone = ?
+        OR username = ?
+      )
+      AND id != ?
+    `,
+      [telephone, username, id],
     );
 
     if (existing.length > 0) {
@@ -157,14 +168,14 @@ exports.updateUser = async (req, res) => {
 
     await db.query(
       `
-        UPDATE users
-        SET
-          username = ?,
-          email = ?,
-          role = ?
-        WHERE id = ?
-      `,
-      [username, email, role, id],
+    UPDATE users
+    SET
+      username = ?,
+      telephone = ?,
+      role = ?
+    WHERE id = ?
+  `,
+      [username, telephone, role, id],
     );
 
     res.json({

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { apiRequest } from "../services/api";
+
 import { useAuthStore } from "../store/authStore";
 
 import { useNavigate } from "react-router-dom";
@@ -19,16 +21,36 @@ function Login() {
 
   const [password, setPassword] = useState("");
 
+  const [telephone, setTelephone] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  
-  const [hasLoggedBefore, setHasLoggedBefore] = useState(false);
-  
-  useEffect(() => {
-    const remembered = localStorage.getItem("hasLoggedBefore");
 
-    setHasLoggedBefore(remembered === "true");
+  const [initialized, setInitialized] = useState(true);
+
+  const [checkingSetup, setCheckingSetup] = useState(true);
+
+  const [hasLoggedBefore, setHasLoggedBefore] = useState(false);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const remembered = localStorage.getItem("hasLoggedBefore");
+
+        setHasLoggedBefore(remembered === "true");
+
+        const data = await apiRequest("/setup/status");
+
+        setInitialized(data.initialized);
+      } catch (error) {
+        console.error("Failed to check setup status:", error);
+      } finally {
+        setCheckingSetup(false);
+      }
+    };
+
+    initialize();
   }, []);
 
   const handleLogin = async () => {
@@ -38,8 +60,8 @@ function Login() {
 
     try {
       await login(username, password);
-	  
-		localStorage.setItem("hasLoggedBefore", "true");
+
+      localStorage.setItem("hasLoggedBefore", "true");
 
       toast.dismiss(toastId);
 
@@ -57,11 +79,155 @@ function Login() {
     }
   };
 
+  const handleCreateAdmin = async () => {
+    setLoading(true);
+
+    const toastId = toast.loading("Creating administrator...");
+
+    try {
+      await apiRequest("/setup/admin", {
+        method: "POST",
+        body: JSON.stringify({
+          username,
+          telephone,
+          password,
+        }),
+      });
+
+      toast.dismiss(toastId);
+
+      toast.success("Administrator created successfully");
+
+      localStorage.setItem("hasLoggedBefore", "true");
+
+      window.location.reload();
+    } catch (err) {
+      toast.dismiss(toastId);
+
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create administrator",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleLogin();
     }
   };
+
+  if (checkingSetup) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-600 text-lg">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-6">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+          <h1 className="text-3xl font-bold text-center mb-2">
+            Create Administrator Account
+          </h1>
+
+          <p className="text-center text-gray-500 mb-4">
+            No administrator account exists yet.
+          </p>
+
+          <div className="mb-8 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+            Please keep these credentials safe. You will use this username,
+            telephone number, and password to sign in to the system from now on.
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Username
+              </label>
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="
+                w-full
+                h-12
+                px-4
+                rounded-xl
+                border
+                border-gray-300
+              "
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Telephone
+              </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter telephone number"
+                value={telephone}
+                onChange={(e) =>
+                  setTelephone(e.target.value.replace(/\D/g, ""))
+                }
+                className="
+    w-full
+    h-12
+    px-4
+    rounded-xl
+    border
+    border-gray-300
+  "
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Password
+              </label>
+
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="
+                w-full
+                h-12
+                px-4
+                rounded-xl
+                border
+                border-gray-300
+              "
+              />
+            </div>
+
+            <button
+              onClick={handleCreateAdmin}
+              disabled={loading}
+              className="
+              w-full
+              h-12
+              rounded-xl
+              bg-black
+              text-white
+              font-semibold
+              disabled:opacity-50
+            "
+            >
+              {loading ? "Creating..." : "Create Administrator"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center p-6">
@@ -83,7 +249,6 @@ function Login() {
                 className="h-24 w-auto object-contain"
               />
             </div>
-            
 
             <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <ShieldCheck size={16} />
@@ -117,8 +282,8 @@ function Login() {
           <div className="w-full max-w-md">
             <div className="mb-10">
               <h2 className="text-4xl font-black text-gray-900 mb-3">
-  {hasLoggedBefore ? "Welcome Back" : "Welcome"}
-</h2>
+                {hasLoggedBefore ? "Welcome Back" : "Welcome"}
+              </h2>
 
               <p className="text-gray-500">
                 Sign in to access your inventory dashboard.

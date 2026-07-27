@@ -2,6 +2,7 @@ import { ArrowLeft, Warehouse } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiRequest } from "../services/api";
+import { socket } from "../socket/socket";
 import PageHeader from "../components/PageHeader";
 
 function WarehouseInventory() {
@@ -23,10 +24,24 @@ function WarehouseInventory() {
   const [adjustQty, setAdjustQty] = useState("");
 
   useEffect(() => {
+    socket.connect();
+
+    const handleProductUpdate = () => {
+      fetchProducts();
+      fetchInventory();
+    };
+
     fetchWarehouse();
     fetchProducts();
     fetchInventory();
+
+    socket.on("product-updated", handleProductUpdate);
+
+    return () => {
+      socket.off("product-updated", handleProductUpdate);
+    };
   }, []);
+
   const fetchWarehouse = async () => {
     try {
       const data = await apiRequest("/warehouses", { auth: true });

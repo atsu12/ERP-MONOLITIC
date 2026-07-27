@@ -6,6 +6,45 @@ const logActivity = require("../utils/logActivity");
 
 const { createMovement } = require("./MovementController");
 
+// ========================
+// CANCEL DISPATCH
+// =========================
+
+const renderDispatch = require("../views/dispatchPrint");
+
+exports.cancelDispatch = (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    UPDATE dispatch_transactions
+    SET status = 'CANCELLED'
+    WHERE id = ?
+      AND status = 'PENDING_PAYMENT'
+  `;
+
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: "Dispatch not found or cannot be cancelled",
+      });
+    }
+
+    logActivity(req.user.id, req.user.username, `Cancelled dispatch #${id}`);
+
+    getIO().emit("dispatch-updated");
+
+    return res.json({
+      message: "Dispatch cancelled",
+    });
+  });
+};
+
 /* =========================
    CREATE DISPATCH
 ========================= */
@@ -25,6 +64,11 @@ exports.createDispatch = (req, res) => {
     serials = [],
   } = req.body;
 
+  console.log("CREATE DISPATCH REQUEST");
+  console.log("Customer:", customer_name);
+  console.log("Items:", items.length);
+  console.log("Time:", new Date().toISOString());
+
   /* =========================
      VALIDATION
   ========================= */
@@ -35,7 +79,7 @@ exports.createDispatch = (req, res) => {
     });
   }
 
-  if (!Array.isArray(items) && !Array.isArray(serials)) {
+  if (!Array.isArray(items) || !Array.isArray(serials)) {
     return res.status(400).json({
       error: "Products are required",
     });
@@ -210,6 +254,11 @@ exports.createDispatch = (req, res) => {
   `;
 
           db.query(serialQuery, [serialNumbers], (serialErr, productItems) => {
+            if (productItems.length !== serialNumbers.length) {
+              return res.status(400).json({
+                error: "One or more serial numbers are no longer available.",
+              });
+            }
             if (serialErr) {
               return res.status(500).json({
                 error: serialErr.message,
@@ -471,6 +520,67 @@ exports.confirmPayment = (req, res) => {
 /* =========================
    REMOVE STOCK
 ========================= */
+
+/* =========================
+   PRINT DISPATCH
+========================= */
+
+exports.printDispatch = (req, res) => {
+  const { id } = req.params;
+
+  const dispatchQuery = `
+    SELECT
+      id,
+      reference,
+      customer_name,
+      contact,
+      contact_person,
+      location,
+      status,
+      subtotal,
+      discount,
+      grand_total,
+      currency,
+      created_at
+    FROM dispatch_transactions
+    WHERE id = ?
+  `;
+
+  db.query(dispatchQuery, [id], (dispatchErr, dispatchRows) => {
+    if (dispatchErr) {
+      return res.status(500).send(dispatchErr.message);
+    }
+
+    if (dispatchRows.length === 0) {
+      return res.status(404).send("Dispatch not found");
+    }
+
+    const dispatch = dispatchRows[0];
+
+    const itemsQuery = `
+      SELECT
+        p.name,
+        di.quantity,
+        di.unit_price,
+        di.line_total
+      FROM dispatch_items di
+      JOIN products p
+        ON p.id = di.product_id
+      WHERE di.transaction_id = ?
+      ORDER BY p.name
+    `;
+
+    db.query(itemsQuery, [id], (itemsErr, items) => {
+      if (itemsErr) {
+        return res.status(500).send(itemsErr.message);
+      }
+
+      res.setHeader("Content-Type", "text/html");
+
+      return res.send(renderDispatch(dispatch, items));
+    });
+  });
+};
 
 exports.completeDispatch = (req, res) => {
   const { id } = req.params;
@@ -751,46 +861,69 @@ exports.completeDispatch = (req, res) => {
                   );
                 }
                 const completeQuery = `
-    UPDATE dispatch_transactions
-    SET
-      status = 'COMPLETED',
-      completed_at = NOW()
-    WHERE id = ?
-  `;
+                  UPDATE dispatch_transactions
+                  SET
+                    status = 'COMPLETED',
+                    completed_at = NOW()
+                  WHERE id = ?
+                    AND status = 'PAYMENT_CONFIRMED'
+                `;
 
                 Promise.all(movementPromises)
                   .then(() => {
-                    connection.query(completeQuery, [id], (completeErr) => {
-                      if (completeErr) {
-                        return connection.rollback(() => {
-                          connection.release();
-
-                          res.status(500).json({
-                            error: completeErr.message,
-                          });
-                        });
-                      }
-
-                      connection.commit((commitErr) => {
-                        if (commitErr) {
+                    connection.query(
+                      completeQuery,
+                      [id],
+                      (completeErr, result) => {
+                        if (completeErr) {
                           return connection.rollback(() => {
                             connection.release();
 
                             res.status(500).json({
-                              error: commitErr.message,
+                              error: completeErr.message,
                             });
                           });
                         }
 
-                        connection.release();
+                        if (result.affectedRows === 0) {
+                          return connection.rollback(() => {
+                            connection.release();
 
-                        getIO().emit("dispatch-completed");
+                            res.status(400).json({
+                              error:
+                                "Dispatch is no longer eligible for completion",
+                            });
+                          });
+                        }
 
-                        return res.json({
-                          message: "Dispatch completed successfully",
+                        connection.commit((commitErr) => {
+                          if (commitErr) {
+                            return connection.rollback(() => {
+                              connection.release();
+
+                              res.status(500).json({
+                                error: commitErr.message,
+                              });
+                            });
+                          }
+
+                          connection.release();
+
+                          logActivity(
+                            req.user.id,
+                            req.user.username,
+                            `Completed dispatch ${dispatch.reference}`,
+                          );
+
+                          getIO().emit("dispatch-completed");
+                          getIO().emit("product-updated");
+
+                          return res.json({
+                            message: "Dispatch completed successfully",
+                          });
                         });
-                      });
-                    });
+                      },
+                    );
                   })
                   .catch((movementErr) => {
                     return connection.rollback(() => {
