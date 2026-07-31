@@ -4,10 +4,33 @@ import { apiRequest } from "../services/api";
 
 interface Settings {
   id?: number;
+
+  // Currency & Pricing
   display_currency: string;
   currency_symbol: string;
   usd_exchange_rate: number;
   company_multiplier: number;
+
+  // Company Information
+  company_name: string | null;
+  company_address: string | null;
+  company_phone: string | null;
+  company_email: string | null;
+  company_website: string | null;
+  company_vat: string | null;
+
+  // Branding
+  company_logo_path: string | null;
+  company_header: string | null;
+  company_footer: string | null;
+
+  // Invoice Numbering
+  invoice_prefix: string;
+  invoice_next_number: number;
+  invoice_number_length: number;
+
+  // Templates
+  invoice_template_path: string | null;
 }
 
 interface SettingsStore {
@@ -17,7 +40,7 @@ interface SettingsStore {
 
   fetchSettings: () => Promise<void>;
 
-  updateSettings: (data: Settings) => Promise<boolean>;
+  updateSettings: (data: Partial<Settings>) => Promise<boolean>;
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
