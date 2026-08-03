@@ -10,10 +10,14 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
   const headers = new Headers(options.headers || {});
 
   /* =========================
-     JSON
-  ========================= */
+   JSON
+========================= */
 
-  headers.set("Content-Type", "application/json");
+  const isFormData = options.body instanceof FormData;
+
+  if (!isFormData) {
+    headers.set("Content-Type", "application/json");
+  }
 
   /* =========================
      AUTH
@@ -36,8 +40,9 @@ export async function apiRequest(endpoint: string, options: ApiOptions = {}) {
 
     headers,
 
-    body:
-      options.body && typeof options.body === "object"
+    body: isFormData
+      ? options.body
+      : options.body && typeof options.body === "object"
         ? JSON.stringify(options.body)
         : options.body,
   });

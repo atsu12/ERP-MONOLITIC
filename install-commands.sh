@@ -77,3 +77,6 @@ npm install socket.io
 
 cd frontend
 npm ls xlsx jspdf jspdf-autotable
+
+cd backend
+npm install multer

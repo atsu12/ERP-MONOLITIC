@@ -12,8 +12,6 @@ type CurrencyPricingSectionProps = {
   setCompanyMultiplier: (value: number) => void;
 
   effectiveRate: number;
-
-  onSave: () => void;
 };
 
 function CurrencyPricingSection({
@@ -26,7 +24,6 @@ function CurrencyPricingSection({
   companyMultiplier,
   setCompanyMultiplier,
   effectiveRate,
-  onSave,
 }: CurrencyPricingSectionProps) {
   return (
     <div className="bg-white rounded-3xl border border-gray-200 p-8 max-w-3xl">
@@ -109,14 +106,7 @@ function CurrencyPricingSection({
             disabled
             className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-gray-100"
           />
-        </div>
-
-        <button
-          onClick={onSave}
-          className="bg-black hover:bg-gray-800 transition text-white px-6 py-3 rounded-2xl font-semibold"
-        >
-          Save Changes
-        </button>
+        </div>      
       </div>
     </div>
   );

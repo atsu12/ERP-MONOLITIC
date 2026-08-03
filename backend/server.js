@@ -23,6 +23,15 @@ app.use(cors());
 app.use(express.json());
 
 /* =========================
+   UPLOADS
+========================= */
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads")),
+);
+
+/* =========================
    API ROUTES
 ========================= */
 

@@ -2,6 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 
+const upload = require("../middleware/uploadMiddleware");
+
 router.get("/health", (req, res) => {
   res.json({
     status: "ok",
@@ -31,6 +33,11 @@ const {
 
   changePassword,
 } = require("../controllers/UsersController");
+
+const {
+  uploadSettingsAsset,
+  deleteSettingsAsset,
+} = require("../controllers/UploadController");
 
 // AUTH
 
@@ -381,6 +388,25 @@ router.put(
 );
 
 /* =========================
+UPLOADS
+========================= */
+
+router.post(
+  "/upload/settings-asset/:type",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  upload.single("file"),
+  uploadSettingsAsset,
+);
+
+router.delete(
+  "/upload/settings-asset/:type",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  deleteSettingsAsset,
+);
+
+/* =========================
 DISPATCH
 ========================= */
 
@@ -426,8 +452,6 @@ router.put(
   confirmPayment,
 );
 
-router.put(
-  "/dispatch/:id/cancel", authMiddleware, cancelDispatch
-);
+router.put("/dispatch/:id/cancel", authMiddleware, cancelDispatch);
 
 module.exports = router;

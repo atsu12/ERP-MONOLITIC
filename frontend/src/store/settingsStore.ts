@@ -5,6 +5,14 @@ import { apiRequest } from "../services/api";
 interface Settings {
   id?: number;
 
+  // Templates
+
+  quotation_template_path?: string;
+
+  purchase_order_template_path?: string;
+
+  delivery_note_template_path?: string;
+
   // Currency & Pricing
   display_currency: string;
   currency_symbol: string;

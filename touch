@@ -1,0 +1,72 @@
+type BrandingSectionProps = {
+  companyLogoPath: string;
+  setCompanyLogoPath: (value: string) => void;
+
+  companyHeader: string;
+  setCompanyHeader: (value: string) => void;
+
+  companyFooter: string;
+  setCompanyFooter: (value: string) => void;
+};
+
+function BrandingSection({
+  companyLogoPath,
+  setCompanyLogoPath,
+  companyHeader,
+  setCompanyHeader,
+  companyFooter,
+  setCompanyFooter,
+}: BrandingSectionProps) {
+  return (
+    <div className="bg-white rounded-3xl border border-gray-200 p-8 max-w-3xl mt-8">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">
+        Branding
+      </h2>
+
+      <div className="grid gap-6">
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Company Logo
+          </label>
+
+          <input
+            value={companyLogoPath}
+            onChange={(e) => setCompanyLogoPath(e.target.value)}
+            placeholder="Logo path (upload support coming next)"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Document Header
+          </label>
+
+          <textarea
+            rows={4}
+            value={companyHeader}
+            onChange={(e) => setCompanyHeader(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Document Footer
+          </label>
+
+          <textarea
+            rows={4}
+            value={companyFooter}
+            onChange={(e) => setCompanyFooter(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+          />
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+export default BrandingSection;

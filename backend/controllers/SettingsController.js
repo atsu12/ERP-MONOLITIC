@@ -4,18 +4,21 @@ const { getIO } = require("../socket");
 
 // GET SETTINGS
 exports.getSettings = (req, res) => {
-  db.query(
-    "SELECT * FROM settings LIMIT 1",
-    (err, results) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Failed to fetch settings",
-        });
-      }
-
-      res.json(results[0]);
+  db.query("SELECT * FROM settings WHERE id = 1", (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Failed to fetch settings",
+      });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        message: "Settings record not found",
+      });
+    }
+
+    res.json(results[0]);
+  });
 };
 
 // UPDATE SETTINGS
@@ -42,6 +45,10 @@ exports.updateSettings = (req, res) => {
     invoice_number_length,
 
     invoice_template_path,
+
+    quotation_template_path,
+    purchase_order_template_path,
+    delivery_note_template_path,
   } = req.body;
 
   db.query(
@@ -68,10 +75,14 @@ exports.updateSettings = (req, res) => {
         invoice_next_number = ?,
         invoice_number_length = ?,
 
-        invoice_template_path = ?
+        invoice_template_path = ?,
 
-      WHERE id = 1
-    `,
+        quotation_template_path = ?,
+        purchase_order_template_path = ?,
+        delivery_note_template_path = ?
+
+        WHERE id = 1
+      `,
     [
       display_currency,
       currency_symbol,
@@ -94,11 +105,21 @@ exports.updateSettings = (req, res) => {
       invoice_number_length,
 
       invoice_template_path,
+
+      quotation_template_path,
+      purchase_order_template_path,
+      delivery_note_template_path,
     ],
-    (err) => {
+    (err, result) => {
       if (err) {
         return res.status(500).json({
           message: "Failed to update settings",
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          message: "Settings record not found",
         });
       }
 
@@ -107,6 +128,6 @@ exports.updateSettings = (req, res) => {
       res.json({
         message: "Settings updated successfully",
       });
-    }
+    },
   );
 };
