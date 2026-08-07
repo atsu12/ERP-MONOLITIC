@@ -582,6 +582,99 @@ exports.printDispatch = (req, res) => {
   });
 };
 
+/* =========================
+   EXPORT INVOICE
+========================= */
+
+/* =========================
+   EXPORT PROFORMA INVOICE
+========================= */
+
+const invoiceGenerator = require("../services/invoiceGenerator");
+
+/* =========================
+   EXPORT PROFORMA
+========================= */
+
+exports.exportProforma = async (req, res) => {
+  try {
+    const dispatch = {
+      ...req.body,
+      staff_id: req.user.id,
+      staff_name: req.user.username,
+    };
+
+    const { workbook } =
+      await invoiceGenerator.generateProformaInvoice(dispatch);
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="Proforma-Invoice.xlsx"',
+    );
+
+    await workbook.xlsx.write(res);
+
+    res.end();
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+exports.exportInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [dispatchRows] = await db.promise().query(
+      `
+      SELECT *
+      FROM dispatch_transactions
+      WHERE id = ?
+      `,
+      [id],
+    );
+
+    if (dispatchRows.length === 0) {
+      return res.status(404).json({
+        message: "Dispatch not found",
+      });
+    }
+
+    const dispatch = dispatchRows[0];
+
+    const { workbook } =
+      await invoiceGenerator.generateProformaInvoice(dispatch);
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${dispatch.reference}.xlsx"`,
+    );
+
+    await workbook.xlsx.write(res);
+
+    res.end();
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 exports.completeDispatch = (req, res) => {
   const { id } = req.params;
 

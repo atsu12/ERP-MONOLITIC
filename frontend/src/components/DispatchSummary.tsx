@@ -12,6 +12,7 @@ interface DispatchSummaryProps {
   cartItems: CartItem[];
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   onClearDispatch: () => void;
+  onExportInvoice: () => void;
   onSubmit: () => void;
 }
 
@@ -19,6 +20,7 @@ function DispatchSummary({
   cartItems,
   setCartItems,
   onClearDispatch,
+  onExportInvoice,
   onSubmit,
 }: DispatchSummaryProps) {
   const totalProducts = cartItems.length;
@@ -227,7 +229,7 @@ function DispatchSummary({
           </div>
         </div>
 
-        <div className="mt-8 flex justify-between">
+        <div className="mt-8 flex items-center justify-between">
           <button
             onClick={onClearDispatch}
             className="px-5 py-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50"
@@ -235,12 +237,22 @@ function DispatchSummary({
             Clear Dispatch
           </button>
 
-          <button
-            onClick={onSubmit}
-            className="px-6 py-3 rounded-2xl bg-black text-white hover:bg-gray-800"
-          >
-            Submit for Payment
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onExportInvoice}
+              className="px-6 py-3 rounded-2xl border border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              Export Invoice
+            </button>
+
+            <button
+              onClick={onSubmit}
+              className="px-6 py-3 rounded-2xl bg-black text-white hover:bg-gray-800"
+            >
+              Submit for Payment
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -80,3 +80,12 @@ npm ls xlsx jspdf jspdf-autotable
 
 cd backend
 npm install multer
+
+# From the backend folder, run the following command to install the necessary dependencies:
+# If is on Windows, run the following command:
+
+npm install bcrypt jsonwebtoken express mysql2 dotenv cors
+
+# From the frontend folder, run the following command to install the necessary dependencies:
+npm install exceljs
+

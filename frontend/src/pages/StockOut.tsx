@@ -13,8 +13,6 @@ import { PackageMinus, ScanLine, Hash } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function StockOut() {
-  
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [products, setProducts] = useState<any[]>([]);
@@ -378,6 +376,73 @@ function StockOut() {
       setCartItems([]);
     } catch {
       toast.error("Server connection failed");
+    }
+  };
+
+  const exportInvoice = async () => {
+    try {
+      const grandTotal = cartItems.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price,
+        0,
+      );
+
+      const payload = {
+        customer_name: customerName,
+        contact: customerContact,
+        contact_person: contactPerson,
+        location: customerLocation,
+        grand_total: grandTotal,
+
+        items: cartItems.map((item) => ({
+          product_id: item.product_id,
+          name: item.name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          line_total: item.quantity * item.unit_price,
+          serials: item.serials || [],
+        })),
+      };
+
+      const response = await fetch(`${API_URL}/dispatch/proforma`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+
+        console.error(error);
+
+        throw new Error("Unable to export proforma invoice.");
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+
+      link.download = "Proforma-Invoice.xlsx";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Proforma invoice downloaded.");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Unable to export proforma invoice.");
     }
   };
 
@@ -747,6 +812,7 @@ function StockOut() {
               setSerialInput("");
               setScannedSerials([]);
             }}
+            onExportInvoice={exportInvoice}
             onSubmit={submitDispatch}
           />
         )}

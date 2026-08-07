@@ -121,6 +121,10 @@ const {
 
   printDispatch,
 
+  exportProforma,
+  
+  exportInvoice,
+
   confirmPayment,
 
   completeDispatch,
@@ -201,6 +205,20 @@ router.get(
   authMiddleware,
   roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
   printDispatch,
+);
+
+router.post(
+  "/dispatch/proforma",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  exportProforma,
+);
+
+router.get(
+  "/dispatch/:id/invoice",
+  authMiddleware,
+  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
+  exportInvoice,
 );
 
 /* =========================
