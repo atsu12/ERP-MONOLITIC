@@ -1,4 +1,5 @@
 import { exportInventoryValuation } from "../../utils/exportInventoryValuation";
+import { useSettingsStore } from "../../store/settingsStore";
 
 type InventoryValuation = {
   id: number;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 function InventoryValuationTable({ items, filters = {} }: Props) {
+  const { settings } = useSettingsStore();
   return (
     <div className="erp-card lg:col-span-2">
       <div className="flex items-center justify-between mb-4">
@@ -69,9 +71,12 @@ function InventoryValuationTable({ items, filters = {} }: Props) {
 
                 <td className="text-right">{item.quantity}</td>
 
-                <td className="text-right">{Number(item.price).toFixed(2)}</td>
+                <td className="text-right">
+                  {settings?.currency_symbol} {Number(item.price).toFixed(2)}
+                </td>
 
                 <td className="text-right font-semibold">
+                  {settings?.currency_symbol}{" "}
                   {Number(item.inventoryValue).toFixed(2)}
                 </td>
               </tr>

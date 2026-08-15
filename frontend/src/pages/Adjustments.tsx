@@ -32,6 +32,8 @@ function Adjustments() {
 
   const [companyMultiplier, setCompanyMultiplier] = useState(1.25);
 
+  const [invoiceValidityDays, setInvoiceValidityDays] = useState(14);
+
   const [companyName, setCompanyName] = useState("");
 
   const [companyAddress, setCompanyAddress] = useState("");
@@ -76,6 +78,7 @@ function Adjustments() {
     setCurrencySymbol(settings.currency_symbol);
     setUsdExchangeRate(settings.usd_exchange_rate);
     setCompanyMultiplier(settings.company_multiplier);
+    setInvoiceValidityDays(settings.invoice_validity_days ?? 14);
 
     setCompanyName(settings.company_name ?? "");
     setCompanyAddress(settings.company_address ?? "");
@@ -116,6 +119,7 @@ function Adjustments() {
       currency_symbol: currencySymbol,
       usd_exchange_rate: usdExchangeRate,
       company_multiplier: companyMultiplier,
+      invoice_validity_days: invoiceValidityDays,
 
       // Company Information
       company_name: companyName,
@@ -179,9 +183,39 @@ function Adjustments() {
         onChange={setDocumentNumbering}
       />
 
+      <div className="erp-card erp-section">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Invoice Validity</h2>
+
+          <p className="text-sm text-gray-500">
+            Set the default validity period for Proforma Invoices.
+          </p>
+        </div>
+
+        <div className="max-w-sm">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
+            Validity Period (Days)
+          </label>
+
+          <input
+            type="number"
+            min="1"
+            value={invoiceValidityDays}
+            onChange={(e) => setInvoiceValidityDays(Number(e.target.value))}
+            className="w-full rounded-xl border border-gray-300 px-4 py-2"
+          />
+
+          <p className="mt-2 text-xs text-gray-500">
+            Default: 14 days from the Proforma Invoice date.
+          </p>
+        </div>
+      </div>
+
       <BrandingSection
         companyLogoPath={companyLogoPath}
         setCompanyLogoPath={setCompanyLogoPath}
+        invoiceTemplatePath={invoiceTemplatePath}
+        setInvoiceTemplatePath={setInvoiceTemplatePath}
         companyHeader={companyHeader}
         setCompanyHeader={setCompanyHeader}
         companyFooter={companyFooter}

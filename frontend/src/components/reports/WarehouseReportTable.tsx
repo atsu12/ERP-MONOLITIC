@@ -1,4 +1,5 @@
 import { exportWarehouseReport } from "../../utils/exportWarehouseReport";
+import { useSettingsStore } from "../../store/settingsStore";
 
 interface WarehouseSummary {
   id: number;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 function WarehouseReportTable({ warehouses, filters = {} }: Props) {
+  const { settings } = useSettingsStore();
   return (
     <div className="erp-card">
       <div className="flex items-center justify-between mb-4">
@@ -61,6 +63,7 @@ function WarehouseReportTable({ warehouses, filters = {} }: Props) {
                     <td>{warehouse.totalQuantity}</td>
 
                     <td>
+                      {settings?.currency_symbol}{" "}
                       {warehouse.inventoryValue.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

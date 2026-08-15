@@ -373,7 +373,7 @@ function Products() {
 
                     <td>
                       {product.price && settings
-                        ? `${settings.currency_symbol}${(
+                        ? `${settings.currency_symbol} ${(
                             Number(product.price) *
                             settings.usd_exchange_rate *
                             settings.company_multiplier

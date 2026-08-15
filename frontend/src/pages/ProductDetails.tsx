@@ -176,7 +176,7 @@ function ProductDetails() {
 
             <p className="font-semibold">
               {settings
-                ? `${settings.currency_symbol}${displayPrice.toFixed(2)}`
+                ? `${settings.currency_symbol} ${displayPrice.toFixed(2)}`
                 : "-"}
             </p>
           </div>

@@ -122,10 +122,12 @@ const {
   printDispatch,
 
   exportProforma,
-  
+
   exportInvoice,
 
   confirmPayment,
+
+  adjustDispatchPricing,
 
   completeDispatch,
 
@@ -468,6 +470,13 @@ router.put(
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   confirmPayment,
+);
+
+router.put(
+  "/dispatch/:id/adjust-pricing",
+  authMiddleware,
+  roleMiddleware(["ADMIN"]),
+  adjustDispatchPricing,
 );
 
 router.put("/dispatch/:id/cancel", authMiddleware, cancelDispatch);

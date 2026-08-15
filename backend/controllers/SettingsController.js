@@ -43,6 +43,8 @@ exports.updateSettings = (req, res) => {
     invoice_prefix,
     invoice_next_number,
     invoice_number_length,
+    invoice_validity_days,
+    invoice_vat_rate,
 
     invoice_template_path,
 
@@ -74,6 +76,8 @@ exports.updateSettings = (req, res) => {
         invoice_prefix = ?,
         invoice_next_number = ?,
         invoice_number_length = ?,
+        invoice_validity_days = ?,
+        invoice_vat_rate = ?,
 
         invoice_template_path = ?,
 
@@ -103,6 +107,8 @@ exports.updateSettings = (req, res) => {
       invoice_prefix,
       invoice_next_number,
       invoice_number_length,
+      invoice_validity_days,
+      invoice_vat_rate,
 
       invoice_template_path,
 

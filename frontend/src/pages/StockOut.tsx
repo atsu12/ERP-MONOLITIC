@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 
+import { useSettingsStore } from "../store/settingsStore";
+
 import DispatchSummary from "../components/DispatchSummary";
 
 import { socket } from "../socket/socket";
@@ -13,6 +15,8 @@ import { PackageMinus, ScanLine, Hash } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function StockOut() {
+  const { settings } = useSettingsStore();
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [products, setProducts] = useState<any[]>([]);
@@ -579,7 +583,8 @@ function StockOut() {
 
                   <p>
                     <span className="font-semibold">Total:</span>{" "}
-                    {dispatch.currency} {dispatch.grand_total}
+                    {settings?.currency_symbol}{" "}
+                    {Number(dispatch.grand_total).toFixed(2)}
                   </p>
 
                   <p>

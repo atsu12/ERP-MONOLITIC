@@ -36,6 +36,8 @@ interface Settings {
   invoice_prefix: string;
   invoice_next_number: number;
   invoice_number_length: number;
+  invoice_validity_days: number;
+  invoice_vat_rate: number;
 
   // Templates
   invoice_template_path: string | null;

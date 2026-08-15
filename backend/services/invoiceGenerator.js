@@ -10,7 +10,8 @@ const db = require("../configs/db").promise();
 
 const TEMPLATE = {
   itemStartRow: 23,
-  itemEndRow: 34,
+  itemEndRow: 44,
+  totalsStartRow: 45,
 
   logo: {
     column: 0.3,
@@ -86,6 +87,18 @@ async function generateInvoiceNumber(settings) {
 }
 
 /* =========================
+   FORMAT INVOICE DATE
+========================= */
+
+function formatInvoiceDate(date = new Date()) {
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
+
+/* =========================
    GET PREPARED BY
 ========================= */
 
@@ -155,8 +168,38 @@ function replacePlaceholders(worksheet, values) {
 }
 
 /* =========================
-   POPULATE LINE ITEMS
+   SHIFT FORMULA ROW REFERENCES
 ========================= */
+
+function shiftFormulaRows(formula, insertionRow, rowsToInsert) {
+  if (typeof formula !== "string") {
+    return formula;
+  }
+
+  return formula.replace(
+    /(\$?[A-Z]{1,3})(\$?)(\d+)/g,
+    (match, column, rowAbsolute, rowNumber) => {
+      const row = Number(rowNumber);
+
+      /*
+       * Do not move absolute row references.
+       */
+      if (rowAbsolute === "$") {
+        return match;
+      }
+
+      /*
+       * References at or below the insertion point
+       * move down with the totals section.
+       */
+      if (row >= insertionRow) {
+        return `${column}${row + rowsToInsert}`;
+      }
+
+      return match;
+    },
+  );
+}
 
 /* =========================
    EXPAND ITEM TABLE
@@ -171,28 +214,176 @@ function expandItemTable(worksheet, itemCount) {
 
   const rowsToInsert = itemCount - templateCapacity;
 
-  worksheet.duplicateRow(TEMPLATE.itemEndRow, rowsToInsert, true);
+  const sourceRow = worksheet.getRow(TEMPLATE.itemEndRow);
+
+  worksheet.insertRows(
+    TEMPLATE.totalsStartRow,
+    new Array(rowsToInsert).fill([]),
+  );
+
+  for (let i = 0; i < rowsToInsert; i++) {
+    const targetRow = worksheet.getRow(TEMPLATE.itemEndRow + 1 + i);
+
+    targetRow.height = sourceRow.height;
+
+    sourceRow.eachCell({ includeEmpty: true }, (sourceCell, columnNumber) => {
+      const targetCell = targetRow.getCell(columnNumber);
+
+      targetCell.style = JSON.parse(JSON.stringify(sourceCell.style));
+
+      targetCell.font = JSON.parse(JSON.stringify(sourceCell.font));
+
+      targetCell.alignment = JSON.parse(JSON.stringify(sourceCell.alignment));
+
+      targetCell.border = JSON.parse(JSON.stringify(sourceCell.border));
+
+      targetCell.fill = JSON.parse(JSON.stringify(sourceCell.fill));
+
+      targetCell.numFmt = sourceCell.numFmt;
+    });
+  }
 }
 
 function populateLineItems(worksheet, items) {
+  /*
+   * Convert the template's shared formulas in column I
+   * into independent formulas for every available item row.
+   */
+  for (
+    let rowNumber = TEMPLATE.itemStartRow;
+    rowNumber <= TEMPLATE.itemEndRow;
+    rowNumber++
+  ) {
+    const totalCell = worksheet.getCell(`I${rowNumber}`);
+
+    totalCell.value = null;
+
+    totalCell.model.formula = undefined;
+    totalCell.model.sharedFormula = undefined;
+    totalCell.model.shareType = undefined;
+    totalCell.model.ref = undefined;
+
+    totalCell.value = {
+      formula: `IF(H${rowNumber},H${rowNumber}*B${rowNumber},"")`,
+    };
+
+    totalCell.model.sharedFormula = undefined;
+    totalCell.model.shareType = undefined;
+    totalCell.model.ref = undefined;
+  }
+
+  /*
+   * Populate the actual products.
+   */
   items.forEach((item, index) => {
-    const row = worksheet.getRow(TEMPLATE.itemStartRow + index);
+    const rowNumber = TEMPLATE.itemStartRow + index;
+    const row = worksheet.getRow(rowNumber);
 
     row.getCell("B").value = item.quantity;
-
     row.getCell("C").value = item.name;
-
     row.getCell("H").value = Number(item.unit_price);
 
-    /*
-      Leave column I alone.
-
-      The template already
-      contains formulas.
-    */
+    row.getCell("I").value = {
+      formula: `IF(H${rowNumber},H${rowNumber}*B${rowNumber},"")`,
+      result: Number(item.unit_price) * Number(item.quantity),
+    };
 
     row.commit();
   });
+}
+
+/* =========================
+   UPDATE TOTAL FORMULAS
+========================= */
+
+function updateTotalFormulas(worksheet, itemCount) {
+  if (itemCount === 0) {
+    return;
+  }
+
+  const templateCapacity = TEMPLATE.itemEndRow - TEMPLATE.itemStartRow + 1;
+
+  const extraRows = Math.max(0, itemCount - templateCapacity);
+
+  const subtotalRow = TEMPLATE.totalsStartRow + extraRows;
+  const discountRow = subtotalRow + 1;
+  const vatRow = subtotalRow + 2;
+  const totalRow = subtotalRow + 3;
+
+  const itemEndRow = TEMPLATE.itemStartRow + itemCount - 1;
+
+  /* =========================
+     CALCULATE SUBTOTAL
+  ========================= */
+
+  let subtotal = 0;
+
+  for (
+    let rowNumber = TEMPLATE.itemStartRow;
+    rowNumber <= itemEndRow;
+    rowNumber++
+  ) {
+    const quantity = Number(worksheet.getCell(`B${rowNumber}`).value || 0);
+
+    const unitPrice = Number(worksheet.getCell(`H${rowNumber}`).value || 0);
+
+    subtotal += quantity * unitPrice;
+  }
+
+  /* =========================
+     SUBTOTAL
+  ========================= */
+
+  worksheet.getCell(`I${subtotalRow}`).value = {
+    formula: `SUM(I${TEMPLATE.itemStartRow}:I${itemEndRow})`,
+    result: subtotal,
+  };
+
+  /* =========================
+     DISCOUNT
+  ========================= */
+
+  const discount = Number(worksheet.getCell(`I${discountRow}`).value || 0);
+
+  /* =========================
+     VAT
+  ========================= */
+
+  const vatCell = worksheet.getCell(`I${vatRow}`);
+
+  let vat = 0;
+
+  if (typeof vatCell.value === "object" && vatCell.value?.formula) {
+    const formula = vatCell.value.formula;
+
+    const percentageMatch = formula.match(/(\d+(?:\.\d+)?)%/);
+
+    if (percentageMatch) {
+      const percentage = Number(percentageMatch[1]);
+
+      vat = (subtotal - discount) * (percentage / 100);
+
+      vatCell.value = {
+        formula,
+        result: vat,
+      };
+    }
+  } else {
+    vat = Number(vatCell.value || 0);
+  }
+
+  /* =========================
+     TOTAL
+  ========================= */
+
+  const totalCell = worksheet.getCell(`I${totalRow}`);
+
+  if (typeof totalCell.value === "object" && totalCell.value?.formula) {
+    totalCell.value = {
+      formula: totalCell.value.formula,
+      result: subtotal - discount + vat,
+    };
+  }
 }
 
 /* =========================
@@ -241,9 +432,16 @@ async function generateProformaInvoice(dispatch) {
 
   const preparedBy = await getPreparedBy(dispatch.staff_id);
 
+  const invoiceDate = new Date();
+
+  const validityDays = Number(settings.invoice_validity_days ?? 14);
+
+  const validTillDate = new Date(invoiceDate);
+
+  validTillDate.setDate(validTillDate.getDate() + validityDays);
+
   const itemRows =
-  dispatch.items ??
-  (dispatch.id ? await getDispatchItems(dispatch.id) : []);
+    dispatch.items ?? (dispatch.id ? await getDispatchItems(dispatch.id) : []);
 
   const invoiceData = {
     company: {
@@ -259,7 +457,8 @@ async function generateProformaInvoice(dispatch) {
 
     invoice: {
       number: invoiceNumber,
-      date: new Date().toLocaleDateString(),
+      date: formatInvoiceDate(invoiceDate),
+      validTill: formatInvoiceDate(validTillDate),
     },
 
     customer: {
@@ -277,6 +476,8 @@ async function generateProformaInvoice(dispatch) {
     items: itemRows,
   };
 
+  expandItemTable(worksheet, invoiceData.items.length);
+
   replacePlaceholders(worksheet, {
     company_name: invoiceData.company.name,
     company_address: invoiceData.company.address,
@@ -287,6 +488,7 @@ async function generateProformaInvoice(dispatch) {
 
     invoice_number: invoiceData.invoice.number,
     invoice_date: invoiceData.invoice.date,
+    valid_till: invoiceData.invoice.validTill,
 
     customer_name: invoiceData.customer.name,
     customer_address: invoiceData.customer.address,
@@ -299,11 +501,11 @@ async function generateProformaInvoice(dispatch) {
     currency: invoiceData.company.currency,
   });
 
-  expandItemTable(worksheet, invoiceData.items.length);
-
   populateLineItems(worksheet, invoiceData.items);
 
-    await insertCompanyLogo(workbook, worksheet, settings);
+  updateTotalFormulas(worksheet, invoiceData.items.length);
+
+  await insertCompanyLogo(workbook, worksheet, settings);
 
   return {
     workbook,
@@ -311,6 +513,60 @@ async function generateProformaInvoice(dispatch) {
   };
 }
 
+async function calculateTemplateTotals(items) {
+  const { workbook } = await loadInvoiceTemplate();
+
+  const worksheet = workbook.worksheets[0];
+
+  let subtotal = 0;
+
+  items.forEach((item) => {
+    subtotal +=
+      Number(item.quantity || 0) *
+      Number(item.unit_price || 0);
+  });
+
+  const discount = Number(
+    worksheet.getCell("I46").value || 0
+  );
+
+  const vatCell = worksheet.getCell("I47");
+
+  let vat = 0;
+
+  if (
+    typeof vatCell.value === "object" &&
+    vatCell.value?.formula
+  ) {
+    const formula = vatCell.value.formula;
+
+    const percentageMatch = formula.match(
+      /(\d+(?:\.\d+)?)%/
+    );
+
+    if (percentageMatch) {
+      const percentage = Number(percentageMatch[1]);
+
+      vat =
+        (subtotal - discount) *
+        (percentage / 100);
+    }
+  } else {
+    vat = Number(vatCell.value || 0);
+  }
+
+  const grandTotal =
+    subtotal - discount + vat;
+
+  return {
+    subtotal,
+    discount,
+    vat,
+    grandTotal,
+  };
+}
+
 module.exports = {
   generateProformaInvoice,
+  calculateTemplateTotals,
 };

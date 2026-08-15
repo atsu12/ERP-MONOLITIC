@@ -110,7 +110,7 @@ exports.createDispatch = (req, res) => {
   WHERE id IN (?)
 `;
 
-  db.query(productsQuery, [productIds], (productsErr, products) => {
+  db.query(productsQuery, [productIds], async (productsErr, products) => {
     if (productsErr) {
       return res.status(500).json({
         error: productsErr.message,
@@ -143,26 +143,30 @@ exports.createDispatch = (req, res) => {
       };
     });
 
-    const grandTotal = subtotal;
+    const templateTotals =
+      await invoiceGenerator.calculateTemplateTotals(dispatchItems);
+
+    const discount = Number(templateTotals.discount.toFixed(2));
+
+    const vat = Number(templateTotals.vat.toFixed(2));
+
+    const grandTotal = Number(templateTotals.grandTotal.toFixed(2));
 
     const transactionQuery = `
   INSERT INTO dispatch_transactions (
     reference,
-
     customer_name,
     contact,
     contact_person,
     location,
-
     status,
-
     subtotal,
     discount,
+    vat,
     grand_total,
-
     staff_id
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
     db.query(
@@ -178,9 +182,9 @@ exports.createDispatch = (req, res) => {
         "PENDING_PAYMENT",
 
         subtotal,
-        0,
+        discount,
+        vat,
         grandTotal,
-
         req.user.id,
       ],
       (err, result) => {
@@ -326,13 +330,17 @@ exports.getPendingDispatches = (req, res) => {
       dt.contact_person,
       dt.location,
       dt.subtotal,
+      dt.discount,
+      dt.vat,
       dt.grand_total,
+      s.currency_symbol,
       dt.status,
       dt.created_at,
 
       u.username AS staff_name
 
     FROM dispatch_transactions dt
+    cross join settings s
 
     JOIN users u
       ON u.id = dt.staff_id
@@ -369,6 +377,8 @@ exports.getPaidDispatches = (req, res) => {
       dt.contact_person,
       dt.location,
       dt.subtotal,
+      dt.discount,
+      dt.vat,
       dt.grand_total,
       dt.status,
       dt.created_at,
@@ -376,6 +386,7 @@ exports.getPaidDispatches = (req, res) => {
       u.username AS staff_name
 
     FROM dispatch_transactions dt
+    cross join settings s
 
     JOIN users u
       ON u.id = dt.staff_id
@@ -415,9 +426,13 @@ exports.getDispatchById = (req, res) => {
       dt.location,
       dt.status,
       dt.subtotal,
+      dt.discount,
+      dt.vat,
       dt.grand_total,
+      s.currency_symbol,
       dt.created_at
     FROM dispatch_transactions dt
+    cross join settings s
     WHERE dt.id = ?
   `;
 
@@ -517,9 +532,113 @@ exports.confirmPayment = (req, res) => {
     });
   });
 };
+
 /* =========================
-   REMOVE STOCK
+   ADJUST DISPATCH PRICING
 ========================= */
+
+exports.adjustDispatchPricing = (req, res) => {
+  const { id } = req.params;
+
+  const discount = Number(req.body.discount);
+  const vat = Number(req.body.vat);
+
+  if (!Number.isFinite(discount) || discount < 0) {
+    return res.status(400).json({
+      error: "Invalid discount amount",
+    });
+  }
+
+  if (!Number.isFinite(vat) || vat < 0) {
+    return res.status(400).json({
+      error: "Invalid VAT amount",
+    });
+  }
+
+  const query = `
+    SELECT
+      reference,
+      subtotal,
+      status
+    FROM dispatch_transactions
+    WHERE id = ?
+  `;
+
+  db.query(query, [id], (err, rows) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        error: "Dispatch not found",
+      });
+    }
+
+    const dispatch = rows[0];
+
+    if (dispatch.status !== "PENDING_PAYMENT") {
+      return res.status(400).json({
+        error: "Only pending-payment dispatches can be adjusted",
+      });
+    }
+
+    if (discount > Number(dispatch.subtotal)) {
+      return res.status(400).json({
+        error: "Discount cannot exceed subtotal",
+      });
+    }
+
+    const grandTotal = Number(
+      (Number(dispatch.subtotal) - discount + vat).toFixed(2),
+    );
+
+    const updateQuery = `
+      UPDATE dispatch_transactions
+      SET
+        discount = ?,
+        vat = ?,
+        grand_total = ?
+      WHERE id = ?
+      AND status = 'PENDING_PAYMENT'
+    `;
+
+    db.query(
+      updateQuery,
+      [discount, vat, grandTotal, id],
+      (updateErr, result) => {
+        if (updateErr) {
+          return res.status(500).json({
+            error: updateErr.message,
+          });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(400).json({
+            error: "Dispatch is no longer eligible for adjustment",
+          });
+        }
+
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Adjusted pricing for dispatch #${id}`,
+        );
+
+        getIO().emit("dispatch-updated");
+
+        return res.json({
+          message: "Dispatch pricing updated successfully",
+          discount,
+          vat,
+          grand_total: grandTotal,
+        });
+      },
+    );
+  });
+};
 
 /* =========================
    PRINT DISPATCH

@@ -6,13 +6,20 @@ import { socket } from "../socket/socket";
 
 import toast from "react-hot-toast";
 
+import { useSettingsStore } from "../store/settingsStore";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Cashier() {
+  const { settings } = useSettingsStore();
   const [dispatches, setDispatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDispatch, setSelectedDispatch] = useState<any>(null);
   const [dispatchItems, setDispatchItems] = useState<any[]>([]);
+
+  const [editingPricing, setEditingPricing] = useState<number | null>(null);
+  const [discountInput, setDiscountInput] = useState("");
+  const [vatInput, setVatInput] = useState("");
 
   const cancelDispatch = async (id: number) => {
     if (!confirm("Cancel this dispatch?")) return;
@@ -123,6 +130,42 @@ function Cashier() {
     }
   };
 
+  const adjustPricing = async (
+    dispatchId: number,
+    discount: number,
+    vat: number,
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/dispatch/${dispatchId}/adjust-pricing`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            discount,
+            vat,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to update pricing");
+        return;
+      }
+
+      toast.success("Pricing updated");
+
+      await fetchDispatches();
+    } catch {
+      toast.error("Server connection failed");
+    }
+  };
+
   useEffect(() => {
     fetchDispatches();
 
@@ -174,11 +217,9 @@ function Cashier() {
                     {dispatch.customer_name}
                   </h2>
 
-                  <p className="text-sm text-gray-500">{dispatch.reference}</p>
-
                   <p className="text-sm text-gray-500">
-                    Staff: {dispatch.staff_name}
-                  </p>
+                    Reference: {dispatch.reference}
+                  </p>               
 
                   {dispatch.contact && (
                     <p className="text-sm text-gray-500">
@@ -191,14 +232,140 @@ function Cashier() {
                       Location: {dispatch.location}
                     </p>
                   )}
+
+                  <p className="text-sm text-gray-500">
+                    Staff: {dispatch.staff_name}
+                  </p>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-2xl font-bold">
-                    GH₵ {Number(dispatch.grand_total).toFixed(2)}
-                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-6">
+                      <span className="text-sm text-gray-600">Subtotal:</span>
+
+                      <span className="font-medium">
+                        {settings?.currency_symbol}{" "}
+                        {Number(dispatch.subtotal).toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-6">
+                      <span className="text-sm text-gray-600">Discount:</span>
+
+                      {editingPricing === dispatch.id ? (
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={discountInput}
+                          onChange={(e) => setDiscountInput(e.target.value)}
+                          className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-right"
+                        />
+                      ) : (
+                        <span className="font-medium">
+                          {settings?.currency_symbol}{" "}
+                          {Number(dispatch.discount).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-6">
+                      <span className="text-sm text-gray-600">VAT:</span>
+
+                      {editingPricing === dispatch.id ? (
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={vatInput}
+                          onChange={(e) => setVatInput(e.target.value)}
+                          className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-right"
+                        />
+                      ) : (
+                        <span className="font-medium">
+                          {settings?.currency_symbol}{" "}
+                          {Number(dispatch.vat).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold">Grand Total:</span>
+
+                        <span className="text-2xl font-bold">
+                          {settings?.currency_symbol}{" "}
+                          {(
+                            Number(dispatch.subtotal) -
+                            (editingPricing === dispatch.id
+                              ? Number(discountInput || 0)
+                              : Number(dispatch.discount || 0)) +
+                            (editingPricing === dispatch.id
+                              ? Number(vatInput || 0)
+                              : Number(dispatch.vat || 0))
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="mt-4 flex flex-col gap-2">
+                    {editingPricing === dispatch.id ? (
+                      <>
+                        <button
+                          onClick={async () => {
+                            const discount = Number(discountInput);
+                            const vat = Number(vatInput);
+
+                            if (!Number.isFinite(discount) || discount < 0) {
+                              toast.error("Enter a valid discount");
+                              return;
+                            }
+
+                            if (!Number.isFinite(vat) || vat < 0) {
+                              toast.error("Enter a valid VAT amount");
+                              return;
+                            }
+
+                            if (discount > Number(dispatch.subtotal)) {
+                              toast.error("Discount cannot exceed subtotal");
+                              return;
+                            }
+
+                            await adjustPricing(dispatch.id, discount, vat);
+
+                            setEditingPricing(null);
+                          }}
+                          className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl"
+                        >
+                          Save Pricing
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setEditingPricing(null);
+                            setDiscountInput("");
+                            setVatInput("");
+                          }}
+                          className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
+                        >
+                          Cancel Pricing
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingPricing(dispatch.id);
+                          setDiscountInput(
+                            Number(dispatch.discount || 0).toFixed(2),
+                          );
+                          setVatInput(Number(dispatch.vat || 0).toFixed(2));
+                        }}
+                        className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
+                      >
+                        Adjust Pricing
+                      </button>
+                    )}
                     <button
                       onClick={() => openDispatch(dispatch.id)}
                       className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"

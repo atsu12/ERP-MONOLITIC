@@ -1,5 +1,7 @@
 import React from "react";
 
+import { useSettingsStore } from "../store/settingsStore";
+
 interface CartItem {
   product_id: number;
   name: string;
@@ -23,6 +25,7 @@ function DispatchSummary({
   onExportInvoice,
   onSubmit,
 }: DispatchSummaryProps) {
+  const { settings } = useSettingsStore();
   const totalProducts = cartItems.length;
 
   const totalUnits = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -61,11 +64,8 @@ function DispatchSummary({
     );
   };
 
-  const currency = new Intl.NumberFormat("en-GH", {
-    style: "currency",
-    currency: "GHS",
-  });
-
+  const formatCurrency = (value: number) =>
+    `${settings?.currency_symbol ?? ""} ${Number(value).toFixed(2)}`;
   const grandTotal = cartItems.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
     0,
@@ -103,14 +103,14 @@ function DispatchSummary({
                       <div>
                         <p className="text-xs text-gray-500">Unit Price</p>
                         <p className="font-semibold">
-                          {currency.format(item.unit_price)}
+                          {formatCurrency(item.unit_price)}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-xs text-gray-500">Line Total</p>
                         <p className="font-bold text-lg">
-                          {currency.format(item.quantity * item.unit_price)}
+                          {formatCurrency(item.quantity * item.unit_price)}
                         </p>
                       </div>
                     </div>
@@ -143,14 +143,14 @@ function DispatchSummary({
                       <div>
                         <p className="text-xs text-gray-500">Unit Price</p>
                         <p className="font-semibold">
-                          {currency.format(item.unit_price)}
+                          {formatCurrency(item.unit_price)}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-xs text-gray-500">Line Total</p>
                         <p className="font-bold text-lg">
-                          {currency.format(item.quantity * item.unit_price)}
+                          {formatCurrency(item.quantity * item.unit_price)}
                         </p>
                       </div>
                     </div>
@@ -224,7 +224,7 @@ function DispatchSummary({
             <span className="text-lg font-semibold">Grand Total</span>
 
             <span className="text-3xl font-bold">
-              {currency.format(grandTotal)}
+              {formatCurrency(grandTotal)}
             </span>
           </div>
         </div>
