@@ -136,7 +136,7 @@ async function getDispatchItems(dispatchId) {
     FROM dispatch_items di
     JOIN products p
       ON p.id = di.product_id
-    WHERE di.dispatch_id = ?
+    WHERE di.transaction_id = ?
     ORDER BY di.id ASC
     `,
     [dispatchId],
@@ -423,10 +423,21 @@ async function insertCompanyLogo(workbook, worksheet, settings) {
    GENERATE PROFORMA
 ========================= */
 
-async function generateProformaInvoice(dispatch) {
+async function generateProformaInvoice(
+  dispatch,
+  documentTitle = "PROFORMA INVOICE",
+) {
   const { workbook, settings } = await loadInvoiceTemplate();
 
   const worksheet = workbook.worksheets[0];
+
+  worksheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      if (cell.value === "PROFORMA INVOICE") {
+        cell.value = documentTitle;
+      }
+    });
+  });
 
   const invoiceNumber = await generateInvoiceNumber(settings);
 
@@ -521,42 +532,30 @@ async function calculateTemplateTotals(items) {
   let subtotal = 0;
 
   items.forEach((item) => {
-    subtotal +=
-      Number(item.quantity || 0) *
-      Number(item.unit_price || 0);
+    subtotal += Number(item.quantity || 0) * Number(item.unit_price || 0);
   });
 
-  const discount = Number(
-    worksheet.getCell("I46").value || 0
-  );
+  const discount = Number(worksheet.getCell("I46").value || 0);
 
   const vatCell = worksheet.getCell("I47");
 
   let vat = 0;
 
-  if (
-    typeof vatCell.value === "object" &&
-    vatCell.value?.formula
-  ) {
+  if (typeof vatCell.value === "object" && vatCell.value?.formula) {
     const formula = vatCell.value.formula;
 
-    const percentageMatch = formula.match(
-      /(\d+(?:\.\d+)?)%/
-    );
+    const percentageMatch = formula.match(/(\d+(?:\.\d+)?)%/);
 
     if (percentageMatch) {
       const percentage = Number(percentageMatch[1]);
 
-      vat =
-        (subtotal - discount) *
-        (percentage / 100);
+      vat = (subtotal - discount) * (percentage / 100);
     }
   } else {
     vat = Number(vatCell.value || 0);
   }
 
-  const grandTotal =
-    subtotal - discount + vat;
+  const grandTotal = subtotal - discount + vat;
 
   return {
     subtotal,

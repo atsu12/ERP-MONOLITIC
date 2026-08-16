@@ -11,11 +11,15 @@ import { useSettingsStore } from "../store/settingsStore";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function Cashier() {
-  const { settings } = useSettingsStore();
+  const { settings, fetchSettings } = useSettingsStore();
   const [dispatches, setDispatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDispatch, setSelectedDispatch] = useState<any>(null);
   const [dispatchItems, setDispatchItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const [editingPricing, setEditingPricing] = useState<number | null>(null);
   const [discountInput, setDiscountInput] = useState("");
@@ -130,6 +134,51 @@ function Cashier() {
     }
   };
 
+  const createSalesInvoice = async (dispatchId: number) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/dispatch/${dispatchId}/invoice`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        let message = "Unable to create sales invoice.";
+
+        try {
+          const errorData = await response.json();
+          message = errorData.message || message;
+        } catch {
+          // Ignore JSON parsing errors
+        }
+
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Sales-Invoice-${dispatchId}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Sales Invoice generated successfully");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Unable to create sales invoice.");
+    }
+  };
+
   const adjustPricing = async (
     dispatchId: number,
     discount: number,
@@ -219,7 +268,7 @@ function Cashier() {
 
                   <p className="text-sm text-gray-500">
                     Reference: {dispatch.reference}
-                  </p>               
+                  </p>
 
                   {dispatch.contact && (
                     <p className="text-sm text-gray-500">
@@ -371,6 +420,14 @@ function Cashier() {
                       className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
                     >
                       View Products
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => createSalesInvoice(dispatch.id)}
+                      className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Create Sales Invoice
                     </button>
 
                     <button

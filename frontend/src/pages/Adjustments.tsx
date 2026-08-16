@@ -34,6 +34,8 @@ function Adjustments() {
 
   const [invoiceValidityDays, setInvoiceValidityDays] = useState(14);
 
+  const [invoiceVatRate, setInvoiceVatRate] = useState(0);
+
   const [companyName, setCompanyName] = useState("");
 
   const [companyAddress, setCompanyAddress] = useState("");
@@ -79,6 +81,7 @@ function Adjustments() {
     setUsdExchangeRate(settings.usd_exchange_rate);
     setCompanyMultiplier(settings.company_multiplier);
     setInvoiceValidityDays(settings.invoice_validity_days ?? 14);
+    setInvoiceVatRate(settings.invoice_vat_rate ?? 0);
 
     setCompanyName(settings.company_name ?? "");
     setCompanyAddress(settings.company_address ?? "");
@@ -120,6 +123,7 @@ function Adjustments() {
       usd_exchange_rate: usdExchangeRate,
       company_multiplier: companyMultiplier,
       invoice_validity_days: invoiceValidityDays,
+      invoice_vat_rate: invoiceVatRate,
 
       // Company Information
       company_name: companyName,

@@ -42,7 +42,7 @@ export function exportProductsToExcel(
 
     company:
       settings?.company_name ??
-      "ZICO BUSINESS ERP",
+      "ZICO BUSINESS",
 
     rows,
 

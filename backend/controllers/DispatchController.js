@@ -769,8 +769,10 @@ exports.exportInvoice = async (req, res) => {
 
     const dispatch = dispatchRows[0];
 
-    const { workbook } =
-      await invoiceGenerator.generateProformaInvoice(dispatch);
+    const { workbook } = await invoiceGenerator.generateProformaInvoice(
+      dispatch,
+      "SALES INVOICE",
+    );
 
     res.setHeader(
       "Content-Type",
