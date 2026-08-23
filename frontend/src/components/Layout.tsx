@@ -97,7 +97,7 @@ function Layout({ children }: LayoutProps) {
         "Track inventory movements, warehouse operations, and stock history.",
     },
 
-    "/activity": {
+    "/audit-log": {
       title: "Audit Log",
 
       description: "Monitor user activity and maintain a complete audit trail.",

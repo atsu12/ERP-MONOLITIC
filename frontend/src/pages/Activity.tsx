@@ -6,6 +6,9 @@ import { useDebounce } from "../hooks/useDebounce";
 
 import { Activity as ActivityIcon, Clock3, User } from "lucide-react";
 
+import { DatePicker } from "antd";
+import dayjs from "dayjs";
+
 import PageHeader from "../components/PageHeader";
 
 import PageLoader from "../components/PageLoader";
@@ -34,13 +37,29 @@ function Activity() {
   const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounce(search);
+
+  /* =========================
+     DATE FILTERS
+  ========================= */
+
+  const [fromDate, setFromDate] = useState("");
+
+  const [toDate, setToDate] = useState("");
+
+  const minimumAuditDate = dayjs().subtract(3, "year");
+
+  const maximumAuditDate = dayjs();
+
   /* =========================
      LOAD
   ========================= */
 
   useEffect(() => {
-    fetchActivities();
-  }, []);
+    fetchActivities({
+      fromDate,
+      toDate,
+    });
+  }, [fromDate, toDate]);
 
   /* =========================
      FILTERED ACTIVITIES
@@ -82,9 +101,66 @@ function Activity() {
 
       <PageHeader
         icon={<ActivityIcon size={32} className="text-gray-800" />}
-        title="Activity Logs"
+        title="Activity Audit Logs"
         description="Review system activity logs and monitor user actions across inventory operations."
       />
+
+      {/* AUDIT HISTORY RANGE */}
+
+      <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="mb-3">
+          <p className="text-sm font-semibold text-gray-800">
+            Audit History
+          </p>
+
+          <p className="text-xs text-gray-500">
+            Search activity history for up to 3 years.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium text-gray-700">
+            Date From
+          </span>
+
+          <DatePicker
+            format="DD/MM/YYYY"
+            value={fromDate ? dayjs(fromDate) : null}
+            minDate={minimumAuditDate}
+            maxDate={maximumAuditDate}
+            onChange={(date) =>
+              setFromDate(date ? date.format("YYYY-MM-DD") : "")
+            }
+          />
+
+          <span className="text-sm font-medium text-gray-700">
+            Date To
+          </span>
+
+          <DatePicker
+            format="DD/MM/YYYY"
+            value={toDate ? dayjs(toDate) : null}
+            minDate={minimumAuditDate}
+            maxDate={maximumAuditDate}
+            onChange={(date) =>
+              setToDate(date ? date.format("YYYY-MM-DD") : "")
+            }
+          />
+
+          {(fromDate || toDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+              }}
+              className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Clear Dates
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* SEARCH RESULTS */}
 
@@ -130,6 +206,7 @@ function Activity() {
               <th>Action</th>
 
               <th>Date</th>
+
               <th>Time</th>
             </tr>
           </thead>
@@ -190,8 +267,12 @@ function Activity() {
                   {/* DATE */}
 
                   <td>
-                    {new Date(activity.created_at).toLocaleDateString("en-GB")}
+                    {new Date(activity.created_at).toLocaleDateString(
+                      "en-GB",
+                    )}
                   </td>
+
+                  {/* TIME */}
 
                   <td>
                     <div className="flex items-center gap-2 text-gray-600">

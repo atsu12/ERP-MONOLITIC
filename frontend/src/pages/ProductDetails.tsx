@@ -164,10 +164,14 @@ function ProductDetails() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Price (USD)</p>
+            <p className="text-sm text-gray-500">
+              Price ({settings?.base_currency ?? "USD"})
+            </p>
 
             <p className="font-semibold">
-              {product.price ? `$${Number(product.price).toFixed(2)}` : "-"}
+              {product.price
+                ? `${settings?.base_currency ?? "USD"} ${Number(product.price).toFixed(2)}`
+                : "-"}
             </p>
           </div>
 

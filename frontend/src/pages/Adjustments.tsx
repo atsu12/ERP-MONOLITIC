@@ -24,11 +24,14 @@ function Adjustments() {
   const { settings, loading, fetchSettings, updateSettings } =
     useSettingsStore();
 
+  const [baseCurrency, setBaseCurrency] = useState("USD");
+
   const [displayCurrency, setDisplayCurrency] = useState("GHS");
 
   const [currencySymbol, setCurrencySymbol] = useState("GH₵");
 
-  const [usdExchangeRate, setUsdExchangeRate] = useState(15.5);
+  const [baseCurrencyExchangeRate, setBaseCurrencyExchangeRate] =
+    useState(15.5);
 
   const [companyMultiplier, setCompanyMultiplier] = useState(1.25);
 
@@ -76,9 +79,11 @@ function Adjustments() {
   useEffect(() => {
     if (!settings) return;
 
+    setBaseCurrency(settings.base_currency);
+
     setDisplayCurrency(settings.display_currency);
     setCurrencySymbol(settings.currency_symbol);
-    setUsdExchangeRate(settings.usd_exchange_rate);
+    setBaseCurrencyExchangeRate(settings.usd_exchange_rate);
     setCompanyMultiplier(settings.company_multiplier);
     setInvoiceValidityDays(settings.invoice_validity_days ?? 14);
     setInvoiceVatRate(settings.invoice_vat_rate ?? 0);
@@ -112,15 +117,16 @@ function Adjustments() {
   }, [settings]);
 
   const effectiveRate = useMemo(() => {
-    return usdExchangeRate * companyMultiplier;
-  }, [usdExchangeRate, companyMultiplier]);
+    return baseCurrencyExchangeRate * companyMultiplier;
+  }, [baseCurrencyExchangeRate, companyMultiplier]);
 
   const handleSave = async () => {
     const success = await updateSettings({
       // Currency & Pricing
+      base_currency: baseCurrency,
       display_currency: displayCurrency,
       currency_symbol: currencySymbol,
-      usd_exchange_rate: usdExchangeRate,
+      usd_exchange_rate: baseCurrencyExchangeRate,
       company_multiplier: companyMultiplier,
       invoice_validity_days: invoiceValidityDays,
       invoice_vat_rate: invoiceVatRate,
@@ -218,8 +224,6 @@ function Adjustments() {
       <BrandingSection
         companyLogoPath={companyLogoPath}
         setCompanyLogoPath={setCompanyLogoPath}
-        invoiceTemplatePath={invoiceTemplatePath}
-        setInvoiceTemplatePath={setInvoiceTemplatePath}
         companyHeader={companyHeader}
         setCompanyHeader={setCompanyHeader}
         companyFooter={companyFooter}
@@ -238,12 +242,14 @@ function Adjustments() {
       />
 
       <CurrencyPricingSection
+        baseCurrency={baseCurrency}
+        setBaseCurrency={setBaseCurrency}
         displayCurrency={displayCurrency}
         setDisplayCurrency={setDisplayCurrency}
         currencySymbol={currencySymbol}
         setCurrencySymbol={setCurrencySymbol}
-        usdExchangeRate={usdExchangeRate}
-        setUsdExchangeRate={setUsdExchangeRate}
+        baseCurrencyExchangeRate={baseCurrencyExchangeRate}
+        setBaseCurrencyExchangeRate={setBaseCurrencyExchangeRate}
         companyMultiplier={companyMultiplier}
         setCompanyMultiplier={setCompanyMultiplier}
         effectiveRate={effectiveRate}

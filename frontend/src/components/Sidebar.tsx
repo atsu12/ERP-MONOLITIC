@@ -20,6 +20,7 @@ import {
   FileText,
   SlidersHorizontal,
   Users,
+  BookOpen,
   LogOut,
   UserCog,
   Wallet,
@@ -111,7 +112,7 @@ function Sidebar() {
       items: [
         {
           label: "Audit Log",
-          path: "/activity",
+          path: "/audit-log",
           icon: Activity,
           roles: ["ADMIN"],
         },
@@ -121,6 +122,13 @@ function Sidebar() {
           path: "/warehouses",
           icon: Warehouse,
           roles: ["ADMIN"],
+        },
+
+        {
+          label: "Customers",
+          path: "/customers",
+          icon: Users,
+          roles: ["ADMIN", "MANAGER", "STAFF"],
         },
 
         {
@@ -142,6 +150,13 @@ function Sidebar() {
           path: "/users",
           icon: Users,
           roles: ["ADMIN"],
+        },
+
+        {
+          label: "Help",
+          path: "/help",
+          icon: BookOpen,
+          roles: ["ADMIN", "MANAGER", "STAFF"],
         },
       ],
     },
@@ -233,11 +248,13 @@ function Sidebar() {
                           to={item.path}
                           onClick={closeMobileMenu}
                           title={sidebarCollapsed ? item.label : ""}
-                          className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-3"
-                            } px-3 py-3 rounded-xl transition-all duration-200 ${isActive
+                          className={`flex items-center ${
+                            sidebarCollapsed ? "justify-center" : "gap-3"
+                          } px-3 py-3 rounded-xl transition-all duration-200 ${
+                            isActive
                               ? "bg-slate-800 text-white border border-slate-700 shadow-lg"
                               : "text-gray-300 hover:bg-slate-800/70 hover:text-white"
-                            }`}
+                          }`}
                         >
                           <Icon size={sidebarCollapsed ? 28 : 20} />
 
@@ -266,8 +283,9 @@ function Sidebar() {
 
         <button
           onClick={() => navigate("/my-account")}
-          className={`w-full flex items-center justify-center ${sidebarCollapsed ? "" : "gap-2"
-            } bg-gray-800 hover:bg-gray-700 transition-all duration-200 py-3 rounded-2xl font-semibold mb-3`}
+          className={`w-full flex items-center justify-center ${
+            sidebarCollapsed ? "" : "gap-2"
+          } bg-gray-800 hover:bg-gray-700 transition-all duration-200 py-3 rounded-2xl font-semibold mb-3`}
         >
           <UserCog size={18} />
 
@@ -276,8 +294,9 @@ function Sidebar() {
 
         <button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center ${sidebarCollapsed ? "" : "gap-2"
-            } bg-red-600 hover:bg-red-700 transition-all duration-200 py-3 rounded-2xl font-semibold shadow-lg`}
+          className={`w-full flex items-center justify-center ${
+            sidebarCollapsed ? "" : "gap-2"
+          } bg-red-600 hover:bg-red-700 transition-all duration-200 py-3 rounded-2xl font-semibold shadow-lg`}
         >
           <LogOut size={18} />
 

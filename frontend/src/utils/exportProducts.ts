@@ -20,14 +20,14 @@ export function exportProductsToExcel(
 
     Quantity: product.quantity,
 
-    "USD Price": Number(
+    [`Base Price (${settings?.base_currency ?? "USD"})`]: Number(
       product.price || 0,
     ).toFixed(2),
 
     Currency:
-      settings?.display_currency || "USD",
+      settings?.display_currency || "GHS",
 
-    "Display Price": (
+    [`Display Price (${settings?.display_currency ?? "GHS"})`]: (
       Number(product.price || 0) *
       effectiveRate
     ).toFixed(2),

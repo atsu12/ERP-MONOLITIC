@@ -14,6 +14,12 @@ interface Activity {
   created_at: string;
 }
 
+interface ActivityFilters {
+  fromDate?: string;
+
+  toDate?: string;
+}
+
 interface ActivityState {
   activities: Activity[];
 
@@ -21,7 +27,7 @@ interface ActivityState {
 
   error: string;
 
-  fetchActivities: () => Promise<void>;
+  fetchActivities: (filters?: ActivityFilters) => Promise<void>;
 }
 
 export const useActivityStore = create<ActivityState>((set) => ({
@@ -31,7 +37,7 @@ export const useActivityStore = create<ActivityState>((set) => ({
 
   error: "",
 
-  fetchActivities: async () => {
+  fetchActivities: async (filters = {}) => {
     try {
       set({
         loading: true,
@@ -39,7 +45,20 @@ export const useActivityStore = create<ActivityState>((set) => ({
         error: "",
       });
 
-      const data = await apiRequest("/activity", {
+      const params = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          params.append(key, value);
+        }
+      });
+
+      const endpoint =
+        params.toString().length > 0
+          ? `/activity?${params.toString()}`
+          : "/activity";
+
+      const data = await apiRequest(endpoint, {
         auth: true,
       });
 

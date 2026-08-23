@@ -1,9 +1,17 @@
+import { useSettingsStore } from "../store/settingsStore";
+
 import { exportExcel } from "./exportExcel";
 
 export function exportInventoryValuation(
   items: any[],
   filters: Record<string, string> = {},
 ) {
+  const { settings } = useSettingsStore.getState();
+
+  const effectiveRate = settings
+    ? settings.usd_exchange_rate * settings.company_multiplier
+    : 1;
+
   const rows = items.map((item) => ({
     "Product ID": item.id,
 
@@ -15,14 +23,14 @@ export function exportInventoryValuation(
 
     Quantity: item.quantity,
 
-    "Unit Price": Number(item.price).toFixed(2),
+    [`Unit Price (${settings?.display_currency ?? "GHS"})`]:
+      (Number(item.price) * effectiveRate).toFixed(2),
 
-    "Inventory Value": Number(item.inventoryValue).toFixed(2),
+    [`Inventory Value (${settings?.display_currency ?? "GHS"})`]:
+      (Number(item.inventoryValue) * effectiveRate).toFixed(2),
   }));
 
-  const today = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
   exportExcel({
     title: "Inventory Valuation Report",

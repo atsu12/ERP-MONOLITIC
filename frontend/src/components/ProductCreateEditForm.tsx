@@ -30,8 +30,6 @@ function ProductCreateEditForm({
 
     price: initialData?.price || "",
 
-    track_serial: initialData?.track_serial || false,
-
     stock_unit: initialData?.stock_unit || "Unit",
 
     package_size: initialData?.package_size || 1,
@@ -170,65 +168,6 @@ function ProductCreateEditForm({
           <p className="text-sm text-red-500 mt-1">{errors.price}</p>
         )}
       </div>
-
-      {/* SERIALIZED */}
-
-      {!formData.track_serial && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Stock Unit
-            </label>
-
-            <select
-              name="stock_unit"
-              value={formData.stock_unit}
-              onChange={handleChange}
-              className="erp-input"
-            >
-              <option value="Unit">Unit</option>
-              <option value="Piece">Piece</option>
-              <option value="Pair">Pair</option>
-              <option value="Bottle">Bottle</option>
-              <option value="Pack">Pack</option>
-              <option value="Box">Box</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Package Size
-            </label>
-
-            <input
-              type="number"
-              min="1"
-              name="package_size"
-              value={formData.package_size}
-              onChange={handleChange}
-              className="erp-input"
-            />
-          </div>
-
-          <div className="md:col-span-2 rounded-xl bg-blue-50 p-4 text-sm text-blue-800">
-            Example: If 1 Pack contains 6 Pairs, select <strong>Pair</strong> as
-            Stock Unit and enter <strong>6</strong> as Package Size.
-          </div>
-        </div>
-      )}
-
-      {mode === "create" && (
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="track_serial"
-            checked={formData.track_serial}
-            onChange={handleChange}
-          />
-
-          <label className="font-medium">Serialized Product</label>
-        </div>
-      )}
 
       {/* ACTIONS */}
 

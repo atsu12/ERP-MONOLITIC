@@ -11,6 +11,11 @@ import { PackagePlus, Boxes, ScanLine, Hash } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 
 function StockIn() {
+  const [trackSerial, setTrackSerial] = useState<boolean | null>(null);
+
+  const [stockUnit, setStockUnit] = useState("Unit");
+
+  const [packageSize, setPackageSize] = useState(1);
   const { fetchProducts: refreshProducts } = useProductStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +81,10 @@ function StockIn() {
 
     setSelectedProduct(product || null);
 
+    setTrackSerial(null);
+    setStockUnit("Unit");
+    setPackageSize(1);
+
     setQuantity("");
 
     setSerialInput("");
@@ -134,13 +143,16 @@ function StockIn() {
 
     let payload: any = {
       product_id: selectedProduct.id,
+      track_serial: trackSerial,
+      stock_unit: stockUnit,
+      package_size: packageSize,
     };
 
     /* =========================
        SERIALIZED
     ========================= */
 
-    if (selectedProduct.track_serial) {
+    if (trackSerial === true) {
       if (serials.length === 0) {
         toast.error("Add at least one serial");
 
@@ -158,7 +170,7 @@ function StockIn() {
         return;
       }
 
-      payload.quantity = Number(quantity) * (selectedProduct.package_size || 1);
+      payload.quantity = Number(quantity) * (packageSize || 1);
     }
 
     try {
@@ -265,11 +277,75 @@ function StockIn() {
           </select>
         </div>
 
-        {/* STANDARD PRODUCT */}
+        {/* INVENTORY TYPE */}
 
-        {selectedProduct && !selectedProduct.track_serial && (
+        {selectedProduct && trackSerial === null && (
           <div className="mb-6">
             <label className="block mb-2 font-semibold text-gray-700">
+              Inventory Type
+            </label>
+
+            <select
+              className="erp-select"
+              value=""
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (value === "standard") {
+                  setTrackSerial(false);
+                }
+
+                if (value === "serialized") {
+                  setTrackSerial(true);
+                }
+              }}
+            >
+              <option value="">Select Inventory Type</option>
+              <option value="standard">Standard</option>
+              <option value="serialized">Serialized</option>
+            </select>
+          </div>
+        )}
+
+        {/* STANDARD PRODUCT */}
+
+        {selectedProduct && trackSerial === false && (
+          <div className="mb-6">
+            <label className="block mb-2 font-semibold text-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Stock Unit
+                  </label>
+
+                  <select
+                    className="erp-select"
+                    value={stockUnit}
+                    onChange={(e) => setStockUnit(e.target.value)}
+                  >
+                    <option value="Unit">Unit</option>
+                    <option value="Piece">Piece</option>
+                    <option value="Pair">Pair</option>
+                    <option value="Bottle">Bottle</option>
+                    <option value="Pack">Pack</option>
+                    <option value="Box">Box</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block mb-2 font-semibold text-gray-700">
+                    Package Size
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1"
+                    className="erp-input"
+                    value={packageSize}
+                    onChange={(e) => setPackageSize(Number(e.target.value))}
+                  />
+                </div>
+              </div>
               Packages Received
             </label>
 
@@ -285,9 +361,8 @@ function StockIn() {
                 </p>
 
                 <p className="text-sm text-blue-700 mt-1">
-                  1 Package = {selectedProduct.package_size}{" "}
-                  {selectedProduct.stock_unit}
-                  {selectedProduct.package_size > 1 ? "s" : ""}
+                  1 Package = {packageSize} {stockUnit}
+                  {packageSize > 1 ? "s" : ""}
                 </p>
               </div>
 
@@ -305,11 +380,8 @@ function StockIn() {
                   </p>
 
                   <p className="text-lg font-bold text-green-700">
-                    {Number(quantity) * selectedProduct.package_size}{" "}
-                    {selectedProduct.stock_unit}
-                    {Number(quantity) * selectedProduct.package_size > 1
-                      ? "s"
-                      : ""}
+                    {Number(quantity) * packageSize} {stockUnit}
+                    {Number(quantity) * packageSize > 1 ? "s" : ""}
                   </p>
                 </div>
               )}
@@ -319,7 +391,7 @@ function StockIn() {
 
         {/* SERIALIZED PRODUCT */}
 
-        {selectedProduct && selectedProduct.track_serial && (
+        {selectedProduct && trackSerial === true && (
           <div>
             <label className="block mb-2 font-semibold text-gray-700">
               Serial Scanner

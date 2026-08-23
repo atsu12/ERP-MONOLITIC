@@ -8,7 +8,17 @@ import { useAuthStore } from "../store/authStore";
 
 import { useDebounce } from "../hooks/useDebounce";
 
-import { Package, Boxes, Trash2, Pencil, Loader2, Plus } from "lucide-react";
+import {
+  Package,
+  Boxes,
+  Trash2,
+  Pencil,
+  Loader2,
+  Plus,
+  Upload,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 import { useProductStore } from "../store/productStore";
 
@@ -32,6 +42,15 @@ function Products() {
   const [filterValue, setFilterValue] = useState("");
 
   const [openCreateModal, setOpenCreateModal] = useState(false);
+
+  const [importing, setImporting] = useState(false);
+
+  const [importReport, setImportReport] = useState<{
+    type: "error" | "success";
+    title: string;
+    message: string;
+    errors?: string[];
+  } | null>(null);
 
   const [_editingProduct, setEditingProduct] = useState<any>(null);
 
@@ -105,6 +124,244 @@ function Products() {
     }
   }, []);
 
+  const handleBulkImport = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    setImportReport(null);
+    setImporting(true);
+
+    try {
+      const XLSX = await import("xlsx");
+
+      const buffer = await file.arrayBuffer();
+
+      const workbook = XLSX.read(buffer, {
+        type: "array",
+      });
+
+      if (workbook.SheetNames.length === 0) {
+        throw new Error("The Excel workbook contains no worksheets.");
+      }
+
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(
+        worksheet,
+        {
+          header: 1,
+          defval: null,
+          raw: true,
+        },
+      );
+
+      if (rows.length < 1) {
+        throw new Error("The Excel file contains no product rows.");
+      }
+
+      const errors: string[] = [];
+
+      /*
+       * EXCEL FORMAT
+       *
+       * A = Product Name
+       * B = Brand
+       * C = Category
+       * D = Price
+       *
+       * NO HEADER ROW.
+       * Row 1 is the first product.
+       */
+
+      const importRows: {
+        rowNumber: number;
+        name: string;
+        brand: string;
+        category: string;
+        price: number;
+      }[] = [];
+
+      const namesInFile = new Map<string, number>();
+
+      /*
+       * VALIDATE EVERY ROW
+       */
+
+      rows.forEach((row, index) => {
+        const rowNumber = index + 1;
+
+        const name = String(row[0] ?? "").trim();
+        const brand = String(row[1] ?? "").trim();
+        const category = String(row[2] ?? "").trim();
+        const rawPrice = row[3];
+
+        if (!name) {
+          errors.push(`A${rowNumber} — Product name is empty.`);
+        }
+
+        if (!brand) {
+          errors.push(`B${rowNumber} — Brand is empty.`);
+        }
+
+        if (!category) {
+          errors.push(`C${rowNumber} — Category is empty.`);
+        }
+
+        if (
+          rawPrice === null ||
+          rawPrice === undefined ||
+          String(rawPrice).trim() === ""
+        ) {
+          errors.push(`D${rowNumber} — Price is empty.`);
+        } else {
+          const price = Number(rawPrice);
+
+          if (!Number.isFinite(price)) {
+            errors.push(
+              `D${rowNumber} — Price "${String(rawPrice)}" is not a valid number.`,
+            );
+          } else if (price <= 0) {
+            errors.push(`D${rowNumber} — Price must be greater than 0.`);
+          }
+        }
+
+        const normalizedName = name.toLowerCase();
+
+        if (normalizedName) {
+          if (namesInFile.has(normalizedName)) {
+            errors.push(
+              `A${rowNumber} — Duplicate product "${name}" also appears on row ${namesInFile.get(normalizedName)}.`,
+            );
+          } else {
+            namesInFile.set(normalizedName, rowNumber);
+          }
+        }
+
+        if (
+          name &&
+          brand &&
+          category &&
+          rawPrice !== null &&
+          rawPrice !== undefined &&
+          Number.isFinite(Number(rawPrice)) &&
+          Number(rawPrice) > 0
+        ) {
+          importRows.push({
+            rowNumber,
+            name,
+            brand,
+            category,
+            price: Number(rawPrice),
+          });
+        }
+      });
+
+      /*
+       * CHECK AGAINST PRODUCTS ALREADY IN THE SYSTEM
+       */
+
+      const existingNames = new Map(
+        products.map((product) => [
+          product.name.trim().toLowerCase(),
+          product.name,
+        ]),
+      );
+
+      importRows.forEach((row) => {
+        const existingName = existingNames.get(row.name.toLowerCase());
+
+        if (existingName) {
+          errors.push(
+            `A${row.rowNumber} — Product "${row.name}" already exists in the system.`,
+          );
+        }
+      });
+
+      /*
+       * ANY ERROR = ENTIRE IMPORT ABORTED
+       */
+
+      if (errors.length > 0) {
+        setImportReport({
+          type: "error",
+          title: "Import aborted",
+          message:
+            "No products were imported because one or more validation rules were violated.",
+          errors,
+        });
+
+        return;
+      }
+
+      /*
+       * IMPORT
+       */
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/products/import`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            products: importRows.map((row) => ({
+              name: row.name,
+              brand: row.brand,
+              category: row.category,
+              price: row.price,
+              track_serial: null,
+              quantity: 0,
+              stock_unit: "Unit",
+              package_size: 1,
+            })),
+          }),
+        },
+      );
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        setImportReport({
+          type: "error",
+          title: "Import aborted",
+          message:
+            responseData.error ||
+            "The server rejected the bulk product import.",
+          errors: responseData.errors || [],
+        });
+
+        return;
+      }
+
+      await fetchProducts();
+
+      setImportReport({
+        type: "success",
+        title: "Import completed",
+        message: `${importRows.length} product(s) were imported successfully.`,
+      });
+    } catch (error: any) {
+      console.error(error);
+
+      setImportReport({
+        type: "error",
+        title: "Import aborted",
+        message: error?.message || "The Excel file could not be processed.",
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const filteredProducts = products.filter((product) => {
     const term = debouncedSearch.toLowerCase();
 
@@ -142,6 +399,64 @@ function Products() {
 
   return (
     <div>
+      {importReport && (
+        <div
+          className={`mb-6 rounded-2xl border p-5 ${
+            importReport.type === "error"
+              ? "border-red-200 bg-red-50"
+              : "border-green-200 bg-green-50"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            {importReport.type === "error" ? (
+              <AlertCircle size={22} className="mt-0.5 text-red-600 shrink-0" />
+            ) : (
+              <CheckCircle2
+                size={22}
+                className="mt-0.5 text-green-600 shrink-0"
+              />
+            )}
+
+            <div className="min-w-0">
+              <h3
+                className={`font-semibold ${
+                  importReport.type === "error"
+                    ? "text-red-800"
+                    : "text-green-800"
+                }`}
+              >
+                {importReport.title}
+              </h3>
+
+              <p
+                className={`mt-1 text-sm ${
+                  importReport.type === "error"
+                    ? "text-red-700"
+                    : "text-green-700"
+                }`}
+              >
+                {importReport.message}
+              </p>
+
+              {importReport.errors && importReport.errors.length > 0 && (
+                <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border border-red-200 bg-white p-3">
+                  <div className="space-y-2">
+                    {importReport.errors.map((error, index) => (
+                      <div
+                        key={`${error}-${index}`}
+                        className="text-sm text-red-700"
+                      >
+                        {error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         icon={<Package size={32} className="text-gray-800" />}
         title="Products"
@@ -252,13 +567,39 @@ function Products() {
             )}
           </div>
 
-          <button
-            onClick={() => setOpenCreateModal(true)}
-            className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition text-white px-5 py-3 rounded-2xl font-semibold"
-          >
-            <Plus size={18} />
-            Create Product
-          </button>
+          <div className="flex items-center gap-3">
+            <label
+              className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition cursor-pointer ${
+                importing
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-800 hover:bg-gray-50"
+              }`}
+            >
+              {importing ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Upload size={18} />
+              )}
+
+              {importing ? "Importing..." : "Import Products"}
+
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                disabled={importing}
+                onChange={handleBulkImport}
+              />
+            </label>
+
+            <button
+              onClick={() => setOpenCreateModal(true)}
+              className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition text-white px-5 py-3 rounded-2xl font-semibold"
+            >
+              <Plus size={18} />
+              Create Product
+            </button>
+          </div>
         </div>
       </div>
 
@@ -293,7 +634,7 @@ function Products() {
 
                 <th>Quantity</th>
 
-                <th>Price</th>
+                <th>Price ({settings?.display_currency ?? "GHS"})</th>
 
                 <th>Actions</th>
               </tr>

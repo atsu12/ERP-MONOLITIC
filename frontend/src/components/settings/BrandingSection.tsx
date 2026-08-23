@@ -4,9 +4,6 @@ type BrandingSectionProps = {
   companyLogoPath: string;
   setCompanyLogoPath: (value: string) => void;
 
-  invoiceTemplatePath: string;
-  setInvoiceTemplatePath: (value: string) => void;
-
   companyHeader: string;
   setCompanyHeader: (value: string) => void;
 
@@ -17,9 +14,6 @@ type BrandingSectionProps = {
 function BrandingSection({
   companyLogoPath,
   setCompanyLogoPath,
-
-  invoiceTemplatePath,
-  setInvoiceTemplatePath,
 
   companyHeader,
   setCompanyHeader,
@@ -73,37 +67,6 @@ function BrandingSection({
           type="logo"
           accept=".png,.jpg,.jpeg,.svg,.webp"
           onUploaded={setCompanyLogoPath}
-        />
-      </section>
-
-      {/* ================================================= */}
-      {/* PROFORMA / INVOICE TEMPLATE                       */}
-      {/* ================================================= */}
-
-      <section className="mb-10">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Invoice Template
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-600">
-            Upload the Excel invoice template used when generating Proforma
-            Invoices and Final Invoices.
-          </p>
-
-          <ul className="mt-3 ml-5 list-disc text-sm text-gray-500 space-y-1">
-            <li>Supported formats: XLSX and XLSM.</li>
-            <li>The ERP automatically fills placeholders.</li>
-            <li>You can replace the template at any time.</li>
-          </ul>
-        </div>
-
-        <FileUploadField
-          label="Invoice Template"
-          value={invoiceTemplatePath}
-          type="invoice"
-          accept=".xlsx,.xlsm"
-          onUploaded={setInvoiceTemplatePath}
         />
       </section>
 

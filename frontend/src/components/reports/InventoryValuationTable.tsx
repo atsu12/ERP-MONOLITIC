@@ -18,6 +18,11 @@ type Props = {
 
 function InventoryValuationTable({ items, filters = {} }: Props) {
   const { settings } = useSettingsStore();
+
+  const effectiveRate = settings
+    ? settings.usd_exchange_rate * settings.company_multiplier
+    : 1;
+
   return (
     <div className="erp-card lg:col-span-2">
       <div className="flex items-center justify-between mb-4">
@@ -54,9 +59,13 @@ function InventoryValuationTable({ items, filters = {} }: Props) {
 
               <th className="text-right py-2">Qty</th>
 
-              <th className="text-right py-2">Unit Price</th>
+              <th className="text-right py-2">
+                Unit Price ({settings?.display_currency ?? "GHS"})
+              </th>
 
-              <th className="text-right py-2">Total Value</th>
+              <th className="text-right py-2">
+                Total Value ({settings?.display_currency ?? "GHS"})
+              </th>
             </tr>
           </thead>
 
@@ -72,12 +81,13 @@ function InventoryValuationTable({ items, filters = {} }: Props) {
                 <td className="text-right">{item.quantity}</td>
 
                 <td className="text-right">
-                  {settings?.currency_symbol} {Number(item.price).toFixed(2)}
+                  {settings?.currency_symbol}{" "}
+                  {(Number(item.price) * effectiveRate).toFixed(2)}
                 </td>
 
                 <td className="text-right font-semibold">
                   {settings?.currency_symbol}{" "}
-                  {Number(item.inventoryValue).toFixed(2)}
+                  {(Number(item.inventoryValue) * effectiveRate).toFixed(2)}
                 </td>
               </tr>
             ))}

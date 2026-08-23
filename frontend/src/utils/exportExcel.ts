@@ -1,26 +1,79 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+
+import { useSettingsStore } from "../store/settingsStore";
 
 type ExportOptions = {
   title: string;
-
   company?: string;
-
   generatedBy?: string;
-
   generatedAt?: Date;
-
   filters?: Record<string, string>;
-
   sheetName: string;
-
   fileName: string;
-
   rows: Record<string, any>[];
 };
 
-export function exportExcel({
+function getFileExtension(path: string): "png" | "jpeg" | "gif" {
+  const extension = path
+    .split("?")[0]
+    .split(".")
+    .pop()
+    ?.toLowerCase();
+
+  if (extension === "png") {
+    return "png";
+  }
+
+  if (extension === "gif") {
+    return "gif";
+  }
+
+  return "jpeg";
+}
+
+async function loadCompanyLogo(
+  logoPath: string | null | undefined,
+): Promise<ArrayBuffer | null> {
+  if (!logoPath) {
+    return null;
+  }
+
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL as string;
+
+    const backendUrl = apiUrl.replace(/\/api\/?$/, "");
+
+    const normalizedPath = logoPath.startsWith("/")
+      ? logoPath
+      : `/${logoPath}`;
+
+    const response = await fetch(
+      `${backendUrl}/${normalizedPath.replace(/^\/+/, "")}`,
+    );
+
+    if (!response.ok) {
+      console.warn(
+        "Could not load company logo for Excel export:",
+        response.status,
+      );
+
+      return null;
+    }
+
+    return await response.arrayBuffer();
+  } catch (error) {
+    console.warn(
+      "Could not load company logo for Excel export:",
+      error,
+    );
+
+    return null;
+  }
+}
+
+export async function exportExcel({
   title,
-  company = "ZICO BUSINESS ERP",
+  company,
   generatedBy,
   generatedAt = new Date(),
   filters = {},
@@ -28,36 +81,177 @@ export function exportExcel({
   fileName,
   rows,
 }: ExportOptions) {
-  const data: any[][] = [];
+  const { settings } = useSettingsStore.getState();
+
+  const companyName =
+    company ??
+    settings?.company_name ??
+    "Company";
+
+  const logoBuffer = await loadCompanyLogo(
+    settings?.company_logo_path,
+  );
+
+  const workbook = new ExcelJS.Workbook();
+
+  workbook.creator = companyName;
+  workbook.created = generatedAt;
+  workbook.modified = generatedAt;
+
+  const worksheet = workbook.addWorksheet(sheetName);
+
+  const columnKeys =
+    rows.length > 0
+      ? Object.keys(rows[0])
+      : [];
+
+  const totalColumns = Math.max(
+    columnKeys.length,
+    1,
+  );
+
+  const lastColumn = String.fromCharCode(
+    64 + Math.min(totalColumns, 26),
+  );
 
   /* =========================
-     COMPANY
+     PAGE SETUP
   ========================= */
 
-  data.push([company]);
+  worksheet.pageSetup = {
+    orientation:
+      totalColumns > 6
+        ? "landscape"
+        : "portrait",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    paperSize: 9,
+    margins: {
+      left: 0.25,
+      right: 0.25,
+      top: 0.5,
+      bottom: 0.5,
+      header: 0.2,
+      footer: 0.2,
+    },
+  };
+
+  worksheet.views = [
+    {
+      state: "frozen",
+      ySplit: 7,
+    },
+  ];
+
+  /* =========================
+     COMPANY HEADER
+  ========================= */
+
+  worksheet.mergeCells(
+    `A1:${lastColumn}2`,
+  );
+
+  const companyCell =
+    worksheet.getCell("A1");
+
+  /*
+   * General exports are branded with the ERP company logo.
+   * The company name is retained as workbook metadata/footer,
+   * but is not displayed as a hard-coded report heading.
+   */
+
+  companyCell.value = "";
+
+  companyCell.alignment = {
+    vertical: "middle",
+    horizontal: "center",
+  };
+
+  /* =========================
+     COMPANY LOGO
+  ========================= */
+
+  if (logoBuffer) {
+    try {
+      const imageId = workbook.addImage({
+        buffer: logoBuffer,
+        extension: getFileExtension(
+          settings?.company_logo_path ?? "",
+        ),
+      });
+
+      worksheet.addImage(imageId, {
+        tl: {
+          col: 0.15,
+          row: 0.15,
+        },
+        ext: {
+          width: 120,
+          height: 65,
+        },
+      });
+
+      companyCell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+    } catch (error) {
+      console.warn(
+        "Could not embed company logo:",
+        error,
+      );
+    }
+  }
 
   /* =========================
      REPORT TITLE
   ========================= */
 
-  data.push([title]);
+  worksheet.mergeCells(
+    `A3:${lastColumn}3`,
+  );
 
-  data.push([]);
+  const titleCell =
+    worksheet.getCell("A3");
+
+  titleCell.value = title;
+
+  titleCell.font = {
+    name: "Arial",
+    size: 15,
+    bold: true,
+  };
+
+  titleCell.alignment = {
+    vertical: "middle",
+    horizontal: "center",
+  };
 
   /* =========================
-     GENERATED INFO
+     GENERATED INFORMATION
   ========================= */
 
-  data.push([
-    "Generated",
-    generatedAt.toLocaleString("en-GB"),
-  ]);
+  worksheet.getCell("A5").value =
+    "Generated";
+
+  worksheet.getCell("B5").value =
+    generatedAt.toLocaleString("en-GB");
+
+  worksheet.getCell("A5").font = {
+    bold: true,
+  };
 
   if (generatedBy) {
-    data.push([
-      "Generated By",
-      generatedBy,
-    ]);
+    worksheet.getCell("A6").value =
+      "Generated By";
+
+    worksheet.getCell("B6").value =
+      generatedBy;
+
+    worksheet.getCell("A6").font = {
+      bold: true,
+    };
   }
 
   /* =========================
@@ -72,64 +266,236 @@ export function exportExcel({
         value !== "",
     );
 
+  let tableStartRow = 8;
+
   if (filterEntries.length > 0) {
-    data.push([]);
+    worksheet.getCell(
+      `A${tableStartRow}`,
+    ).value = "Filters";
 
-    data.push(["Filters"]);
+    worksheet.getCell(
+      `A${tableStartRow}`,
+    ).font = {
+      bold: true,
+      size: 11,
+    };
 
-    filterEntries.forEach(([key, value]) => {
-      data.push([key, value]);
-    });
+    tableStartRow++;
+
+    filterEntries.forEach(
+      ([key, value]) => {
+        worksheet.getCell(
+          `A${tableStartRow}`,
+        ).value = key;
+
+        worksheet.getCell(
+          `B${tableStartRow}`,
+        ).value = value;
+
+        worksheet.getCell(
+          `A${tableStartRow}`,
+        ).font = {
+          bold: true,
+        };
+
+        tableStartRow++;
+      },
+    );
+
+    tableStartRow++;
   }
-
-  data.push([]);
 
   /* =========================
      TABLE
   ========================= */
 
-  const worksheet =
-    XLSX.utils.aoa_to_sheet(data);
+  if (columnKeys.length > 0) {
+    const headerRow =
+      worksheet.getRow(tableStartRow);
 
-  XLSX.utils.sheet_add_json(
-    worksheet,
-    rows,
-    {
-      origin: data.length,
-      skipHeader: false,
-    },
-  );
+    columnKeys.forEach(
+      (key, index) => {
+        const cell =
+          headerRow.getCell(index + 1);
 
-  /* =========================
-     COLUMN WIDTH
-  ========================= */
+        cell.value = key;
 
-  if (rows.length > 0) {
-    worksheet["!cols"] = Object.keys(
-      rows[0],
-    ).map((key) => ({
-      wch: Math.max(
-        key.length + 4,
-        18,
-      ),
-    }));
+        cell.font = {
+          name: "Arial",
+          size: 10,
+          bold: true,
+          color: {
+            argb: "FFFFFFFF",
+          },
+        };
+
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true,
+        };
+
+        cell.border = {
+          top: {
+            style: "thin",
+          },
+          bottom: {
+            style: "thin",
+          },
+          left: {
+            style: "thin",
+          },
+          right: {
+            style: "thin",
+          },
+        };
+
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: {
+            argb: "FF1F2937",
+          },
+        };
+      },
+    );
+
+    headerRow.height = 28;
+
+    rows.forEach((row, rowIndex) => {
+      const excelRow =
+        worksheet.getRow(
+          tableStartRow + rowIndex + 1,
+        );
+
+      columnKeys.forEach(
+        (key, columnIndex) => {
+          const cell =
+            excelRow.getCell(
+              columnIndex + 1,
+            );
+
+          cell.value =
+            row[key] ?? "";
+
+          cell.font = {
+            name: "Arial",
+            size: 10,
+          };
+
+          cell.alignment = {
+            vertical: "middle",
+            wrapText: true,
+          };
+
+          cell.border = {
+            top: {
+              style: "hair",
+            },
+            bottom: {
+              style: "hair",
+            },
+            left: {
+              style: "hair",
+            },
+            right: {
+              style: "hair",
+            },
+          };
+
+          if (rowIndex % 2 === 1) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: {
+                argb: "FFF3F4F6",
+              },
+            };
+          }
+        },
+      );
+
+      excelRow.height = 22;
+    });
+
+    worksheet.autoFilter = {
+      from: {
+        row: tableStartRow,
+        column: 1,
+      },
+      to: {
+        row:
+          tableStartRow +
+          rows.length,
+        column: columnKeys.length,
+      },
+    };
+
+    /* =========================
+       COLUMN WIDTHS
+    ========================= */
+
+    columnKeys.forEach(
+      (key, columnIndex) => {
+        let maxLength =
+          key.length;
+
+        rows.forEach((row) => {
+          const value =
+            row[key] ?? "";
+
+          maxLength = Math.max(
+            maxLength,
+            String(value).length,
+          );
+        });
+
+        worksheet.getColumn(
+          columnIndex + 1,
+        ).width = Math.min(
+          Math.max(maxLength + 3, 15),
+          45,
+        );
+      },
+    );
   }
 
   /* =========================
-     WORKBOOK
+     FOOTER
   ========================= */
 
-  const workbook =
-    XLSX.utils.book_new();
+  worksheet.headerFooter.oddFooter =
+    `&L${companyName}&RPage &P of &N`;
 
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    sheetName,
+  /* =========================
+     DOWNLOAD
+  ========================= */
+
+  const buffer =
+    await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob(
+    [buffer],
+    {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
   );
 
-  XLSX.writeFile(
-    workbook,
-    fileName,
-  );
+  const url =
+    URL.createObjectURL(blob);
+
+  const anchor =
+    document.createElement("a");
+
+  anchor.href = url;
+  anchor.download = fileName;
+
+  document.body.appendChild(anchor);
+
+  anchor.click();
+
+  document.body.removeChild(anchor);
+
+  URL.revokeObjectURL(url);
 }

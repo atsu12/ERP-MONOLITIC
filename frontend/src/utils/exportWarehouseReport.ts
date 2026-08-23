@@ -1,9 +1,16 @@
+import { useSettingsStore } from "../store/settingsStore";
 import { exportExcel } from "./exportExcel";
 
 export function exportWarehouseReport(
   warehouses: any[],
   filters: Record<string, string> = {},
 ) {
+  const { settings } = useSettingsStore.getState();
+
+  const effectiveRate = settings
+    ? settings.usd_exchange_rate * settings.company_multiplier
+    : 1;
+
   const rows = warehouses.map((warehouse) => ({
     Warehouse: warehouse.name,
 
@@ -11,24 +18,22 @@ export function exportWarehouseReport(
 
     Quantity: warehouse.totalQuantity,
 
-    "Inventory Value": Number(
-      warehouse.inventoryValue,
+    [`Inventory Value (${settings?.display_currency ?? "GHS"})`]: (
+      Number(warehouse.inventoryValue) * effectiveRate
     ).toFixed(2),
   }));
 
-  const today = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
 
   exportExcel({
-  title: "Warehouse Summary Report",
+    title: "Warehouse Summary Report",
 
-  rows,
+    rows,
 
-  filters,
+    filters,
 
-  sheetName: "Warehouses",
+    sheetName: "Warehouses",
 
-  fileName: `warehouse-summary-${today}.xlsx`,
-});
+    fileName: `warehouse-summary-${today}.xlsx`,
+  });
 }

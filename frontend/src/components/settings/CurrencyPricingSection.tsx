@@ -1,13 +1,15 @@
 type CurrencyPricingSectionProps = {
+  baseCurrency: string;
+  setBaseCurrency: (value: string) => void;
+
   displayCurrency: string;
   setDisplayCurrency: (value: string) => void;
 
   currencySymbol: string;
   setCurrencySymbol: (value: string) => void;
 
-  usdExchangeRate: number;
-  setUsdExchangeRate: (value: number) => void;
-
+  baseCurrencyExchangeRate: number;
+  setBaseCurrencyExchangeRate: (value: number) => void;
   companyMultiplier: number;
   setCompanyMultiplier: (value: number) => void;
 
@@ -15,12 +17,15 @@ type CurrencyPricingSectionProps = {
 };
 
 function CurrencyPricingSection({
+  baseCurrency,
+  setBaseCurrency,
+
   displayCurrency,
   setDisplayCurrency,
   currencySymbol,
   setCurrencySymbol,
-  usdExchangeRate,
-  setUsdExchangeRate,
+  baseCurrencyExchangeRate,
+  setBaseCurrencyExchangeRate,
   companyMultiplier,
   setCompanyMultiplier,
   effectiveRate,
@@ -37,11 +42,20 @@ function CurrencyPricingSection({
             Base Currency
           </label>
 
-          <input
-            value="USD"
-            disabled
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-gray-100"
-          />
+          <select
+            value={baseCurrency}
+            onChange={(e) => setBaseCurrency(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white"
+          >
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="CHF">CHF — Swiss Franc</option>
+            <option value="JPY">JPY — Japanese Yen</option>
+            <option value="CAD">CAD — Canadian Dollar</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+            <option value="SGD">SGD — Singapore Dollar</option>
+          </select>
         </div>
 
         <div>
@@ -70,14 +84,16 @@ function CurrencyPricingSection({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            USD Exchange Rate
+            Base Currency Exchange Rate
           </label>
 
           <input
             type="number"
             step="0.01"
-            value={usdExchangeRate}
-            onChange={(e) => setUsdExchangeRate(Number(e.target.value))}
+            value={baseCurrencyExchangeRate}
+            onChange={(e) =>
+              setBaseCurrencyExchangeRate(Number(e.target.value))
+            }
             className="w-full px-4 py-3 rounded-xl border border-gray-300"
           />
         </div>
@@ -106,7 +122,7 @@ function CurrencyPricingSection({
             disabled
             className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-gray-100"
           />
-        </div>      
+        </div>
       </div>
     </div>
   );

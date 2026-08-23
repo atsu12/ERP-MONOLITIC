@@ -16,6 +16,11 @@ interface Props {
 
 function WarehouseReportTable({ warehouses, filters = {} }: Props) {
   const { settings } = useSettingsStore();
+
+  const effectiveRate = settings
+    ? settings.usd_exchange_rate * settings.company_multiplier
+    : 1;
+
   return (
     <div className="erp-card">
       <div className="flex items-center justify-between mb-4">
@@ -42,7 +47,7 @@ function WarehouseReportTable({ warehouses, filters = {} }: Props) {
                 <th>Warehouse</th>
                 <th>Products</th>
                 <th>Quantity</th>
-                <th>Inventory Value</th>
+                <th>Inventory Value ({settings?.display_currency ?? "GHS"})</th>
               </tr>
             </thead>
 
@@ -64,7 +69,9 @@ function WarehouseReportTable({ warehouses, filters = {} }: Props) {
 
                     <td>
                       {settings?.currency_symbol}{" "}
-                      {warehouse.inventoryValue.toLocaleString("en-US", {
+                      {(
+                        Number(warehouse.inventoryValue) * effectiveRate
+                      ).toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

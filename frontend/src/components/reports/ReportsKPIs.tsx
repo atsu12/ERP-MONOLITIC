@@ -7,6 +7,7 @@ type ProductSummary = {
 
 type Settings = {
   currency_symbol: string;
+  display_currency: string;
   usd_exchange_rate: number;
   company_multiplier: number;
 };
@@ -51,7 +52,9 @@ function ReportsKPIs({
       </div>
 
       <div className="erp-card">
-        <p className="text-sm text-gray-500">Inventory Value</p>
+        <p className="text-sm text-gray-500">
+          Inventory Value ({settings?.display_currency ?? "GHS"})
+        </p>
 
         <h2 className="text-3xl font-black text-emerald-700 break-words">
           {settings

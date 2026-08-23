@@ -57,7 +57,7 @@ function ReportsFilters({
             <option value="7">Last 7 Days</option>
             <option value="30">Last 30 Days</option>
             <option value="90">Last 90 Days</option>
-            <option value="365">This Year</option>
+            <option value="year">This Year</option>
             <option value="custom">Custom</option>
           </select>
         </div>

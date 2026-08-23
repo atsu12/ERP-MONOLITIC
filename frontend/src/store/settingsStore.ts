@@ -14,6 +14,7 @@ interface Settings {
   delivery_note_template_path?: string;
 
   // Currency & Pricing
+  base_currency: string;
   display_currency: string;
   currency_symbol: string;
   usd_exchange_rate: number;
