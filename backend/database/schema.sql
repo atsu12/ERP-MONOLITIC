@@ -75,6 +75,30 @@ CREATE TABLE `dispatch_serials` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
+--
+-- Table structure for table `customers`
+--
+
+DROP TABLE IF EXISTS `customers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+
+CREATE TABLE `customers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `customer_name` varchar(255) NOT NULL,
+  `contact` varchar(100) DEFAULT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_customers_name` (`customer_name`),
+  KEY `idx_customers_contact` (`contact`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
 -- Table structure for table `dispatch_transactions`
 --
@@ -190,7 +214,7 @@ CREATE TABLE `products` (
   `name` varchar(255) NOT NULL,
   `brand` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
-  `track_serial` tinyint(1) NOT NULL DEFAULT '0',
+  `track_serial` tinyint(1) DEFAULT NULL,
   `quantity` int NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

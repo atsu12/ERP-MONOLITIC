@@ -143,11 +143,6 @@ const {
   deleteWarehouse,
 } = require("../controllers/WarehousesController");
 
-const {
-  getCustomers,
-  getCustomerById,
-} = require("../controllers/CustomersController");
-
 /* =========================
 AUTH
 ========================= */
@@ -407,25 +402,6 @@ router.delete(
   authMiddleware,
   roleMiddleware(["ADMIN"]),
   deleteWarehouse,
-);
-
-
-/* =========================
-CUSTOMERS
-========================= */
-
-router.get(
-  "/customers",
-  authMiddleware,
-  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
-  getCustomers,
-);
-
-router.get(
-  "/customers/:id",
-  authMiddleware,
-  roleMiddleware(["ADMIN", "MANAGER", "STAFF"]),
-  getCustomerById,
 );
 
 /* =========================

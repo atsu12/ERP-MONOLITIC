@@ -439,7 +439,7 @@ function Products() {
               </p>
 
               {importReport.errors && importReport.errors.length > 0 && (
-                <div className="mt-4 max-h-64 overflow-y-auto rounded-xl border border-red-200 bg-white p-3">
+                <div className="mt-4 max-h-64 overflow-y-auto rounded-2xl border border-red-200 bg-white p-3">
                   <div className="space-y-2">
                     {importReport.errors.map((error, index) => (
                       <div
@@ -458,15 +458,15 @@ function Products() {
       )}
 
       <PageHeader
-        icon={<Package size={32} className="text-gray-800" />}
+        icon={<Package size={32} className="text-slate-800" />}
         title="Products"
         description="Manage inventory products, stock quantities, and serialized inventory."
       />
 
       {debouncedSearch && (
-        <div className="mb-4 text-sm text-gray-500">
+        <div className="mb-4 text-sm text-slate-500">
           Found
-          <span className="font-semibold text-gray-900 mx-1">
+          <span className="font-semibold text-slate-900 mx-1">
             {filteredProducts.length}
           </span>
           matching product(s) for
@@ -479,7 +479,7 @@ function Products() {
       {/* SEARCH */}
 
       <div className="mb-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
           Search
         </label>
 
@@ -488,14 +488,14 @@ function Products() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by product name, brand or category..."
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+          className="w-full rounded-2xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
 
       <div className="mb-6">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-slate-700">
               Selected: {selectedProducts.length}
             </span>
 
@@ -508,9 +508,9 @@ function Products() {
 
                 exportProductsToExcel(productsToExport, settings);
               }}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+              className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 ${
                 selectedProducts.length === 0
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
@@ -524,7 +524,7 @@ function Products() {
 
                 setFilterValue("");
               }}
-              className="px-3 py-2 rounded-xl border border-gray-300"
+              className="px-3 py-2 rounded-2xl border border-slate-200"
             >
               <option value="all">All</option>
 
@@ -539,7 +539,7 @@ function Products() {
               <select
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-gray-300"
+                className="px-3 py-2 rounded-2xl border border-slate-200"
               >
                 <option value="">All Brands</option>
 
@@ -554,7 +554,7 @@ function Products() {
               <select
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-gray-300"
+                className="px-3 py-2 rounded-2xl border border-slate-200"
               >
                 <option value="">All Categories</option>
 
@@ -569,10 +569,10 @@ function Products() {
 
           <div className="flex items-center gap-3">
             <label
-              className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition cursor-pointer ${
+              className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold transition-all duration-200 cursor-pointer ${
                 importing
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-white border border-gray-300 text-gray-800 hover:bg-gray-50"
+                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                  : "bg-white border border-slate-200 text-slate-800 hover:bg-slate-50"
               }`}
             >
               {importing ? (
@@ -594,7 +594,7 @@ function Products() {
 
             <button
               onClick={() => setOpenCreateModal(true)}
-              className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition text-white px-5 py-3 rounded-2xl font-semibold"
+              className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition-all duration-200 text-white px-5 py-3 rounded-2xl font-semibold"
             >
               <Plus size={18} />
               Create Product
@@ -650,7 +650,7 @@ function Products() {
                       action={
                         <button
                           onClick={() => setOpenCreateModal(true)}
-                          className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition text-white px-5 py-3 rounded-2xl font-semibold"
+                          className="inline-flex items-center gap-2 bg-black hover:bg-gray-800 transition-all duration-200 text-white px-5 py-3 rounded-2xl font-semibold"
                         >
                           Create Product
                         </button>
@@ -686,20 +686,20 @@ function Products() {
                       />
                     </td>
 
-                    <td className="font-medium text-gray-700">{product.id}</td>
+                    <td className="font-medium text-slate-700">{product.id}</td>
 
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <div className="w-11 h-11 rounded-2xl bg-slate-50 flex items-center justify-center">
                           {product.track_serial ? (
-                            <Boxes size={20} className="text-gray-700" />
+                            <Boxes size={20} className="text-slate-700" />
                           ) : (
-                            <Package size={20} className="text-gray-700" />
+                            <Package size={20} className="text-slate-700" />
                           )}
                         </div>
 
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-slate-900">
                             {product.name}
                           </p>
                         </div>
@@ -726,16 +726,16 @@ function Products() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => navigate(`/products/${product.id}`)}
-                          className="px-3 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 transition text-blue-700 text-sm font-medium"
+                          className="px-3 h-10 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 text-blue-700 text-sm font-medium"
                         >
                           View
                         </button>
 
                         <button
                           onClick={() => setEditingProduct(product)}
-                          className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 transition flex items-center justify-center"
+                          className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-200 transition-all duration-200 flex items-center justify-center"
                         >
-                          <Pencil size={18} className="text-gray-700" />
+                          <Pencil size={18} className="text-slate-700" />
                         </button>
 
                         {user?.role === "ADMIN" && (
@@ -752,16 +752,16 @@ function Products() {
 
                               await deleteProduct(product.id);
                             }}
-                            className={`w-10 h-10 rounded-xl transition flex items-center justify-center ${
+                            className={`w-10 h-10 rounded-2xl transition-all duration-200 flex items-center justify-center ${
                               isDeleting
-                                ? "bg-gray-200 cursor-not-allowed"
+                                ? "bg-slate-200 cursor-not-allowed"
                                 : "bg-red-50 hover:bg-red-100"
                             }`}
                           >
                             {isDeleting ? (
                               <Loader2
                                 size={18}
-                                className="animate-spin text-gray-600"
+                                className="animate-spin text-slate-600"
                               />
                             ) : (
                               <Trash2 size={18} className="text-red-600" />

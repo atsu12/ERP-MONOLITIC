@@ -63,7 +63,7 @@ ${productWhere}
   FROM stock_movements sm
   JOIN products p
     ON p.id = sm.product_id
-  WHERE sm.type IN ('IN','RECEIVED','SCANNED_IN')
+  WHERE sm.type IN ('RECEIVED','RETURNED')
   ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
 `;
 
@@ -73,7 +73,7 @@ ${productWhere}
   FROM stock_movements sm
   JOIN products p
     ON p.id = sm.product_id
-  WHERE sm.type IN ('OUT','SCANNED_OUT')
+  WHERE sm.type IN ('STOCK_OUT','DAMAGED')
   ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
 `;
   const lowStockProductsQuery = `

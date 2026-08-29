@@ -1,4 +1,5 @@
 const db = require("../configs/db").promise();
+const logger = require("../utils/logger");
 
 /* =========================
    GET WAREHOUSES
@@ -39,7 +40,7 @@ ORDER BY w.name ASC
       warehouses,
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to fetch warehouses",
@@ -97,7 +98,7 @@ CHECK DUPLICATE NAME
       message: "Warehouse created successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to create warehouse",
@@ -174,7 +175,7 @@ CHECK DUPLICATE CODE
       message: "Warehouse updated successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to update warehouse",
@@ -239,7 +240,7 @@ if (warehouseCount.total <= 1) {
       message: "Warehouse deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
 
     res.status(500).json({
       message: "Failed to delete warehouse",

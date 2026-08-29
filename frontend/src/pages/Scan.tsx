@@ -155,24 +155,24 @@ function Scan() {
 
         <div className="flex items-center gap-3 mb-6">
 
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
 
             <ScanLine
               size={28}
-              className="text-gray-700"
+              className="text-slate-700"
             />
 
           </div>
 
           <div>
 
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="erp-section-title">
 
               Barcode Scanner
 
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
 
               Scan or enter serialized inventory numbers.
 
@@ -210,13 +210,13 @@ function Scan() {
 
             <div>
 
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="erp-section-title">
 
                 Scan Result
 
               </h2>
 
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
 
                 Serialized inventory validation completed successfully.
 
@@ -230,16 +230,16 @@ function Scan() {
 
             {/* PRODUCT */}
 
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
 
               <div className="flex items-center gap-3 mb-4">
 
                 <Package
                   size={22}
-                  className="text-gray-700"
+                  className="text-slate-700"
                 />
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
 
                   Product
 
@@ -247,7 +247,7 @@ function Scan() {
 
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900">
+              <h3 className="text-xl font-bold text-slate-900">
 
                 {result.product_name}
 
@@ -257,16 +257,16 @@ function Scan() {
 
             {/* SERIAL */}
 
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
 
               <div className="flex items-center gap-3 mb-4">
 
                 <Barcode
                   size={22}
-                  className="text-gray-700"
+                  className="text-slate-700"
                 />
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
 
                   Serial Number
 
@@ -274,7 +274,7 @@ function Scan() {
 
               </div>
 
-              <h3 className="text-xl font-bold text-gray-900 break-all">
+              <h3 className="text-xl font-bold text-slate-900 break-all">
 
                 {result.serial_number}
 
@@ -284,16 +284,16 @@ function Scan() {
 
             {/* STATUS */}
 
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
 
               <div className="flex items-center gap-3 mb-4">
 
                 <CheckCircle2
                   size={22}
-                  className="text-gray-700"
+                  className="text-slate-700"
                 />
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
 
                   Status
 

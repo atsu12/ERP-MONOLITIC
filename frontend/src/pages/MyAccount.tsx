@@ -78,7 +78,7 @@ function MyAccount() {
   return (
     <div>
       <PageHeader
-        icon={<UserCog size={32} className="text-gray-800" />}
+        icon={<UserCog size={32} className="text-slate-800" />}
         title="My Account"
         description="Manage your account information and security settings."
       />
@@ -87,32 +87,32 @@ function MyAccount() {
 
       <div className="erp-card erp-section mb-8">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-            <Shield size={24} className="text-gray-700" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
+            <Shield size={24} className="text-slate-700" />
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-slate-900">
               Account Information
             </h2>
 
-            <p className="text-gray-500">Your current account details.</p>
+            <p className="text-slate-500">Your current account details.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-500 mb-2">Username</p>
+            <p className="text-sm text-slate-500 mb-2">Username</p>
 
-            <div className="bg-gray-50 rounded-2xl p-4 font-semibold">
+            <div className="bg-slate-50 rounded-2xl p-4 font-semibold">
               {user?.username}
             </div>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500 mb-2">Role</p>
+            <p className="text-sm text-slate-500 mb-2">Role</p>
 
-            <div className="bg-gray-50 rounded-2xl p-4 font-semibold">
+            <div className="bg-slate-50 rounded-2xl p-4 font-semibold">
               {user?.role}
             </div>
           </div>
@@ -122,11 +122,11 @@ function MyAccount() {
       {/* CHANGE PASSWORD */}
 
       <div className="erp-card erp-section">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
           Change Password
         </h2>
 
-        <p className="text-gray-500 mb-6">Update your account password.</p>
+        <p className="text-slate-500 mb-6">Update your account password.</p>
 
         <div className="grid gap-5">
           <div className="relative">
@@ -141,7 +141,7 @@ function MyAccount() {
             <button
               type="button"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
             >
               {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -159,7 +159,7 @@ function MyAccount() {
             <button
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
             >
               {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -177,7 +177,7 @@ function MyAccount() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -186,7 +186,7 @@ function MyAccount() {
           <button
             onClick={handleChangePassword}
             disabled={loading}
-            className="erp-button-primary disabled:opacity-50"
+            className="erp-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Updating..." : "Update Password"}
           </button>

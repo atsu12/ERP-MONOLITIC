@@ -168,7 +168,7 @@ function Adjustments() {
   return (
     <div>
       <PageHeader
-        icon={<SlidersHorizontal size={32} className="text-gray-800" />}
+        icon={<SlidersHorizontal size={32} className="text-slate-800" />}
         title="Adjustments"
         description="Manage currency conversion and business pricing settings."
       />
@@ -197,13 +197,13 @@ function Adjustments() {
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Invoice Validity</h2>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500">
             Set the default validity period for Proforma Invoices.
           </p>
         </div>
 
         <div className="max-w-sm">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+          <label className="mb-2 block text-sm font-medium text-slate-700">
             Validity Period (Days)
           </label>
 
@@ -212,10 +212,10 @@ function Adjustments() {
             min="1"
             value={invoiceValidityDays}
             onChange={(e) => setInvoiceValidityDays(Number(e.target.value))}
-            className="w-full rounded-xl border border-gray-300 px-4 py-2"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-2"
           />
 
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-slate-500">
             Default: 14 days from the Proforma Invoice date.
           </p>
         </div>
@@ -258,7 +258,7 @@ function Adjustments() {
       <div className="mt-8 flex justify-end">
         <button
           onClick={handleSave}
-          className="rounded-2xl bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800"
+          className="rounded-2xl bg-black px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-gray-800"
         >
           Save Settings
         </button>

@@ -1,0 +1,217 @@
+import { ReactNode, useState } from "react";
+
+import { Bell, Wifi, WifiOff, Menu, X } from "lucide-react";
+
+import { useLayoutStore } from "../store/layoutStore";
+
+import { useLocation } from "react-router-dom";
+
+import Sidebar from "./Sidebar";
+
+import NotificationPanel from "./NotificationPanel";
+
+import { useRealtimeInventory } from "../hooks/useRealtimeInventory";
+
+import { useLowStockAlerts } from "../hooks/useLowStockAlerts";
+
+import { useApiHealth } from "../hooks/useApiHealth";
+
+import { useNotificationStore } from "../store/notificationStore";
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+function Layout({ children }: LayoutProps) {
+  /* =========================
+     ROUTER
+  ========================= */
+
+  const location = useLocation();
+
+  /* =========================
+     REALTIME
+  ========================= */
+
+  useRealtimeInventory();
+
+  /* =========================
+     LOW STOCK
+  ========================= */
+
+  useLowStockAlerts();
+
+  /* =========================
+     API HEALTH
+  ========================= */
+
+  const { apiOnline } = useApiHealth();
+
+  /* =========================
+     AUTH
+  ========================= */
+
+  const {
+    sidebarCollapsed,
+    mobileMenuOpen,
+    toggleMobileMenu,
+    closeMobileMenu,
+  } = useLayoutStore();
+
+  /* =========================
+     NOTIFICATIONS
+  ========================= */
+
+  const notifications = useNotificationStore((state) => state.notifications);
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  /* =========================
+     PAGE CONFIG
+  ========================= */
+
+  const pageConfig: Record<
+    string,
+    {
+      title: string;
+      description: string;
+    }
+  > = {
+    "/dashboard": {
+      title: "Operations Dashboard",
+
+      description: "Real-time inventory monitoring and warehouse operations.",
+    },
+
+    "/products": {
+      title: "Product Management",
+
+      description:
+        "Manage inventory products, stock levels, and serialized items.",
+    },
+
+    "/movements": {
+      title: "Inventory Movements",
+
+      description:
+        "Track inventory movements, warehouse operations, and stock history.",
+    },
+
+    "/audit-log": {
+      title: "Audit Log",
+
+      description: "Monitor user activity and maintain a complete audit trail.",
+    },
+
+    "/scan": {
+      title: "Inventory Scanning",
+
+      description: "Scan serialized inventory and validate stock operations.",
+    },
+
+    "/serial-intake": {
+      title: "Serial Intake",
+
+      description: "Register serialized inventory into warehouse stock.",
+    },
+  };
+
+  const currentPage = pageConfig[location.pathname] || {
+    title: "Business-MGT ERP",
+
+    description: "Enterprise inventory & warehouse Platform.",
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* SIDEBAR */}
+
+      <Sidebar />
+
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* MAIN */}
+
+      <main
+        className={`min-h-screen transition-all duration-300 ${
+          sidebarCollapsed ? "lg:ml-24" : "lg:ml-72"
+        }`}
+      >
+        {/* HEADER */}
+
+        <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.06)] flex flex-wrap items-center justify-between gap-3 px-4 md:px-8 py-4 sticky top-0 z-20">
+          {/* LEFT */}
+
+          <div className="flex items-start gap-3">
+            <button
+              onClick={toggleMobileMenu}
+              className="lg:hidden w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900">
+                {currentPage.title}
+              </h1>
+
+              <p className="hidden md:block text-sm text-slate-500 mt-1">
+                {currentPage.description}
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT */}
+
+          <div className="flex items-center gap-4">
+            {/* API STATUS */}
+
+            <div
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border ${
+                apiOnline
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}
+            >
+              {apiOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
+
+              <span>{apiOnline ? "API Online" : "API Offline"}</span>
+            </div>
+
+            {/* NOTIFICATIONS */}
+
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center relative"
+              >
+                <Bell size={20} className="text-gray-700" />
+
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-xs flex items-center justify-center font-bold">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && <NotificationPanel />}
+            </div>
+          </div>
+        </header>
+
+        {/* CONTENT */}
+
+        <div className="px-4 py-5 md:px-6 md:py-7 lg:p-8">
+          <div className="max-w-[1600px] mx-auto">{children}</div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Layout;

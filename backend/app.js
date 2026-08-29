@@ -35,7 +35,7 @@ app.use('/api', routes);
 // SERVE FRONTEND
 const distPath = path.join(__dirname, '../frontend/dist');
 
-console.log("Serving frontend from:", distPath);
+logger.info(`Serving frontend from: ${distPath}`);
 
 app.use(express.static(distPath));
 

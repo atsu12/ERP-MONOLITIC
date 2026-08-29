@@ -208,7 +208,7 @@ function UsersPage() {
       {/* HEADER */}
 
       <PageHeader
-        icon={<Users size={32} className="text-gray-800" />}
+        icon={<Users size={32} className="text-slate-800" />}
         title="Users"
         description="Manage ERP users, permissions, and operational roles."
       />
@@ -217,9 +217,9 @@ function UsersPage() {
 
       <div className="erp-card erp-section mb-8">
         <div className="flex items-center gap-3 mb-6">
-          <UserPlus size={24} className="text-gray-700" />
+          <UserPlus size={24} className="text-slate-700" />
 
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="erp-section-title">
             {editingUser ? "Edit User" : "Create User"}
           </h2>
         </div>
@@ -356,7 +356,7 @@ function UsersPage() {
 
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td className="font-semibold text-gray-900">
+                  <td className="font-semibold text-slate-900">
                     {user.username}
                   </td>
 
@@ -369,7 +369,7 @@ function UsersPage() {
                           ? "bg-red-100 text-red-700"
                           : user.role === "MANAGER"
                             ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-700"
+                            : "bg-slate-50 text-slate-700"
                       }`}
                     >
                       <Shield size={14} />
@@ -397,9 +397,9 @@ function UsersPage() {
                               role: user.role,
                             });
                           }}
-                          className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 transition flex items-center justify-center"
+                          className="w-10 h-10 rounded-2xl bg-slate-50 hover:bg-slate-200 transition-all duration-200 flex items-center justify-center"
                         >
-                          <Pencil size={18} className="text-gray-700" />
+                          <Pencil size={18} className="text-slate-700" />
                         </button>
 
                         <button
@@ -408,7 +408,7 @@ function UsersPage() {
 
                             setConfirmOpen(true);
                           }}
-                          className="w-10 h-10 rounded-xl bg-red-50 hover:bg-red-100 transition flex items-center justify-center"
+                          className="w-10 h-10 rounded-2xl bg-red-50 hover:bg-red-100 transition-all duration-200 flex items-center justify-center"
                         >
                           <Trash2 size={18} className="text-red-600" />
                         </button>

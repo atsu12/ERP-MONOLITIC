@@ -124,7 +124,7 @@ function Movements() {
       {/* HEADER */}
 
       <PageHeader
-        icon={<ArrowLeftRight size={32} className="text-gray-800" />}
+        icon={<ArrowLeftRight size={32} className="text-slate-800" />}
         title="Inventory Movements"
         description="Track stock movement operations and warehouse transactions."
       />
@@ -132,9 +132,9 @@ function Movements() {
       {/* SEARCH RESULTS */}
 
       {debouncedSearch && (
-        <div className="mb-4 text-sm text-gray-500">
+        <div className="mb-4 text-sm text-slate-500">
           Found
-          <span className="font-semibold text-gray-900 mx-1">
+          <span className="font-semibold text-slate-900 mx-1">
             {filteredMovements.length}
           </span>
           matching movement(s) for
@@ -147,7 +147,7 @@ function Movements() {
       {/* SEARCH */}
 
       <div className="mb-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-slate-700 mb-2">
           Search
         </label>
 
@@ -156,14 +156,14 @@ function Movements() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by product, serial number, reference, user or movement..."
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+          className="w-full rounded-2xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
 
       {/* TOOL BAR */}
 
       <div className="mb-4 flex items-center gap-3 flex-wrap">
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-sm font-medium text-slate-700">
           Selected: {selectedMovements.length}
         </span>
 
@@ -176,14 +176,14 @@ function Movements() {
 
             exportMovementsToExcel(movementsToExport);
           }}
-          className={`px-4 py-2 rounded-xl text-sm font-medium transition ${selectedMovements.length === 0
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+          className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 ${selectedMovements.length === 0
+              ? "bg-slate-200 text-slate-500 cursor-not-allowed"
               : "bg-green-600 text-white hover:bg-green-700"
             }`}
         >
           Export
         </button>
-        <span className="text-sm font-medium text-gray-700">Date From</span>
+        <span className="text-sm font-medium text-slate-700">Date From</span>
 
         <DatePicker
           format="DD/MM/YYYY"
@@ -193,7 +193,7 @@ function Movements() {
           }
         />
 
-        <span className="text-sm font-medium text-gray-700">Date To</span>
+        <span className="text-sm font-medium text-slate-700">Date To</span>
 
         <DatePicker
           format="DD/MM/YYYY"
@@ -201,7 +201,7 @@ function Movements() {
           onChange={(date) => setToDate(date ? date.format("YYYY-MM-DD") : "")}
         />
 
-        <span className="text-sm font-medium text-gray-700">Movement</span>
+        <span className="text-sm font-medium text-slate-700">Movement</span>
 
         <select
           value={filterType}
@@ -209,7 +209,7 @@ function Movements() {
             setFilterType(e.target.value);
             setFilterValue("");
           }}
-          className="px-3 py-2 rounded-xl border border-gray-300"
+          className="px-3 py-2 rounded-2xl border border-slate-200"
         >
           <option value="all">All Movements</option>
           <option value="type">Type</option>
@@ -219,7 +219,7 @@ function Movements() {
           <select
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-300"
+            className="px-3 py-2 rounded-2xl border border-slate-200"
           >
             <option value="">All Types</option>
             <option value="RECEIVED">Received</option>
@@ -320,7 +320,7 @@ function Movements() {
                                   ? "bg-emerald-100 text-emerald-700"
                                   : movement.type === "ADJUSTMENT_OUT"
                                     ? "bg-rose-100 text-rose-700"
-                                    : "bg-gray-100 text-gray-700"
+                                    : "bg-slate-50 text-slate-700"
                       }`}
                   >
                     {movementLabels[movement.type] || movement.type}

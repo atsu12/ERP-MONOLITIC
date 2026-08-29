@@ -236,7 +236,7 @@ function Cashier() {
   }, []);
 
   if (loading) {
-    return <div className="text-gray-500">Loading...</div>;
+    return <div className="text-slate-500">Loading...</div>;
   }
 
   return (
@@ -252,13 +252,13 @@ function Cashier() {
       <div className="erp-card erp-section">
         <div className="space-y-4">
           {dispatches.length === 0 && (
-            <p className="text-gray-500">No pending payments.</p>
+            <p className="text-slate-500">No pending payments.</p>
           )}
 
           {dispatches.map((dispatch) => (
             <div
               key={dispatch.id}
-              className="border border-gray-200 rounded-2xl p-5"
+              className="border border-slate-200 rounded-2xl p-5"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -266,23 +266,23 @@ function Cashier() {
                     {dispatch.customer_name}
                   </h2>
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500">
                     Reference: {dispatch.reference}
                   </p>
 
                   {dispatch.contact && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-500">
                       Contact: {dispatch.contact}
                     </p>
                   )}
 
                   {dispatch.location && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-500">
                       Location: {dispatch.location}
                     </p>
                   )}
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500">
                     Staff: {dispatch.staff_name}
                   </p>
                 </div>
@@ -290,7 +290,7 @@ function Cashier() {
                 <div className="text-right">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-6">
-                      <span className="text-sm text-gray-600">Subtotal:</span>
+                      <span className="text-sm text-slate-600">Subtotal:</span>
 
                       <span className="font-medium">
                         {settings?.currency_symbol}{" "}
@@ -299,7 +299,7 @@ function Cashier() {
                     </div>
 
                     <div className="flex items-center justify-between gap-6">
-                      <span className="text-sm text-gray-600">Discount:</span>
+                      <span className="text-sm text-slate-600">Discount:</span>
 
                       {editingPricing === dispatch.id ? (
                         <input
@@ -308,7 +308,7 @@ function Cashier() {
                           step="0.01"
                           value={discountInput}
                           onChange={(e) => setDiscountInput(e.target.value)}
-                          className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-right"
+                          className="w-32 rounded-xl border border-slate-200 px-3 py-2 text-right"
                         />
                       ) : (
                         <span className="font-medium">
@@ -319,7 +319,7 @@ function Cashier() {
                     </div>
 
                     <div className="flex items-center justify-between gap-6">
-                      <span className="text-sm text-gray-600">VAT:</span>
+                      <span className="text-sm text-slate-600">VAT:</span>
 
                       {editingPricing === dispatch.id ? (
                         <input
@@ -328,7 +328,7 @@ function Cashier() {
                           step="0.01"
                           value={vatInput}
                           onChange={(e) => setVatInput(e.target.value)}
-                          className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-right"
+                          className="w-32 rounded-xl border border-slate-200 px-3 py-2 text-right"
                         />
                       ) : (
                         <span className="font-medium">
@@ -338,7 +338,7 @@ function Cashier() {
                       )}
                     </div>
 
-                    <div className="border-t border-gray-200 pt-2">
+                    <div className="border-t border-slate-200 pt-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold">Grand Total:</span>
 
@@ -396,7 +396,7 @@ function Cashier() {
                             setDiscountInput("");
                             setVatInput("");
                           }}
-                          className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
+                          className="border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-100"
                         >
                           Cancel Pricing
                         </button>
@@ -410,14 +410,14 @@ function Cashier() {
                           );
                           setVatInput(Number(dispatch.vat || 0).toFixed(2));
                         }}
-                        className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
+                        className="border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-100"
                       >
                         Adjust Pricing
                       </button>
                     )}
                     <button
                       onClick={() => openDispatch(dispatch.id)}
-                      className="border border-gray-300 px-4 py-2 rounded-xl hover:bg-gray-100"
+                      className="border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-100"
                     >
                       View Products
                     </button>

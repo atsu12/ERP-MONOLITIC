@@ -216,7 +216,7 @@ function StockIn() {
   ========================= */
 
   if (loading) {
-    return <div className="text-gray-500">Loading products...</div>;
+    return <div className="text-slate-500">Loading products...</div>;
   }
 
   return (
@@ -236,16 +236,16 @@ function StockIn() {
 
       <div className="erp-card erp-section mb-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-            <PackagePlus size={28} className="text-gray-700" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
+            <PackagePlus size={28} className="text-slate-700" />
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="erp-section-title">
               Inventory Receiving
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Add stock into inventory.
             </p>
           </div>
@@ -254,7 +254,7 @@ function StockIn() {
         {/* PRODUCT */}
 
         <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700">
+          <label className="block mb-2 font-semibold text-slate-700">
             Product
           </label>
 
@@ -281,7 +281,7 @@ function StockIn() {
 
         {selectedProduct && trackSerial === null && (
           <div className="mb-6">
-            <label className="block mb-2 font-semibold text-gray-700">
+            <label className="block mb-2 font-semibold text-slate-700">
               Inventory Type
             </label>
 
@@ -311,10 +311,10 @@ function StockIn() {
 
         {selectedProduct && trackSerial === false && (
           <div className="mb-6">
-            <label className="block mb-2 font-semibold text-gray-700">
+            <label className="block mb-2 font-semibold text-slate-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block mb-2 font-semibold text-gray-700">
+                  <label className="block mb-2 font-semibold text-slate-700">
                     Stock Unit
                   </label>
 
@@ -333,7 +333,7 @@ function StockIn() {
                 </div>
 
                 <div>
-                  <label className="block mb-2 font-semibold text-gray-700">
+                  <label className="block mb-2 font-semibold text-slate-700">
                     Package Size
                   </label>
 
@@ -352,7 +352,7 @@ function StockIn() {
             <div className="relative">
               <Hash
                 size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
 
               <div className="mb-4 rounded-2xl bg-blue-50 border border-blue-100 p-4">
@@ -393,14 +393,14 @@ function StockIn() {
 
         {selectedProduct && trackSerial === true && (
           <div>
-            <label className="block mb-2 font-semibold text-gray-700">
+            <label className="block mb-2 font-semibold text-slate-700">
               Serial Scanner
             </label>
 
             <div className="relative mb-4">
               <ScanLine
                 size={22}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
               />
 
               <input
@@ -418,11 +418,11 @@ function StockIn() {
               {serials.map((serial, index) => (
                 <div
                   key={index}
-                  className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 flex items-center gap-3"
+                  className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3"
                 >
-                  <Boxes size={18} className="text-gray-600" />
+                  <Boxes size={18} className="text-slate-600" />
 
-                  <span className="font-medium text-gray-800 break-all">
+                  <span className="font-medium text-slate-800 break-all">
                     {serial}
                   </span>
                 </div>
@@ -436,7 +436,7 @@ function StockIn() {
         <div className="pt-8 flex justify-end">
           <button
             onClick={submitStock}
-            className="bg-black hover:bg-gray-800 transition text-white px-6 py-3 rounded-2xl font-semibold"
+            className="bg-black hover:bg-gray-800 transition-all duration-200 text-white px-6 py-3 rounded-2xl font-semibold"
           >
             Add Stock
           </button>

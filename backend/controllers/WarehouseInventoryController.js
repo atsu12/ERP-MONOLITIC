@@ -175,7 +175,6 @@ exports.assignInventory = async (req, res) => {
 };
 
 exports.updateAllocation = async (req, res) => {
-  console.log(">>> updateAllocation() reached");
   
   try {
     const { id } = req.params;

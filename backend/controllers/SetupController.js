@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const logger = require("../utils/logger");
 
 const db = require("../configs/db").promise();
 
@@ -13,7 +14,7 @@ const getSetupStatus = async (req, res) => {
       initialized: result.total > 0,
     });
   } catch (error) {
-    console.error("Setup status error:", error);
+    logger.error(`Setup status error: ${error.message}`);
 
     res.status(500).json({
       message: "Failed to check setup status",
@@ -61,7 +62,7 @@ const createFirstAdmin = async (req, res) => {
       message: "Administrator account created successfully",
     });
   } catch (error) {
-    console.error("Admin setup error:", error);
+    logger.error(`Admin setup error: ${error.message}`);
 
     res.status(500).json({
       message: "Failed to create administrator account",

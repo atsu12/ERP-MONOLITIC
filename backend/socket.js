@@ -1,3 +1,5 @@
+const logger = require("./utils/logger");
+
 const {
   Server
 } = require("socket.io");
@@ -27,20 +29,13 @@ function initSocket(server) {
     "connection",
     (socket) => {
 
-      console.log(
-        "Socket connected:",
-        socket.id
-      );
+      logger.info(`Socket connected: ${socket.id}`);
 
       socket.on(
         "disconnect",
         () => {
 
-          console.log(
-            "Socket disconnected:",
-            socket.id
-          );
-
+          logger.info(`Socket disconnected: ${socket.id}`);
         }
       );
 

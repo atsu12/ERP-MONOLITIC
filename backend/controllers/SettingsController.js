@@ -24,6 +24,7 @@ exports.getSettings = (req, res) => {
 // UPDATE SETTINGS
 exports.updateSettings = (req, res) => {
   const {
+    base_currency,
     display_currency,
     currency_symbol,
     usd_exchange_rate,
@@ -57,6 +58,7 @@ exports.updateSettings = (req, res) => {
     `
       UPDATE settings
       SET
+        base_currency = ?,
         display_currency = ?,
         currency_symbol = ?,
         usd_exchange_rate = ?,
@@ -87,7 +89,9 @@ exports.updateSettings = (req, res) => {
 
         WHERE id = 1
       `,
-    [
+    
+      [
+      base_currency,
       display_currency,
       currency_symbol,
       usd_exchange_rate,

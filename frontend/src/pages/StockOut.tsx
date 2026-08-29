@@ -523,7 +523,7 @@ function StockOut() {
   ========================= */
 
   if (loading) {
-    return <div className="text-gray-500">Loading products...</div>;
+    return <div className="text-slate-500">Loading products...</div>;
   }
 
   return (
@@ -562,15 +562,15 @@ function StockOut() {
               >
                 <p className="font-bold">{dispatch.reference}</p>
 
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   {dispatch.customer_name}
                 </p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   {dispatch.contact_person}
                 </p>
 
-                <div className="mt-3 space-y-1 text-sm text-gray-600">
+                <div className="mt-3 space-y-1 text-sm text-slate-600">
                   <p>
                     <span className="font-semibold">Contact:</span>{" "}
                     {dispatch.contact || "-"}
@@ -602,16 +602,16 @@ function StockOut() {
 
       <div className="erp-card erp-section mb-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-            <PackageMinus size={28} className="text-gray-700" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
+            <PackageMinus size={28} className="text-slate-700" />
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="erp-section-title">
               Inventory Dispatch
             </h2>
 
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Remove inventory from warehouse stock.
             </p>
           </div>
@@ -620,13 +620,13 @@ function StockOut() {
         {/* CUSTOMER INFORMATION */}
 
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">
             Customer Information
           </h3>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Customer Name *
               </label>
 
@@ -640,7 +640,7 @@ function StockOut() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Contact *
               </label>
 
@@ -658,7 +658,7 @@ function StockOut() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Contact Person *
               </label>
 
@@ -672,7 +672,7 @@ function StockOut() {
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Location *
               </label>
 
@@ -690,7 +690,7 @@ function StockOut() {
         {/* PRODUCT */}
 
         <div className="mb-6">
-          <label className="block mb-2 font-semibold text-gray-700">
+          <label className="block mb-2 font-semibold text-slate-700">
             Product
           </label>
 
@@ -718,14 +718,14 @@ function StockOut() {
         {selectedProduct && selectedProduct.track_serial === 0 && (
           <>
             <div className="mb-6">
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Quantity
               </label>
 
               <div className="relative">
                 <Hash
                   size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
@@ -741,7 +741,7 @@ function StockOut() {
             <div className="pt-4 flex justify-end">
               <button
                 onClick={addToCart}
-                className="border border-gray-300 hover:bg-gray-100 px-6 py-3 rounded-2xl font-semibold"
+                className="border border-slate-200 hover:bg-slate-50 px-6 py-3 rounded-2xl font-semibold"
               >
                 Add to Dispatch
               </button>
@@ -754,14 +754,14 @@ function StockOut() {
         {selectedProduct && selectedProduct.track_serial === 1 && (
           <>
             <div>
-              <label className="block mb-2 font-semibold text-gray-700">
+              <label className="block mb-2 font-semibold text-slate-700">
                 Serial Scanner
               </label>
 
               <div className="relative mb-4">
                 <ScanLine
                   size={22}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
@@ -776,7 +776,7 @@ function StockOut() {
               </div>
 
               {scannedSerials.length > 0 && (
-                <div className="mt-4 border border-gray-200 rounded-xl p-3">
+                <div className="mt-4 border border-slate-200 rounded-2xl p-3">
                   <p className="font-semibold mb-2">
                     Selected Serials ({scannedSerials.length})
                   </p>
@@ -785,7 +785,7 @@ function StockOut() {
                     {scannedSerials.map((serial) => (
                       <p
                         key={serial}
-                        className="text-sm text-gray-600 break-all"
+                        className="text-sm text-slate-600 break-all"
                       >
                         {serial}
                       </p>
@@ -797,7 +797,7 @@ function StockOut() {
               <div className="pt-4 flex justify-end">
                 <button
                   onClick={addSerializedToCart}
-                  className="border border-gray-300 hover:bg-gray-100 px-6 py-3 rounded-2xl font-semibold"
+                  className="border border-slate-200 hover:bg-slate-50 px-6 py-3 rounded-2xl font-semibold"
                 >
                   Add to Dispatch
                 </button>

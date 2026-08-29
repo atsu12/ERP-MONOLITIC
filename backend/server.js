@@ -1,3 +1,5 @@
+const logger = require('./utils/logger');
+
 require('dotenv').config();
 
 const cors = require('cors');
@@ -50,10 +52,7 @@ const frontendPath =
     '../frontend/dist'
   );
 
-console.log(
-  "Serving frontend from:",
-  frontendPath
-);
+logger.info(`Serving frontend from: ${frontendPath}`);
 
 app.use(
   express.static(frontendPath)
@@ -106,8 +105,6 @@ initSocket(server);
 
 server.listen(PORT, () => {
 
-  console.log(
-    `Backend server running on port ${PORT}`
-  );
+  logger.info(`Backend server running on port ${PORT}`);
 
 });

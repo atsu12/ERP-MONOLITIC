@@ -89,7 +89,7 @@ function Warehouses() {
       {/* HEADER */}
 
       <PageHeader
-        icon={<Warehouse size={32} className="text-gray-800" />}
+        icon={<Warehouse size={32} className="text-slate-800" />}
         title="Warehouses"
         description="Manage warehouse locations and inventory distribution centers."
         actions={
@@ -115,9 +115,9 @@ function Warehouses() {
         <div className="erp-card erp-section">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-2">Total Warehouses</p>
+              <p className="text-sm text-slate-500 mb-2">Total Warehouses</p>
 
-              <h2 className="text-4xl font-black text-gray-900">
+              <h2 className="text-4xl font-black text-slate-900">
                 {warehouses.length}
               </h2>
             </div>
@@ -133,9 +133,9 @@ function Warehouses() {
         <div className="erp-card erp-section">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-2">Active Warehouses</p>
+              <p className="text-sm text-slate-500 mb-2">Active Warehouses</p>
 
-              <h2 className="text-4xl font-black text-gray-900">
+              <h2 className="text-4xl font-black text-slate-900">
                 {warehouses.filter((w) => w.status === "ACTIVE").length}
               </h2>
             </div>
@@ -151,11 +151,11 @@ function Warehouses() {
         <div className="erp-card erp-section">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-2">Total Units Stored</p>
+              <p className="text-sm text-slate-500 mb-2">Total Units Stored</p>
 
-              <h2 className="text-4xl font-black text-gray-900">
+              <h2 className="text-4xl font-black text-slate-900">
                 {totalUnits.toLocaleString()}
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-slate-500 mt-2">
                   {warehouses.reduce(
                     (total, warehouse) =>
                       total + Number(warehouse.products || 0),
@@ -176,12 +176,12 @@ function Warehouses() {
       {/* WAREHOUSE TABLE */}
 
       <div className="erp-table-container">
-        <div className="erp-section border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="erp-section border-b border-slate-200">
+          <h2 className="erp-section-title">
             Warehouse Locations
           </h2>
 
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Operational warehouse infrastructure and inventory distribution
             overview.
           </p>
@@ -220,15 +220,15 @@ function Warehouses() {
                   <tr key={warehouse.id}>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <Warehouse size={18} className="text-gray-700" />
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
+                          <Warehouse size={18} className="text-slate-700" />
                         </div>
 
                         <button
                           onClick={() =>
                             navigate(`/warehouses/${warehouse.id}/inventory`)
                           }
-                          className="font-semibold text-gray-900 hover:text-blue-600 hover:underline"
+                          className="font-semibold text-slate-900 hover:text-blue-600 hover:underline"
                         >
                           {warehouse.name}
                         </button>
@@ -242,7 +242,7 @@ function Warehouses() {
                           {warehouse.products === 1 ? "product" : "products"}
                         </span>
 
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-500">
                           {warehouse.quantity}{" "}
                           {warehouse.quantity === 1 ? "unit" : "units"}
                         </span>
@@ -258,7 +258,7 @@ function Warehouses() {
 
                             setShowCreateModal(true);
                           }}
-                          className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-sm font-medium"
+                          className="px-3 py-1 rounded-xl bg-blue-100 text-blue-700 text-sm font-medium"
                         >
                           Edit
                         </button>
@@ -267,7 +267,7 @@ function Warehouses() {
                           onClick={() =>
                             handleDeleteWarehouse(warehouse.id, warehouse.name)
                           }
-                          className="px-3 py-1 rounded-lg bg-red-100 text-red-700 text-sm font-medium"
+                          className="px-3 py-1 rounded-xl bg-red-100 text-red-700 text-sm font-medium"
                         >
                           Delete
                         </button>
@@ -285,7 +285,7 @@ function Warehouses() {
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+          <div className="erp-card p-6 w-full max-w-md">
             <h2 className="text-2xl font-bold mb-5">
               {editingWarehouse ? "Edit Warehouse" : "Create Warehouse"}
             </h2>

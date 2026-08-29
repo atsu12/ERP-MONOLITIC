@@ -11,9 +11,9 @@ function Unauthorized() {
 
   return (
 
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-8">
 
-      <div className="bg-white border border-gray-200 shadow-xl rounded-3xl p-12 text-center max-w-xl w-full">
+      <div className="bg-white border border-slate-200 shadow-xl rounded-3xl p-12 text-center max-w-xl w-full">
 
         {/* ICON */}
 
@@ -28,7 +28,7 @@ function Unauthorized() {
 
         {/* TITLE */}
 
-        <h1 className="text-4xl font-black text-gray-900 mb-4">
+        <h1 className="text-4xl font-black text-slate-900 mb-4">
 
           Access Denied
 
@@ -36,7 +36,7 @@ function Unauthorized() {
 
         {/* DESCRIPTION */}
 
-        <p className="text-gray-500 mb-8">
+        <p className="text-slate-500 mb-8">
 
           You do not have permission to access this ERP module.
 

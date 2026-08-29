@@ -1,4 +1,5 @@
 const mysql = require("mysql2");
+const logger = require("../utils/logger");
 
 const mode = process.env.DB_MODE || "LOCAL";
 
@@ -14,6 +15,6 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-console.log(`Using ${mode} database`);
+logger.info(`Using ${mode} database`);
 
 module.exports = pool;

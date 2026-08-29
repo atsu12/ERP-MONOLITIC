@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 const db = require("../configs/db");
 
 const { getIO } = require("../socket");
@@ -62,8 +64,10 @@ GROUP BY p.id
 
   db.query(query, params, (err, results) => {
     if (err) {
+      logger.error(err);
+
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -113,8 +117,10 @@ WHERE product_id = ?
 
   db.query(productQuery, [productId], (err, productResult) => {
     if (err) {
+      logger.error(err);
+
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -126,8 +132,10 @@ WHERE product_id = ?
 
     db.query(serialsQuery, [productId], (err, serialsResult) => {
       if (err) {
+        logger.error(err);
+
         return res.status(500).json({
-          error: err.message,
+          error: "Internal server error",
         });
       }
 
@@ -190,7 +198,10 @@ NORMALIZE
 
   quantity = Number(quantity) || 0;
 
-  track_serial = Boolean(track_serial);
+  track_serial =
+    track_serial === undefined || track_serial === null
+      ? null
+      : Boolean(track_serial);
   stock_unit = stock_unit?.trim() || "Unit";
 
   package_size = Number(package_size) || 1;
@@ -236,8 +247,10 @@ AND LOWER(brand) = LOWER(?)
 
   db.query(duplicateQuery, [name, brand], (dupErr, dupResult) => {
     if (dupErr) {
+      logger.error(dupErr);
+
       return res.status(500).json({
-        error: dupErr.message,
+        error: "Internal server error",
       });
     }
 
@@ -280,8 +293,10 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ],
       (err, result) => {
         if (err) {
+          logger.error(err);
+
           return res.status(500).json({
-            error: err.message,
+            error: "Internal server error",
           });
         }
 
@@ -446,8 +461,10 @@ AND id != ?
 
   db.query(duplicateQuery, [name, brand, productId], (dupErr, dupResult) => {
     if (dupErr) {
+      logger.error(dupErr);
+
       return res.status(500).json({
-        error: dupErr.message,
+        error: "Internal server error",
       });
     }
 
@@ -478,8 +495,10 @@ WHERE id = ?
       [name, brand, category, price, stock_unit, package_size, productId],
       (err, result) => {
         if (err) {
+          logger.error(err);
+
           return res.status(500).json({
-            error: err.message,
+            error: "Internal server error",
           });
         }
 
@@ -546,8 +565,10 @@ exports.deleteProduct = (req, res) => {
 
   db.query(productQuery, [productId], (err, productResult) => {
     if (err) {
+      logger.error(err);
+
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -561,84 +582,296 @@ exports.deleteProduct = (req, res) => {
 
     db.query(movementQuery, [productId], (movementErr, movementResult) => {
       if (movementErr) {
+        logger.error(movementErr);
+
         return res.status(500).json({
-          error: movementErr.message,
+          error: "Internal server error",
         });
       }
 
-      db.query(
-        warehouseQuery,
-        [productId],
-        (warehouseErr, warehouseResult) => {
-          if (warehouseErr) {
-            return res.status(500).json({
-              error: warehouseErr.message,
+      db.query(warehouseQuery, [productId], (warehouseErr, warehouseResult) => {
+        if (warehouseErr) {
+          logger.error(warehouseErr);
+
+          return res.status(500).json({
+            error: "Internal server error",
+          });
+        }
+
+        db.query(
+          serializedQuery,
+          [productId],
+          (serializedErr, serializedResult) => {
+            if (serializedErr) {
+              logger.error(serializedErr);
+
+              return res.status(500).json({
+                error: "Internal server error",
+              });
+            }
+
+            const hasMovements = movementResult[0].total > 0;
+
+            const hasWarehouseInventory = warehouseResult[0].total > 0;
+
+            const hasSerializedItems = serializedResult[0].total > 0;
+
+            if (hasMovements || hasWarehouseInventory || hasSerializedItems) {
+              return res.status(400).json({
+                error:
+                  "This product cannot be deleted because it has inventory history or warehouse allocations.",
+              });
+            }
+
+            db.query(deleteItemsQuery, [productId], (err) => {
+              if (err) {
+                logger.error(err);
+
+                return res.status(500).json({
+                  error: "Internal server error",
+                });
+              }
+
+              db.query(deleteProductQuery, [productId], (err2) => {
+                if (err2) {
+                  logger.error(err2);
+
+                  return res.status(500).json({
+                    error: err2.message,
+                  });
+                }
+                getIO().emit("product-deleted");
+
+                logActivity(
+                  req.user.id,
+                  req.user.username,
+                  `Deleted product: ${productName}`,
+                );
+
+                res.json({
+                  message: "Product deleted successfully",
+                });
+              });
+            });
+          },
+        );
+      });
+    });
+  });
+};
+
+/* =========================
+   BULK PRODUCT IMPORT
+========================= */
+
+exports.importProducts = (req, res) => {
+  const products = req.body.products;
+
+  if (!Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({
+      error: "No products supplied for import",
+    });
+  }
+
+  const errors = [];
+  const names = new Map();
+
+  /* =========================
+     VALIDATE ENTIRE BATCH
+  ========================= */
+
+  products.forEach((product, index) => {
+    const row = index + 1;
+
+    const name = String(product.name || "").trim();
+    const brand = String(product.brand || "").trim();
+    const category = String(product.category || "").trim();
+    const price = Number(product.price);
+
+    if (!name) {
+      errors.push(`Row ${row}: Product name is empty.`);
+    }
+
+    if (!brand) {
+      errors.push(`Row ${row}: Brand is empty.`);
+    }
+
+    if (!category) {
+      errors.push(`Row ${row}: Category is empty.`);
+    }
+
+    if (!Number.isFinite(price)) {
+      errors.push(`Row ${row}: Price is invalid.`);
+    } else if (price <= 0) {
+      errors.push(`Row ${row}: Price must be greater than 0.`);
+    }
+
+    const normalizedName = name.toLowerCase();
+
+    if (normalizedName) {
+      if (names.has(normalizedName)) {
+        errors.push(
+          `Row ${row}: Duplicate product "${name}" also appears on row ${names.get(normalizedName)}.`,
+        );
+      } else {
+        names.set(normalizedName, row);
+      }
+    }
+  });
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      error: "Import aborted",
+      errors,
+    });
+  }
+
+  /* =========================
+     TRANSACTION
+  ========================= */
+
+  db.getConnection((connectionErr, connection) => {
+    if (connectionErr) {
+      logger.error(connectionErr);
+
+      return res.status(500).json({
+        error: "Internal server error",
+      });
+    }
+
+    connection.beginTransaction((transactionErr) => {
+      if (transactionErr) {
+        connection.release();
+
+        logger.error(transactionErr);
+
+        return res.status(500).json({
+          error: "Internal server error",
+        });
+      }
+
+      const namesArray = products.map((product) => String(product.name).trim());
+
+      const duplicateQuery = `
+        SELECT name
+        FROM products
+        WHERE LOWER(name) IN (
+          ${namesArray.map(() => "LOWER(?)").join(",")}
+        )
+      `;
+
+      connection.query(
+        duplicateQuery,
+        namesArray,
+        (duplicateErr, duplicateResults) => {
+          if (duplicateErr) {
+            return connection.rollback(() => {
+              connection.release();
+
+              logger.error(duplicateErr);
+
+              return res.status(500).json({
+                error: "Internal server error",
+              });
             });
           }
 
-          db.query(
-            serializedQuery,
-            [productId],
-            (serializedErr, serializedResult) => {
-              if (serializedErr) {
-                return res.status(500).json({
-                  error: serializedErr.message,
-                });
-              }
+          if (duplicateResults.length > 0) {
+            const duplicateNames = duplicateResults.map(
+              (product) => product.name,
+            );
 
-              const hasMovements =
-                movementResult[0].total > 0;
+            return connection.rollback(() => {
+              connection.release();
 
-              const hasWarehouseInventory =
-                warehouseResult[0].total > 0;
-
-              const hasSerializedItems =
-                serializedResult[0].total > 0;
-
-              if (
-                hasMovements ||
-                hasWarehouseInventory ||
-                hasSerializedItems
-              ) {
-                return res.status(400).json({
-                  error:
-                    "This product cannot be deleted because it has inventory history or warehouse allocations.",
-                });
-              }
-
-              db.query(deleteItemsQuery, [productId], (err) => {
-                if (err) {
-                  return res.status(500).json({
-                    error: err.message,
-                  });
-                }
-
-                db.query(
-                  deleteProductQuery,
-                  [productId],
-                  (err2) => {
-                    if (err2) {
-                      return res.status(500).json({
-                        error: err2.message,
-                      });
-                    }
-
-                    getIO().emit("product-deleted");
-
-                    logActivity(
-                      req.user.id,
-                      req.user.username,
-                      `Deleted product: ${productName}`,
-                    );
-
-                    res.json({
-                      message: "Product deleted successfully",
-                    });
-                  },
-                );
+              return res.status(409).json({
+                error: "Import aborted",
+                errors: duplicateNames.map(
+                  (name) => `Product "${name}" already exists in the system.`,
+                ),
               });
-            },
-          );
+            });
+          }
+
+          const insertQuery = `
+            INSERT INTO products
+            (
+              name,
+              brand,
+              category,
+              price,
+              track_serial,
+              quantity,
+              stock_unit,
+              package_size
+            )
+            VALUES ?
+          `;
+
+          const values = products.map((product) => [
+            String(product.name).trim(),
+            String(product.brand).trim(),
+            String(product.category).trim(),
+            Number(product.price),
+
+            // Bulk import creates neutral product definitions.
+            null,
+
+            // NEVER create stock during product import.
+            0,
+
+            "Unit",
+            1,
+          ]);
+
+          connection.query(insertQuery, [values], (insertErr, result) => {
+            if (insertErr) {
+              return connection.rollback(() => {
+                connection.release();
+
+                logger.error(insertErr);
+
+                return res.status(500).json({
+                  error: "Import aborted",
+                  errors: [
+                    "The products could not be imported. No products were created.",
+                  ],
+                });
+              });
+            }
+
+            connection.commit((commitErr) => {
+              if (commitErr) {
+                return connection.rollback(() => {
+                  connection.release();
+
+                  logger.error(commitErr);
+
+                  return res.status(500).json({
+                    error: "Import aborted",
+                    errors: [
+                      "The import transaction failed. No products were created.",
+                    ],
+                  });
+                });
+              }
+
+              connection.release();
+
+              getIO().emit("product-created");
+
+              logActivity(
+                req.user.id,
+                req.user.username,
+                `Bulk imported ${result.affectedRows} products`,
+              );
+
+              return res.json({
+                message: "Products imported successfully",
+                imported: result.affectedRows,
+              });
+            });
+          });
         },
       );
     });

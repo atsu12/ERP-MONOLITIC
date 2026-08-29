@@ -1,4 +1,5 @@
 const db = require("../configs/db");
+const logger = require("../utils/logger");
 const path = require("path");
 const fs = require("fs");
 
@@ -52,7 +53,7 @@ exports.uploadSettingsAsset = (req, res) => {
           try {
             fs.unlinkSync(absolutePath);
           } catch (err) {
-            console.warn("Could not delete previous asset:", err.message);
+            logger.warn(`Could not delete previous asset: ${err.message}`);
           }
         }
       }
@@ -119,10 +120,7 @@ exports.deleteSettingsAsset = (req, res) => {
           try {
             fs.unlinkSync(absolutePath);
           } catch (err) {
-            console.warn(
-              "Could not delete asset:",
-              err.message,
-            );
+            logger.warn(`Could not delete asset: ${err.message}`);
           }
         }
       }

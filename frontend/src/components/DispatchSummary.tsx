@@ -75,9 +75,9 @@ function DispatchSummary({
     <div className="erp-card erp-section mt-20">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dispatch Summary</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Dispatch Summary</h2>
 
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Review all selected products before submitting this dispatch.
           </p>
         </div>
@@ -87,7 +87,7 @@ function DispatchSummary({
         {cartItems.map((item, index) => (
           <div
             key={index}
-            className="rounded-2xl border border-gray-200 bg-white p-5"
+            className="rounded-2xl border border-slate-200 bg-white p-5"
           >
             <div className="flex justify-between items-start">
               <div>
@@ -95,20 +95,20 @@ function DispatchSummary({
 
                 {isSerialized(item) ? (
                   <>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Quantity: {item.quantity}
                     </p>
 
                     <div className="grid grid-cols-2 gap-6 mt-4">
                       <div>
-                        <p className="text-xs text-gray-500">Unit Price</p>
+                        <p className="text-xs text-slate-500">Unit Price</p>
                         <p className="font-semibold">
                           {formatCurrency(item.unit_price)}
                         </p>
                       </div>
 
                       <div>
-                        <p className="text-xs text-gray-500">Line Total</p>
+                        <p className="text-xs text-slate-500">Line Total</p>
                         <p className="font-bold text-lg">
                           {formatCurrency(item.quantity * item.unit_price)}
                         </p>
@@ -118,7 +118,7 @@ function DispatchSummary({
                 ) : (
                   <>
                     <div className="flex items-center gap-3 mt-3">
-                      <label className="text-sm text-gray-500">Quantity</label>
+                      <label className="text-sm text-slate-500">Quantity</label>
 
                       <input
                         type="number"
@@ -135,20 +135,20 @@ function DispatchSummary({
                             ),
                           );
                         }}
-                        className="w-24 rounded-lg border border-gray-300 px-3 py-2"
+                        className="w-24 rounded-lg border border-slate-300 px-3 py-2"
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-6 mt-5">
                       <div>
-                        <p className="text-xs text-gray-500">Unit Price</p>
+                        <p className="text-xs text-slate-500">Unit Price</p>
                         <p className="font-semibold">
                           {formatCurrency(item.unit_price)}
                         </p>
                       </div>
 
                       <div>
-                        <p className="text-xs text-gray-500">Line Total</p>
+                        <p className="text-xs text-slate-500">Line Total</p>
                         <p className="font-bold text-lg">
                           {formatCurrency(item.quantity * item.unit_price)}
                         </p>
@@ -170,7 +170,7 @@ function DispatchSummary({
 
             {item.serials && item.serials.length > 0 && (
               <div className="mt-5">
-                <h4 className="font-medium text-gray-700 mb-2">
+                <h4 className="font-medium text-slate-700 mb-2">
                   Serial Numbers
                 </h4>
 
@@ -178,7 +178,7 @@ function DispatchSummary({
                   {item.serials.map((serial) => (
                     <div
                       key={serial}
-                      className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2"
+                      className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2"
                     >
                       <span className="text-sm">{serial}</span>
 
@@ -201,25 +201,25 @@ function DispatchSummary({
       <div className="border-t mt-8 pt-6">
         <div className="grid grid-cols-3 gap-6 text-center">
           <div>
-            <p className="text-sm text-gray-500">Products</p>
+            <p className="text-sm text-slate-500">Products</p>
 
             <p className="text-2xl font-bold">{totalProducts}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Total Units</p>
+            <p className="text-sm text-slate-500">Total Units</p>
 
             <p className="text-2xl font-bold">{totalUnits}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Serialized Units</p>
+            <p className="text-sm text-slate-500">Serialized Units</p>
 
             <p className="text-2xl font-bold">{serializedUnits}</p>
           </div>
         </div>
 
-        <div className="mt-8 rounded-xl bg-gray-50 border border-gray-200 p-5">
+        <div className="mt-8 rounded-xl bg-slate-50 border border-slate-200 p-5">
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold">Grand Total</span>
 

@@ -9,13 +9,19 @@ async function getFastMoving(filters = {}) {
 
   const sql = `
     SELECT
-      p.id,
-      p.name,
-      SUM(sm.quantity) AS totalOut
+  p.id,
+  p.name,
+  SUM(
+    CASE
+      WHEN sm.type = 'STOCK_OUT' THEN sm.quantity
+      WHEN sm.type = 'RETURNED' THEN -sm.quantity
+      ELSE 0
+    END
+  ) AS totalOut
     FROM stock_movements sm
     JOIN products p
       ON p.id = sm.product_id
-    WHERE sm.type IN ('OUT','SCANNED_OUT')
+    WHERE sm.type IN ('STOCK_OUT', 'RETURNED')
     ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
     GROUP BY
       p.id,
@@ -33,20 +39,34 @@ async function getSlowMoving(filters = {}) {
     movement: "sm",
   });
 
+  const movementFilters = where
+    ? `AND ${where.replace(/^WHERE\s+/i, "")}`
+    : "";
+
   const sql = `
     SELECT
       p.id,
       p.name,
-      SUM(sm.quantity) AS totalOut
-    FROM stock_movements sm
-    JOIN products p
-      ON p.id = sm.product_id
-    WHERE sm.type IN ('OUT','SCANNED_OUT')
-    ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
+      COALESCE(
+        SUM(
+          CASE
+            WHEN sm.type = 'STOCK_OUT' THEN sm.quantity
+            WHEN sm.type = 'RETURNED' THEN -sm.quantity
+            ELSE 0
+          END
+        ),
+        0
+      ) AS totalOut
+    FROM products p
+    LEFT JOIN stock_movements sm
+      ON sm.product_id = p.id
+      ${movementFilters}
     GROUP BY
       p.id,
       p.name
-    ORDER BY totalOut ASC
+    ORDER BY
+      totalOut ASC,
+      p.name ASC
     LIMIT 10
   `;
 
@@ -69,7 +89,8 @@ async function getRecentMovements(filters = {}) {
     FROM stock_movements sm
     JOIN products p
       ON p.id = sm.product_id
-    ${where}
+    WHERE sm.type IN ('RECEIVED', 'STOCK_OUT', 'RETURNED', 'DAMAGED')
+    ${where ? `AND ${where.replace(/^WHERE\s+/i, "")}` : ""}
     ORDER BY sm.created_at DESC
     LIMIT 10
   `;

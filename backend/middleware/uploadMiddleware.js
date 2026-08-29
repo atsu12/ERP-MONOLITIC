@@ -2,6 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+const logger = require("../utils/logger");
 const uploadRoot = path.join(__dirname, "..", "uploads");
 const logoDir = path.join(uploadRoot, "logos");
 const templateDir = path.join(uploadRoot, "templates");
@@ -36,10 +37,9 @@ const fileFilter = (req, file, cb) => {
 
   const extension = path.extname(file.originalname).toLowerCase();
 
-  console.log("Uploaded file:", file.originalname);
-  console.log("Extension:", extension);
-  console.log("Upload type:", type);
-
+  logger.info(`Uploaded file: ${file.originalname}`);
+  logger.info(`Extension: ${extension}`);
+  logger.info(`Upload type: ${type}`);
   if (type === "logo") {
     const allowed = [".png", ".jpg", ".jpeg", ".svg", ".webp"];
 

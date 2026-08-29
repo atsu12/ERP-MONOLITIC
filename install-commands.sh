@@ -89,3 +89,5 @@ npm install bcrypt jsonwebtoken express mysql2 dotenv cors
 # From the frontend folder, run the following command to install the necessary dependencies:
 npm install exceljs
 
+# 
+npm install exceljs

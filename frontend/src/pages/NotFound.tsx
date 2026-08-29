@@ -11,9 +11,9 @@ function NotFound() {
 
   return (
 
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-8">
 
-      <div className="bg-white border border-gray-200 shadow-xl rounded-3xl p-12 text-center max-w-xl w-full">
+      <div className="bg-white border border-slate-200 shadow-xl rounded-3xl p-12 text-center max-w-xl w-full">
 
         {/* ICON */}
 
@@ -28,13 +28,13 @@ function NotFound() {
 
         {/* TITLE */}
 
-        <h1 className="text-5xl font-black text-gray-900 mb-4">
+        <h1 className="text-5xl font-black text-slate-900 mb-4">
 
           404
 
         </h1>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        <h2 className="text-2xl font-bold text-slate-800 mb-4">
 
           Page Not Found
 
@@ -42,7 +42,7 @@ function NotFound() {
 
         {/* DESCRIPTION */}
 
-        <p className="text-gray-500 mb-8">
+        <p className="text-slate-500 mb-8">
 
           The requested ERP module or route could not be found.
 

@@ -1,3 +1,5 @@
+const logger = require("./logger");
+
 const pool = require("../configs/db");
 
 const logActivity = (userId, username, action) => {
@@ -12,7 +14,7 @@ const logActivity = (userId, username, action) => {
     [userId, username, action],
     (err) => {
       if (err) {
-        console.log("Activity log error:", err);
+        logger.error(`Activity log error: ${err.message}`);
       }
     },
   );

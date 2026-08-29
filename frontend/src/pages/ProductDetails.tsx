@@ -116,7 +116,7 @@ function ProductDetails() {
       <div className="mb-6">
         <button
           onClick={() => navigate("/products")}
-          className="inline-flex items-center gap-2 text-gray-700 hover:text-black"
+          className="inline-flex items-center gap-2 text-slate-700 hover:text-black"
         >
           <ArrowLeft size={18} />
           Back to Products
@@ -126,9 +126,9 @@ function ProductDetails() {
       <div className="erp-card mb-8">
         <div className="flex items-center gap-3 mb-6">
           {product.track_serial ? (
-            <Boxes size={28} className="text-gray-700" />
+            <Boxes size={28} className="text-slate-700" />
           ) : (
-            <Package size={28} className="text-gray-700" />
+            <Package size={28} className="text-slate-700" />
           )}
 
           <h1 className="text-3xl font-bold">{product.name}</h1>
@@ -136,35 +136,35 @@ function ProductDetails() {
 
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-500">Product ID</p>
+            <p className="text-sm text-slate-500">Product ID</p>
 
             <p className="font-semibold">{product.id}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Brand</p>
+            <p className="text-sm text-slate-500">Brand</p>
             <p className="font-semibold">{product.brand || "-"}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Category</p>
+            <p className="text-sm text-slate-500">Category</p>
             <p className="font-semibold">{product.category || "-"}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Type</p>
+            <p className="text-sm text-slate-500">Type</p>
             <p className="font-semibold">
               {product.track_serial ? "Serialized" : "Standard"}
             </p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Quantity</p>
+            <p className="text-sm text-slate-500">Quantity</p>
             <p className="font-semibold">{product.quantity}</p>
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Price ({settings?.base_currency ?? "USD"})
             </p>
 
@@ -176,7 +176,7 @@ function ProductDetails() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Display Price</p>
+            <p className="text-sm text-slate-500">Display Price</p>
 
             <p className="font-semibold">
               {settings
@@ -248,7 +248,7 @@ function ProductDetails() {
                       className={
                         item.status === "IN_STOCK"
                           ? "px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold"
-                          : "px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-semibold"
+                          : "px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-semibold"
                       }
                     >
                       {item.status}

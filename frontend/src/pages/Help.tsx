@@ -12,7 +12,9 @@ import {
   FileText,
   Activity,
   Users,
+  UserRound,
   SlidersHorizontal,
+  Download,
   ChevronDown,
 } from "lucide-react";
 
@@ -165,6 +167,47 @@ function Help() {
       ],
     },
     {
+      title: "Customers",
+      icon: UserRound,
+      description:
+        "Customer Records stores customer information captured from completed sales.",
+      steps: [
+        "Open Customers from the navigation menu.",
+        "Review customer records generated from completed sales.",
+        "Review the customer name, contact, contact person, location and date added.",
+        "Use the Export button to export the available customer records.",
+        "The customer export is generated as an Excel workbook.",
+        "The general export format includes the ERP company information and uploaded company logo.",
+      ],
+    },
+    {
+      title: "General Exports",
+      icon: Download,
+      description:
+        "Applicable ERP modules provide Excel exports for operational and management data.",
+      steps: [
+        "Open the module containing the data you want to export.",
+        "Use the available Export button.",
+        "The exported workbook is formatted for practical review and reporting.",
+        "The ERP company name and uploaded company logo are used in general exports when available.",
+        "Where filters are available, the selected filter information can be included in the exported report.",
+        "General exports are separate from invoice generation.",
+      ],
+    },
+    {
+      title: "Invoice Generation",
+      icon: FileText,
+      description:
+        "Invoice generation is a separate document-generation system from the general ERP Excel exports.",
+      steps: [
+        "Invoice generation uses the invoice sample/template uploaded in ERP Settings.",
+        "The uploaded invoice sample is used as the reference for the invoice layout and structure.",
+        "Invoice generation is company-specific because each company can upload its own invoice sample.",
+        "Do not expect general reports or exports to follow the uploaded invoice sample.",
+        "General Excel exports use the ERP's standard reporting format instead.",
+      ],
+    },
+    {
       title: "Users",
       icon: Users,
       description:
@@ -185,19 +228,19 @@ function Help() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">User Guide</h1>
+        <h1 className="erp-page-title">User Guide</h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="erp-page-description">
           A practical guide to using the ZICO Business ERP system.
         </p>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+      <div className="erp-card p-6 shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">
           Getting Started
         </h2>
 
-        <p className="text-gray-600 leading-relaxed">
+        <p className="text-slate-600 leading-relaxed">
           Use the sidebar to access the modules available to your role.
           Start with Products to define the items managed by the business,
           then use Stock In when physical inventory enters the business.
@@ -212,26 +255,26 @@ function Help() {
           return (
             <section
               key={section.title}
-              className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
+              className="erp-card shadow-[0_4px_18px_rgba(15,23,42,0.05)] overflow-hidden"
             >
               <button
                 type="button"
                 onClick={() => toggleSection(section.title)}
-                className="w-full flex items-center justify-between gap-4 p-6 text-left hover:bg-gray-50 transition"
+                className="w-full flex items-center justify-between gap-4 p-6 text-left hover:bg-slate-50 transition"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gray-100">
+                  <div className="p-2 rounded-2xl bg-slate-50">
                     <Icon size={22} />
                   </div>
 
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-slate-900">
                     {section.title}
                   </h2>
                 </div>
 
                 <ChevronDown
                   size={22}
-                  className={`shrink-0 transition-transform duration-200 ${
+                  className={`shrink-0 transition-all duration-200 ${
                     isOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -239,11 +282,11 @@ function Help() {
 
               {isOpen && (
                 <div className="px-6 pb-6 border-t border-gray-100 pt-5">
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-slate-600 mb-4">
                     {section.description}
                   </p>
 
-                  <ol className="space-y-2 list-decimal list-inside text-gray-700">
+                  <ol className="space-y-2 list-decimal list-inside text-slate-700">
                     {section.steps.map((step) => (
                       <li key={step}>{step}</li>
                     ))}
@@ -256,11 +299,11 @@ function Help() {
       </div>
 
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-3">
+        <h2 className="text-xl font-bold text-slate-900 mb-3">
           Important Inventory Rule
         </h2>
 
-        <p className="text-gray-700 leading-relaxed">
+        <p className="text-slate-700 leading-relaxed">
           Products are product definitions. Inventory enters the system
           through Stock In. Creating a product or importing products from
           Excel does not automatically create inventory.

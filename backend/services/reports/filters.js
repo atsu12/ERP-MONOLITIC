@@ -57,7 +57,7 @@ function buildFilters(filters = {}, aliases = {}) {
   ========================= */
 
   if (filters.lowStock && aliases.product) {
-  where.push(`
+    where.push(`
     (
       CASE
         WHEN ${product}.track_serial = TRUE
@@ -71,14 +71,14 @@ function buildFilters(filters = {}, aliases = {}) {
       END
     ) <= 10
   `);
-}
+  }
 
   /* =========================
      OUT OF STOCK
   ========================= */
 
   if (filters.outOfStock && aliases.product) {
-  where.push(`
+    where.push(`
     (
       CASE
         WHEN ${product}.track_serial = TRUE
@@ -92,13 +92,13 @@ function buildFilters(filters = {}, aliases = {}) {
       END
     ) = 0
   `);
-}
+  }
 
   /* =========================
      WAREHOUSE
   ========================= */
 
-  if (filters.warehouse) {
+  if (filters.warehouse && aliases.warehouse) {
     where.push(`${warehouse}.id = ?`);
     params.push(filters.warehouse);
   }
@@ -109,9 +109,13 @@ function buildFilters(filters = {}, aliases = {}) {
 
   if (aliases.movement) {
     if (filters.period) {
-      where.push(`${movement}.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`);
+      if (filters.period === "year") {
+        where.push(`${movement}.created_at >= MAKEDATE(YEAR(CURDATE()), 1)`);
+      } else {
+        where.push(`${movement}.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)`);
 
-      params.push(Number(filters.period));
+        params.push(Number(filters.period));
+      }
     }
 
     if (filters.fromDate) {

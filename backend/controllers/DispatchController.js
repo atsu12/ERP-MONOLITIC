@@ -1,4 +1,5 @@
 const db = require("../configs/db");
+const logger = require("../utils/logger");
 
 const { getIO } = require("../socket");
 
@@ -25,7 +26,7 @@ exports.cancelDispatch = (req, res) => {
   db.query(query, [id], (err, result) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -63,11 +64,6 @@ exports.createDispatch = (req, res) => {
 
     serials = [],
   } = req.body;
-
-  console.log("CREATE DISPATCH REQUEST");
-  console.log("Customer:", customer_name);
-  console.log("Items:", items.length);
-  console.log("Time:", new Date().toISOString());
 
   /* =========================
      VALIDATION
@@ -113,7 +109,7 @@ exports.createDispatch = (req, res) => {
   db.query(productsQuery, [productIds], async (productsErr, products) => {
     if (productsErr) {
       return res.status(500).json({
-        error: productsErr.message,
+        error: "Internal server error",
       });
     }
 
@@ -190,7 +186,7 @@ exports.createDispatch = (req, res) => {
       (err, result) => {
         if (err) {
           return res.status(500).json({
-            error: err.message,
+            error: "Internal server error",
           });
         }
 
@@ -228,7 +224,7 @@ exports.createDispatch = (req, res) => {
         db.query(itemsQuery, [itemValues], (itemsErr) => {
           if (itemsErr) {
             return res.status(500).json({
-              error: itemsErr.message,
+              error: "Internal server error",
             });
           }
 
@@ -265,7 +261,7 @@ exports.createDispatch = (req, res) => {
             }
             if (serialErr) {
               return res.status(500).json({
-                error: serialErr.message,
+                error: "Internal server error",
               });
             }
 
@@ -288,7 +284,7 @@ exports.createDispatch = (req, res) => {
               (dispatchSerialErr) => {
                 if (dispatchSerialErr) {
                   return res.status(500).json({
-                    error: dispatchSerialErr.message,
+                    error: "Internal server error",
                   });
                 }
 
@@ -353,7 +349,7 @@ exports.getPendingDispatches = (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -399,7 +395,7 @@ exports.getPaidDispatches = (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -439,7 +435,7 @@ exports.getDispatchById = (req, res) => {
   db.query(query, [id], (err, dispatchRows) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -473,7 +469,7 @@ exports.getDispatchById = (req, res) => {
     db.query(itemsQuery, [id], (itemsErr, items) => {
       if (itemsErr) {
         return res.status(500).json({
-          error: itemsErr.message,
+          error: "Internal server error",
         });
       }
 
@@ -492,43 +488,177 @@ exports.getDispatchById = (req, res) => {
 exports.confirmPayment = (req, res) => {
   const { id } = req.params;
 
-  const query = `
-    UPDATE dispatch_transactions
-    SET
-      status = 'PAYMENT_CONFIRMED',
-
-      cashier_id = ?,
-
-      payment_confirmed_at = NOW()
-
+  const getDispatchQuery = `
+    SELECT
+      customer_name,
+      contact,
+      contact_person,
+      location
+    FROM dispatch_transactions
     WHERE id = ?
-
-    AND status = 'PENDING_PAYMENT'
+      AND status = 'PENDING_PAYMENT'
   `;
 
-  db.query(query, [req.user.id, id], (err, result) => {
-    if (err) {
+  db.query(getDispatchQuery, [id], (dispatchErr, dispatchRows) => {
+    if (dispatchErr) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
-    if (result.affectedRows === 0) {
+    if (dispatchRows.length === 0) {
       return res.status(400).json({
         error: "Dispatch not found or already processed",
       });
     }
 
-    logActivity(
-      req.user.id,
-      req.user.username,
-      `Confirmed payment for dispatch #${id}`,
-    );
+    const dispatch = dispatchRows[0];
 
-    getIO().emit("dispatch-paid");
+    const query = `
+      UPDATE dispatch_transactions
+      SET
+        status = 'PAYMENT_CONFIRMED',
+        cashier_id = ?,
+        payment_confirmed_at = NOW()
+      WHERE id = ?
+        AND status = 'PENDING_PAYMENT'
+    `;
 
-    return res.json({
-      message: "Payment confirmed successfully",
+    db.query(query, [req.user.id, id], (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          error: "Internal server error",
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(400).json({
+          error: "Dispatch not found or already processed",
+        });
+      }
+
+      /*
+       * =========================
+       * AUTO-CREATE / UPDATE CUSTOMER
+       * =========================
+       */
+
+      const customerLookupQuery = `
+        SELECT id
+        FROM customers
+        WHERE
+          (
+            contact IS NOT NULL
+            AND contact <> ''
+            AND contact = ?
+          )
+          OR
+          (
+            (contact IS NULL OR contact = '')
+            AND customer_name = ?
+          )
+        LIMIT 1
+      `;
+
+      db.query(
+        customerLookupQuery,
+        [dispatch.contact || null, dispatch.customer_name],
+        (customerLookupErr, customerRows) => {
+          if (customerLookupErr) {
+            return res.status(500).json({
+              error:
+                "Payment confirmed, but customer record could not be checked",
+            });
+          }
+
+          if (customerRows.length > 0) {
+            const customerId = customerRows[0].id;
+
+            const updateCustomerQuery = `
+              UPDATE customers
+              SET
+                customer_name = ?,
+                contact = ?,
+                contact_person = ?,
+                location = ?
+              WHERE id = ?
+            `;
+
+            db.query(
+              updateCustomerQuery,
+              [
+                dispatch.customer_name,
+                dispatch.contact || null,
+                dispatch.contact_person || null,
+                dispatch.location || null,
+                customerId,
+              ],
+              (updateCustomerErr) => {
+                if (updateCustomerErr) {
+                  return res.status(500).json({
+                    error:
+                      "Payment confirmed, but customer record could not be updated",
+                  });
+                }
+
+                logActivity(
+                  req.user.id,
+                  req.user.username,
+                  `Confirmed payment for dispatch #${id}`,
+                );
+
+                getIO().emit("dispatch-paid");
+
+                return res.json({
+                  message: "Payment confirmed successfully",
+                });
+              },
+            );
+
+            return;
+          }
+
+          const createCustomerQuery = `
+            INSERT INTO customers (
+              customer_name,
+              contact,
+              contact_person,
+              location
+            )
+            VALUES (?, ?, ?, ?)
+          `;
+
+          db.query(
+            createCustomerQuery,
+            [
+              dispatch.customer_name,
+              dispatch.contact || null,
+              dispatch.contact_person || null,
+              dispatch.location || null,
+            ],
+            (createCustomerErr) => {
+              if (createCustomerErr) {
+                return res.status(500).json({
+                  error:
+                    "Payment confirmed, but customer record could not be created",
+                });
+              }
+
+              logActivity(
+                req.user.id,
+                req.user.username,
+                `Confirmed payment for dispatch #${id}`,
+              );
+
+              getIO().emit("dispatch-paid");
+
+              return res.json({
+                message: "Payment confirmed successfully",
+              });
+            },
+          );
+        },
+      );
     });
   });
 };
@@ -567,7 +697,7 @@ exports.adjustDispatchPricing = (req, res) => {
   db.query(query, [id], (err, rows) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -611,7 +741,7 @@ exports.adjustDispatchPricing = (req, res) => {
       (updateErr, result) => {
         if (updateErr) {
           return res.status(500).json({
-            error: updateErr.message,
+            error: "Internal server error",
           });
         }
 
@@ -740,10 +870,10 @@ exports.exportProforma = async (req, res) => {
 
     res.end();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
 
     res.status(500).json({
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -788,10 +918,10 @@ exports.exportInvoice = async (req, res) => {
 
     res.end();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
 
     res.status(500).json({
-      message: error.message,
+      message: "Internal server error",
     });
   }
 };
@@ -802,7 +932,7 @@ exports.completeDispatch = (req, res) => {
   db.getConnection((connectionErr, connection) => {
     if (connectionErr) {
       return res.status(500).json({
-        error: connectionErr.message,
+        error: "Internal server error",
       });
     }
 
@@ -811,7 +941,7 @@ exports.completeDispatch = (req, res) => {
         connection.release();
 
         return res.status(500).json({
-          error: transactionErr.message,
+          error: "Internal server error",
         });
       }
 
@@ -831,7 +961,7 @@ exports.completeDispatch = (req, res) => {
             connection.release();
 
             res.status(500).json({
-              error: dispatchErr.message,
+              error: "Internal server error",
             });
           });
         }
@@ -880,7 +1010,7 @@ exports.completeDispatch = (req, res) => {
               connection.release();
 
               res.status(500).json({
-                error: itemsErr.message,
+                error: "Internal server error",
               });
             });
           }
@@ -919,7 +1049,7 @@ exports.completeDispatch = (req, res) => {
                   connection.release();
 
                   res.status(500).json({
-                    error: serialsErr.message,
+                    error: "Internal server error",
                   });
                 });
               }
@@ -959,7 +1089,7 @@ exports.completeDispatch = (req, res) => {
                         connection.release();
 
                         res.status(500).json({
-                          error: updateErr.message,
+                          error: "Internal server error",
                         });
                       });
                     }
@@ -1006,7 +1136,7 @@ exports.completeDispatch = (req, res) => {
                         connection.release();
 
                         res.status(500).json({
-                          error: serialUpdateErr.message,
+                          error: "Internal server error",
                         });
                       });
                     }
@@ -1094,7 +1224,7 @@ exports.completeDispatch = (req, res) => {
                             connection.release();
 
                             res.status(500).json({
-                              error: completeErr.message,
+                              error: "Internal server error",
                             });
                           });
                         }
@@ -1116,7 +1246,7 @@ exports.completeDispatch = (req, res) => {
                               connection.release();
 
                               res.status(500).json({
-                                error: commitErr.message,
+                                error: "Internal server error",
                               });
                             });
                           }
@@ -1144,7 +1274,7 @@ exports.completeDispatch = (req, res) => {
                       connection.release();
 
                       res.status(500).json({
-                        error: movementErr.message,
+                        error: "Internal server error",
                       });
                     });
                   });

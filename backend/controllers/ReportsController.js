@@ -27,13 +27,14 @@ exports.getMovements = (req, res) => {
     ON p.id = sm.product_id
   LEFT JOIN users u
     ON u.id = sm.user_id
+  WHERE sm.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
   ORDER BY sm.created_at DESC
-`;
+` ;
 
   db.query(q, (err, results) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -61,7 +62,7 @@ exports.getProductMovements = (req, res) => {
   db.query(q, [id], (err, results) => {
     if (err) {
       return res.status(500).json({
-        error: err.message,
+        error: "Internal server error",
       });
     }
 
@@ -81,12 +82,12 @@ exports.getDashboardReport = async (req, res) => {
 
     res.json(dashboard);
   } catch (error) {
-  logger.error(error);
+    logger.error(error);
 
-  res.status(500).json({
-    error: error.message,
-  });
-}
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
 };
 
 /* =========================
@@ -99,12 +100,12 @@ exports.getWarehouseReport = async (req, res) => {
 
     res.json(data);
   } catch (error) {
-  logger.error(error);
+    logger.error(error);
 
-  res.status(500).json({
-    error: error.message,
-  });
-}
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
 };
 
 /* =========================
@@ -117,10 +118,10 @@ exports.getInventoryValuation = async (req, res) => {
 
     res.json(inventory);
   } catch (error) {
-  logger.error(error);
+    logger.error(error);
 
-  res.status(500).json({
-    error: error.message,
-  });
-}
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
 };

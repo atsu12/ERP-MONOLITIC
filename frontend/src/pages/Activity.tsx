@@ -100,74 +100,80 @@ function Activity() {
       {/* PAGE HEADER */}
 
       <PageHeader
-        icon={<ActivityIcon size={32} className="text-gray-800" />}
+        icon={<ActivityIcon size={32} className="text-slate-800" />}
         title="Activity Audit Logs"
         description="Review system activity logs and monitor user actions across inventory operations."
       />
 
       {/* AUDIT HISTORY RANGE */}
 
-      <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-        <div className="mb-3">
-          <p className="text-sm font-semibold text-gray-800">
-            Audit History
-          </p>
+      <div className="erp-search-bar mb-5">
+        <div className="w-full">
+          <div className="mb-3">
+            <p className="erp-section-title">
+              Audit History
+            </p>
 
-          <p className="text-xs text-gray-500">
-            Search activity history for up to 3 years.
-          </p>
-        </div>
+            <p className="erp-page-description">
+              Search activity history for up to 3 years.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-gray-700">
-            Date From
-          </span>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <label className="erp-label">
+                Date From
+              </label>
 
-          <DatePicker
-            format="DD/MM/YYYY"
-            value={fromDate ? dayjs(fromDate) : null}
-            minDate={minimumAuditDate}
-            maxDate={maximumAuditDate}
-            onChange={(date) =>
-              setFromDate(date ? date.format("YYYY-MM-DD") : "")
-            }
-          />
+              <DatePicker
+                format="DD/MM/YYYY"
+                value={fromDate ? dayjs(fromDate) : null}
+                minDate={minimumAuditDate}
+                maxDate={maximumAuditDate}
+                onChange={(date) =>
+                  setFromDate(date ? date.format("YYYY-MM-DD") : "")
+                }
+              />
+            </div>
 
-          <span className="text-sm font-medium text-gray-700">
-            Date To
-          </span>
+            <div>
+              <label className="erp-label">
+                Date To
+              </label>
 
-          <DatePicker
-            format="DD/MM/YYYY"
-            value={toDate ? dayjs(toDate) : null}
-            minDate={minimumAuditDate}
-            maxDate={maximumAuditDate}
-            onChange={(date) =>
-              setToDate(date ? date.format("YYYY-MM-DD") : "")
-            }
-          />
+              <DatePicker
+                format="DD/MM/YYYY"
+                value={toDate ? dayjs(toDate) : null}
+                minDate={minimumAuditDate}
+                maxDate={maximumAuditDate}
+                onChange={(date) =>
+                  setToDate(date ? date.format("YYYY-MM-DD") : "")
+                }
+              />
+            </div>
 
-          {(fromDate || toDate) && (
-            <button
-              type="button"
-              onClick={() => {
-                setFromDate("");
-                setToDate("");
-              }}
-              className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Clear Dates
-            </button>
-          )}
+            {(fromDate || toDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                }}
+                className="erp-secondary-button"
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* SEARCH RESULTS */}
 
       {debouncedSearch && (
-        <div className="mb-4 text-sm text-gray-500">
+        <div className="mb-4 text-sm text-slate-500">
           Found
-          <span className="font-semibold text-gray-900 mx-1">
+          <span className="font-semibold text-slate-900 mx-1">
             {filteredActivities.length}
           </span>
           matching activity log(s) for
@@ -180,7 +186,7 @@ function Activity() {
       {/* SEARCH */}
 
       <div className="mb-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="erp-label">
           Search
         </label>
 
@@ -189,16 +195,15 @@ function Activity() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by action or user..."
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+          className="erp-search w-full"
         />
       </div>
 
       {/* ACTIVITY TABLE */}
 
       <div className="erp-table-container">
-        <div className="erp-table-scroll"></div>
-
-        <table className="erp-table">
+        <div className="erp-table-scroll">
+          <table className="erp-table">
           <thead>
             <tr>
               <th>User</th>
@@ -241,12 +246,12 @@ function Activity() {
 
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                        <User size={18} className="text-gray-700" />
+                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
+                        <User size={18} className="text-slate-700" />
                       </div>
 
                       <div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-slate-900">
                           {activity.username || `User #${activity.user_id}`}
                         </p>
                       </div>
@@ -275,7 +280,7 @@ function Activity() {
                   {/* TIME */}
 
                   <td>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-slate-600">
                       <Clock3 size={16} />
 
                       <span>
@@ -293,7 +298,8 @@ function Activity() {
               );
             })}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

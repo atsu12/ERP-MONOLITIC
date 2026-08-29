@@ -118,13 +118,13 @@ function Reports() {
   return (
     <div>
       <PageHeader
-        icon={<FileText size={32} className="text-gray-800" />}
+        icon={<FileText size={32} className="text-slate-800" />}
         title="Reports"
         description="Generate operational reports and inventory analytics."
       />
 
       {loading && (
-        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+        <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
           Updating reports...
         </div>
       )}

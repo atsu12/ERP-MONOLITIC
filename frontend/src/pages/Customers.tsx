@@ -23,7 +23,7 @@ function Customers() {
       {/* HEADER */}
 
       <PageHeader
-        icon={<Users size={32} className="text-gray-800" />}
+        icon={<Users size={32} className="text-slate-800" />}
         title="Customers"
         description="View and manage customer records generated from completed sales."
       />
@@ -34,11 +34,11 @@ function Customers() {
         <div className="erp-card erp-section">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-slate-500 mb-2">
                 Total Customers
               </p>
 
-              <h2 className="text-4xl font-black text-gray-900">
+              <h2 className="text-4xl font-black text-slate-900">
                 {customers.length}
               </h2>
             </div>
@@ -54,14 +54,14 @@ function Customers() {
       {/* CUSTOMER TABLE */}
 
       <div className="erp-table-container">
-        <div className="erp-section border-b border-gray-200">
+        <div className="erp-section border-b border-slate-200">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="erp-section-title">
                 Customer Records
               </h2>
 
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Customer information captured from completed sales.
               </p>
             </div>
@@ -69,9 +69,9 @@ function Customers() {
             <button
               onClick={() => exportCustomers(customers)}
               disabled={customers.length === 0}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+              className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all duration-200 ${
                 customers.length === 0
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
@@ -113,16 +113,16 @@ function Customers() {
                   <tr key={customer.id}>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <Users size={18} className="text-gray-700" />
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center">
+                          <Users size={18} className="text-slate-700" />
                         </div>
 
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <p className="font-semibold text-slate-900">
                             {customer.customer_name}
                           </p>
 
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             Customer #{customer.id}
                           </p>
                         </div>
@@ -131,19 +131,19 @@ function Customers() {
 
                     <td>
                       {customer.contact || (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
                     </td>
 
                     <td>
                       {customer.contact_person || (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
                     </td>
 
                     <td>
                       {customer.location || (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
                     </td>
 

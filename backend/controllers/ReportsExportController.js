@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 const reports = require("../services/reports");
 const exportsService = require("../services/reports/exports");
 
@@ -33,10 +35,7 @@ exports.exportReportCSV = async (req, res) => {
       rows,
     });
 
-    res.setHeader(
-      "Content-Type",
-      "text/csv; charset=utf-8",
-    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
 
     res.setHeader(
       "Content-Disposition",
@@ -45,8 +44,10 @@ exports.exportReportCSV = async (req, res) => {
 
     res.send(csv);
   } catch (error) {
+    logger.error(error);
+
     res.status(500).json({
-      error: error.message,
+      error: "Internal server error",
     });
   }
 };

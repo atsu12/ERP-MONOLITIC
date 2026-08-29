@@ -1,0 +1,319 @@
+import { ReactNode, useEffect, useRef, useState } from "react";
+
+import {
+  Bell,
+  Menu,
+  Search,
+  X,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
+
+import { useLayoutStore } from "../store/layoutStore";
+import { useLocation } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import NotificationPanel from "./NotificationPanel";
+import { useRealtimeInventory } from "../hooks/useRealtimeInventory";
+import { useLowStockAlerts } from "../hooks/useLowStockAlerts";
+import { useApiHealth } from "../hooks/useApiHealth";
+import { useAuthStore } from "../store/authStore";
+import { useNotificationStore } from "../store/notificationStore";
+import { useSearchStore } from "../store/searchStore";
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+function Layout({ children }: LayoutProps) {
+  const location = useLocation();
+
+  useRealtimeInventory();
+  useLowStockAlerts();
+
+  const { apiOnline } = useApiHealth();
+
+  const user = useAuthStore((state) => state.user);
+
+  const {
+    sidebarCollapsed,
+    mobileMenuOpen,
+    toggleMobileMenu,
+    closeMobileMenu,
+  } = useLayoutStore();
+
+  const notifications = useNotificationStore(
+    (state) => state.notifications,
+  );
+
+  const [showNotifications, setShowNotifications] =
+    useState(false);
+
+  const {
+    getSearch,
+    setSearch,
+  } = useSearchStore();
+
+  const search = getSearch(location.pathname);
+
+  const searchInputRef =
+    useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === "k"
+      ) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+  }, []);
+
+  const pageConfig: Record<
+    string,
+    { title: string; description: string }
+  > = {
+    "/dashboard": {
+      title: "Dashboard",
+      description:
+        "Real-time inventory monitoring and warehouse operations.",
+    },
+
+    "/products": {
+      title: "Products",
+      description:
+        "Manage products and inventory items.",
+    },
+
+    "/stock-in": {
+      title: "Stock In",
+      description:
+        "Receive inventory into your warehouse.",
+    },
+
+    "/stock-out": {
+      title: "Stock Out",
+      description:
+        "Issue inventory and process customer dispatches.",
+    },
+
+    "/cashier": {
+      title: "Cashier",
+      description:
+        "Manage payments and sales transactions.",
+    },
+
+    "/movements": {
+      title: "Movements",
+      description:
+        "Track inventory movements and warehouse activity.",
+    },
+
+    "/activity": {
+      title: "Activity Logs",
+      description:
+        "Monitor ERP activity and operational audit trails.",
+    },
+
+    "/scan": {
+      title: "Scan Inventory",
+      description:
+        "Scan and validate inventory.",
+    },
+
+    "/warehouses": {
+      title: "Warehouses",
+      description:
+        "Manage warehouse inventory and locations.",
+    },
+
+    "/reports": {
+      title: "Reports",
+      description:
+        "Operational reports and inventory analytics.",
+    },
+
+    "/users": {
+      title: "Users",
+      description:
+        "Manage ERP users and permissions.",
+    },
+
+    "/customers": {
+      title: "Customers",
+      description:
+        "Manage customer records.",
+    },
+
+    "/adjustments": {
+      title: "Settings",
+      description:
+        "Configure ERP and company settings.",
+    },
+  };
+
+  const currentPage =
+    pageConfig[location.pathname] || {
+      title: "Business-MGT ERP",
+      description:
+        "Enterprise inventory and warehouse platform.",
+    };
+
+  return (
+    <div className="min-h-screen bg-[#f7f9fc]">
+      <Sidebar />
+
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-sm lg:hidden"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      <main
+        className={`min-h-screen transition-all duration-300 ${
+          sidebarCollapsed
+            ? "lg:ml-[84px]"
+            : "lg:ml-[252px]"
+        }`}
+      >
+        <header className="sticky top-0 z-20 h-[76px] border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+          <div className="flex h-full items-center gap-5 px-5 lg:px-7">
+            <button
+              onClick={toggleMobileMenu}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100 lg:hidden"
+            >
+              {mobileMenuOpen ? (
+                <X size={22} />
+              ) : (
+                <Menu size={22} />
+              )}
+            </button>
+
+            <div className="hidden items-center gap-3 lg:flex">
+              <button
+                onClick={toggleMobileMenu}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100"
+              >
+                <Menu size={22} />
+              </button>
+
+              <h1 className="text-[20px] font-extrabold tracking-[-0.02em] text-slate-900">
+                {currentPage.title}
+              </h1>
+            </div>
+
+            <div className="relative mx-auto hidden w-full max-w-[430px] md:block">
+              <Search
+                size={19}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+              />
+
+              <input
+                ref={searchInputRef}
+                value={search}
+                onChange={(event) =>
+                  setSearch(
+                    location.pathname,
+                    event.target.value,
+                  )
+                }
+                placeholder="Search products, transfers, users..."
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-14 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
+              />
+
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-500">
+                ⌘K
+              </span>
+            </div>
+
+            <div className="ml-auto flex items-center gap-2.5">
+              <div
+                className={`hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold sm:flex ${
+                  apiOnline
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }`}
+                title={
+                  apiOnline
+                    ? "API Online"
+                    : "API Offline"
+                }
+              >
+                {apiOnline ? (
+                  <Wifi size={14} />
+                ) : (
+                  <WifiOff size={14} />
+                )}
+              </div>
+
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setShowNotifications(
+                      !showNotifications,
+                    )
+                  }
+                  className="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100"
+                >
+                  <Bell size={21} />
+
+                  {notifications.length > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <NotificationPanel />
+                )}
+              </div>
+
+              <button
+                onClick={() =>
+                  (window.location.href =
+                    "/my-account")
+                }
+                className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-slate-50"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white shadow-md shadow-indigo-200">
+                  {(user?.username || "U")
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
+
+                <span className="hidden text-left sm:block">
+                  <strong className="block text-sm font-bold text-slate-900">
+                    {user?.username || "User"}
+                  </strong>
+
+                  <small className="block text-[11px] text-slate-500">
+                    {user?.role || "Administrator"}
+                  </small>
+                </span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="px-4 py-5 md:px-6 lg:px-7 lg:py-7">
+          <div className="mx-auto max-w-[1600px]">
+            {children}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Layout;

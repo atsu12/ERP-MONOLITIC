@@ -120,21 +120,21 @@ function Login() {
 
   if (checkingSetup) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600 text-lg">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+        <p className="text-slate-600 text-lg">Loading...</p>
       </div>
     );
   }
 
   if (!initialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 px-6">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
           <h1 className="text-3xl font-bold text-center mb-2">
             Create Administrator Account
           </h1>
 
-          <p className="text-center text-gray-500 mb-4">
+          <p className="text-center text-slate-500 mb-4">
             No administrator account exists yet.
           </p>
 
@@ -159,7 +159,7 @@ function Login() {
                 px-4
                 rounded-xl
                 border
-                border-gray-300
+                border-slate-200
               "
               />
             </div>
@@ -183,7 +183,7 @@ function Login() {
     px-4
     rounded-xl
     border
-    border-gray-300
+    border-slate-200
   "
               />
             </div>
@@ -203,7 +203,7 @@ function Login() {
                 px-4
                 rounded-xl
                 border
-                border-gray-300
+                border-slate-200
               "
               />
             </div>
@@ -218,7 +218,7 @@ function Login() {
               bg-black
               text-white
               font-semibold
-              disabled:opacity-50
+              disabled:opacity-50 disabled:cursor-not-allowed
             "
             >
               {loading ? "Creating..." : "Create Administrator"}
@@ -278,14 +278,14 @@ function Login() {
 
         {/* RIGHT PANEL */}
 
-        <div className="flex items-center justify-center p-8 lg:p-14 bg-gray-50">
+        <div className="flex items-center justify-center p-8 lg:p-14 bg-slate-50">
           <div className="w-full max-w-md">
             <div className="mb-10">
-              <h2 className="text-4xl font-black text-gray-900 mb-3">
+              <h2 className="text-4xl font-black text-slate-900 mb-3">
                 {hasLoggedBefore ? "Welcome Back" : "Welcome"}
               </h2>
 
-              <p className="text-gray-500">
+              <p className="text-slate-500">
                 Sign in to access your inventory dashboard.
               </p>
             </div>
@@ -293,14 +293,14 @@ function Login() {
             {/* USERNAME */}
 
             <div className="mb-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Username
               </label>
 
               <div className="relative">
                 <User
                   size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
@@ -314,14 +314,14 @@ function Login() {
     h-14
     rounded-xl
     border
-    border-gray-300
+    border-slate-200
     pl-14
     pr-4
     outline-none
     transition-all
     focus:border-black
     focus:ring-4
-    focus:ring-gray-200
+    focus:ring-slate-200
   "
                 />
               </div>
@@ -330,14 +330,14 @@ function Login() {
             {/* PASSWORD */}
 
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Password
               </label>
 
               <div className="relative">
                 <Lock
                   size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
@@ -351,21 +351,21 @@ function Login() {
   h-14
   rounded-xl
   border
-  border-gray-300
+  border-slate-200
   pl-14
   pr-14
   outline-none
   transition-all
   focus:border-black
   focus:ring-4
-  focus:ring-gray-200
+  focus:ring-slate-200
 "
                 />
 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-black transition"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -377,7 +377,7 @@ function Login() {
             <button
               onClick={handleLogin}
               disabled={loading}
-              className="w-full py-4 text-lg bg-black text-white rounded-xl font-semibold hover:bg-gray-900 transition-all disabled:opacity-50"
+              className="w-full py-4 text-lg bg-black text-white rounded-xl font-semibold hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -391,7 +391,7 @@ function Login() {
 
             {/* FOOTER */}
 
-            <div className="mt-10 text-center text-sm text-gray-400">
+            <div className="mt-10 text-center text-sm text-slate-400">
               Secure Inventory and Login Platform
             </div>
           </div>

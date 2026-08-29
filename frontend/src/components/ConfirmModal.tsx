@@ -95,13 +95,13 @@ function ConfirmModal({
 
               </div>
 
-              <h2 className="text-3xl font-black text-gray-900">
+              <h2 className="text-3xl font-black text-slate-900">
 
                 {title}
 
               </h2>
 
-              <p className="text-gray-500 mt-4 leading-relaxed">
+              <p className="text-slate-500 mt-4 leading-relaxed">
 
                 {message}
 
@@ -116,7 +116,7 @@ function ConfirmModal({
               <button
                 onClick={onCancel}
                 disabled={loading}
-                className="flex-1 py-3 rounded-2xl border border-gray-300 font-semibold hover:bg-gray-100 transition disabled:opacity-50"
+                className="flex-1 py-3 rounded-2xl border border-slate-300 font-semibold hover:bg-slate-100 transition disabled:opacity-50"
               >
 
                 {cancelText}

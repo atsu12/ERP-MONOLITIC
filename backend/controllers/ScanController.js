@@ -15,14 +15,14 @@ exports.scanItem = (req, res) => {
   // Get connection from pool
   db.getConnection((err, connection) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: "Internal server error" });
     }
 
     // Start transaction
     connection.beginTransaction((err) => {
       if (err) {
         connection.release();
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ error: "Internal server error" });
       }
 
       const findQuery = `
@@ -37,7 +37,7 @@ exports.scanItem = (req, res) => {
         if (err) {
           return connection.rollback(() => {
             connection.release();
-            res.status(500).json({ error: err.message });
+            res.status(500).json({ error: "Internal server error" });
           });
         }
 
@@ -65,7 +65,7 @@ exports.scanItem = (req, res) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
-              res.status(500).json({ error: err.message });
+              res.status(500).json({ error: "Internal server error" });
             });
           }
 

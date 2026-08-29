@@ -1,495 +1,893 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../services/api";
-
 import { socket } from "../socket/socket";
+import { useProductStore } from "../store/productStore";
+import { useSettingsStore } from "../store/settingsStore";
 
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  CartesianGrid,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Legend,
 } from "recharts";
 
 import {
   Package,
   Boxes,
-  ArrowLeftRight,
-  PieChart as PieChartIcon,
-  BarChart3,
-  Clock3,
+  CircleDollarSign,
+  ArrowDown,
+  ArrowUp,
+  Search,
+  Activity,
+  Warehouse,
 } from "lucide-react";
 
-import { useProductStore } from "../store/productStore";
+const CHART_COLORS = [
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#2563eb",
+];
 
 function Dashboard() {
-  /* =========================
-     GLOBAL STORES
-  ========================= */
+  const {
+    products,
+    fetchProducts,
+  } = useProductStore();
 
-  const { products, fetchProducts } = useProductStore();
+  const {
+    settings,
+    fetchSettings,
+  } = useSettingsStore();
 
-  /* =========================
-     LOCAL STATE
-  ========================= */
+  const [loading, setLoading] =
+    useState(true);
 
-  const [loading, setLoading] = useState(true);
+  const [report, setReport] =
+    useState<any>(null);
 
-  const [report, setReport] = useState<any>(null);
-
-  /* =========================
-     LOAD DATA
-  ========================= */
+  const [warehouseSummary, setWarehouseSummary] =
+    useState<any[]>([]);
 
   useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+
+        const [
+          dashboard,
+          warehouses,
+        ] = await Promise.all([
+          apiRequest(
+            "/reports/dashboard",
+            { auth: true },
+          ),
+          apiRequest(
+            "/reports/warehouse",
+            { auth: true },
+          ),
+          fetchProducts(),
+          fetchSettings(),
+        ] as any);
+
+        setReport(dashboard);
+
+        setWarehouseSummary(
+          Array.isArray(warehouses)
+            ? warehouses
+            : [],
+        );
+      } catch (error) {
+        console.log(
+          "Dashboard loading error:",
+          error,
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     socket.connect();
 
     loadDashboard();
 
-    socket.on("dispatch-completed", loadDashboard);
+    socket.on(
+      "dispatch-completed",
+      loadDashboard,
+    );
 
     return () => {
-      socket.off("dispatch-completed", loadDashboard);
+      socket.off(
+        "dispatch-completed",
+        loadDashboard,
+      );
     };
-  }, []);
+  }, [
+    fetchProducts,
+    fetchSettings,
+  ]);
 
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-
-      await fetchProducts();
-
-      const dashboard = await apiRequest("/reports/dashboard", {
-        auth: true,
-      });
-
-      setReport(dashboard);
-    } catch (error) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* =========================
-     ANALYTICS
-  ========================= */
-
-  const totalProducts = products.length;
-
-  const lowStockItems = products.filter(
-    (product) => Number(product.quantity) < 5,
+  const totalProducts = Number(
+    report?.totalProducts ??
+      products.length,
   );
 
-  /* =========================
-     PIE DATA
-  ========================= */
+  const totalQuantity = Number(
+    report?.totalQuantity ??
+      products.reduce(
+        (sum, product) =>
+          sum +
+          Number(
+            product.quantity || 0,
+          ),
+        0,
+      ),
+  );
 
-  const brandStats = Object.values(
-    products.reduce((acc: any, product: any) => {
-      const brand = product.brand || "Unknown";
+  const inventoryValue = Number(
+    report?.inventoryValue ?? 0,
+  );
 
-      if (!acc[brand]) {
-        acc[brand] = {
-          name: brand,
-          value: 0,
-        };
-      }
+  const stockIn = Number(
+    report?.stockIn ?? 0,
+  );
 
-      acc[brand].value += Number(product.quantity);
+  const stockOut = Number(
+    report?.stockOut ?? 0,
+  );
 
-      return acc;
-    }, {}),
-  ).sort((a: any, b: any) => b.value - a.value);
+  const recentMovements =
+    report?.recentMovements || [];
 
-  const maxBrands = brandStats.length <= 6 ? brandStats.length : 6;
+  const fastMovingProducts =
+    report?.fastMovingProducts || [];
 
-  const COLORS = [
-    "#111827",
-    "#374151",
-    "#6B7280",
-    "#9CA3AF",
-    "#D1D5DB",
-    "#E5E7EB",
-    "#F3F4F6",
-  ];
+  const lowStockItems = products
+    .filter(
+      (product) =>
+        Number(product.quantity) < 5,
+    )
+    .sort(
+      (a, b) =>
+        Number(a.quantity) -
+        Number(b.quantity),
+    );
 
-  const pieData =
-    brandStats.length <= maxBrands
-      ? brandStats
-      : [
-        ...brandStats.slice(0, maxBrands),
-        {
-          name: "Others",
-          value: brandStats
-            .slice(maxBrands)
-            .reduce((sum: number, item: any) => sum + item.value, 0),
-        },
-      ];
+  const inventoryStatus = useMemo(() => {
+    const inStock =
+      products
+        .filter(
+          (p) =>
+            Number(p.quantity) >= 5,
+        )
+        .reduce(
+          (sum, p) =>
+            sum +
+            Number(
+              p.quantity || 0,
+            ),
+          0,
+        );
 
-  const recentMovements = report?.recentMovements || [];
+    const lowStock =
+      products
+        .filter(
+          (p) =>
+            Number(p.quantity) > 0 &&
+            Number(p.quantity) < 5,
+        )
+        .reduce(
+          (sum, p) =>
+            sum +
+            Number(
+              p.quantity || 0,
+            ),
+          0,
+        );
 
-  /* =========================
-     BAR DATA
-  ========================= */
+    const outOfStock =
+      products.filter(
+        (p) =>
+          Number(p.quantity) <= 0,
+      ).length;
 
-  const maxBars =
-    products.length <= 10
-      ? products.length
-      : products.length <= 30
-        ? 10
-        : products.length <= 100
-          ? 15
-          : 20;
+    return [
+      {
+        name: "In Stock",
+        value: inStock,
+      },
+      {
+        name: "Low Stock",
+        value: lowStock,
+      },
+      {
+        name: "Out of Stock",
+        value: outOfStock,
+      },
+      {
+        name: "Incoming",
+        value: Number(
+          report?.incomingQuantity ?? 0,
+        ),
+      },
+    ];
+  }, [products, report]);
 
-  const inventoryData = [...products]
-    .sort((a, b) => Number(b.quantity) - Number(a.quantity))
-    .slice(0, maxBars)
-    .map((product) => ({
-      name:
-        product.name.length > 18
-          ? `${product.name.slice(0, 18)}...`
-          : product.name,
+  const movementChart = useMemo(() => {
+    const days = [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun",
+    ];
 
-      Quantity: Number(product.quantity),
+    const result = days.map((day) => ({
+      day,
+      stockIn: 0,
+      stockOut: 0,
     }));
 
+    recentMovements.forEach(
+      (movement: any) => {
+        const date = new Date(
+          movement.created_at,
+        );
+
+        const index =
+          (date.getDay() + 6) % 7;
+
+        const quantity = Number(
+          movement.quantity || 0,
+        );
+
+        const type = String(
+          movement.type || "",
+        ).toUpperCase();
+
+        if (
+          type.includes("IN") ||
+          type === "RECEIVED"
+        ) {
+          result[index].stockIn +=
+            quantity;
+        }
+
+        if (type.includes("OUT")) {
+          result[index].stockOut +=
+            quantity;
+        }
+      },
+    );
+
+    return result;
+  }, [recentMovements]);
+
+  const currency =
+    settings?.currency_symbol ||
+    "GHS";
+
+  const formattedValue =
+    `${currency} ${inventoryValue.toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    )}`;
+
+  const maxWarehouseQuantity =
+    Math.max(
+      ...warehouseSummary.map(
+        (warehouse) =>
+          Number(
+            warehouse.totalQuantity || 0,
+          ),
+      ),
+      1,
+    );
+
   if (loading) {
-    return <div className="p-6 text-gray-500">Loading dashboard...</div>;
+    return (
+      <div className="erp-dashboard-loading">
+        Loading dashboard...
+      </div>
+    );
   }
 
   return (
-    <div>
-      {/* PAGE HEADER */}
+    <div className="erp-dashboard">
+      <section className="erp-dashboard-intro">
+        <div>
+          <h1>
+            Welcome back, Frank!{" "}
+            <span aria-hidden="true">
+              👋
+            </span>
+          </h1>
 
-      <div className="mb-8">
-        <h1 className="erp-page-title">Dashboard</h1>
-
-        <p className="erp-page-description">
-          Monitor inventory performance, serialized stock levels, and
-          operational activity.
-        </p>
-      </div>
-
-      {/* KPI CARDS */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* TOTAL PRODUCTS */}
-
-        <div className="erp-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">
-                Total Products
-              </p>
-
-              <h2 className="text-4xl font-black text-gray-900 mt-3">
-                {report?.totalProducts ?? totalProducts}
-              </h2>
-            </div>
-
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Package size={30} className="text-gray-700" />
-            </div>
-          </div>
+          <p>
+            Here's what's happening in
+            your warehouse today.
+          </p>
         </div>
 
-        <div className="erp-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">
-                Total Warehouses
-              </p>
-
-              <h2 className="text-4xl font-black text-gray-900 mt-3">
-                {report?.totalWarehouses ?? 0}
-              </h2>
-            </div>
-
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Boxes size={30} className="text-gray-700" />
-            </div>
-          </div>
+        <div className="erp-dashboard-date">
+          Today
         </div>
+      </section>
 
-        {/* TOTAL UNITS */}
+      <section className="erp-kpi-grid">
+        <DashboardKpi
+          icon={<Package />}
+          label="Total Products"
+          value={totalProducts.toLocaleString()}
+          trend="Inventory catalog"
+          tone="blue"
+        />
 
-        <div className="erp-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Total Units</p>
+        <DashboardKpi
+          icon={<Boxes />}
+          label="Total Quantity"
+          value={totalQuantity.toLocaleString()}
+          trend="Units in inventory"
+          tone="green"
+        />
 
-              <h2 className="text-4xl font-black text-gray-900 mt-3">
-                {report?.totalQuantity ?? 0}
-              </h2>
-            </div>
+        <DashboardKpi
+          icon={<CircleDollarSign />}
+          label="Inventory Value"
+          value={formattedValue}
+          trend="Current stock value"
+          tone="purple"
+        />
 
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <Boxes size={30} className="text-gray-700" />
-            </div>
+        <DashboardKpi
+          icon={<ArrowDown />}
+          label="Stock In (Today)"
+          value={stockIn.toLocaleString()}
+          trend="Received inventory"
+          tone="teal"
+        />
+
+        <DashboardKpi
+          icon={<ArrowUp />}
+          label="Stock Out (Today)"
+          value={stockOut.toLocaleString()}
+          trend="Issued inventory"
+          tone="red"
+        />
+      </section>
+
+      <section className="erp-dashboard-grid erp-dashboard-grid-main">
+        <DashboardCard
+          title="Stock Overview"
+          action="This Week"
+          className="erp-stock-overview"
+        >
+          <div className="erp-chart-legend">
+            <span>
+              <i className="dot dot-green" />
+              Stock In
+            </span>
+
+            <span>
+              <i className="dot dot-red" />
+              Stock Out
+            </span>
           </div>
-        </div>
 
-        {/* STOCK OUT */}
+          <div className="erp-chart-large">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
+              <LineChart
+                data={movementChart}
+              >
+                <defs>
+                  <linearGradient
+                    id="stockInFill"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0%"
+                      stopColor="#22c55e"
+                      stopOpacity={0.18}
+                    />
 
-        <div className="erp-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">Stock Out</p>
+                    <stop
+                      offset="100%"
+                      stopColor="#22c55e"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                </defs>
 
-              <h2 className="text-4xl font-black text-gray-900 mt-3">
-                {report?.stockOut ?? 0}
-              </h2>
-            </div>
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                />
 
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
-              <ArrowLeftRight size={30} className="text-gray-700" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ANALYTICS */}
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
-        {/* PIE CHART */}
-
-        <div className="erp-card erp-section">
-          <div className="flex items-center gap-3 mb-6">
-            <PieChartIcon size={24} className="text-gray-700" />
-
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Products by Brand
-              </h2>
-
-              <p className="text-sm text-gray-500 mt-1">
-                Distribution of products across the top brands.
-              </p>
-            </div>
-          </div>
-
-          <div className="h-[320px]">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={110}
-                  innerRadius={60}
-                  paddingAngle={5}
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  width={34}
+                />
 
                 <Tooltip />
 
-                <Legend />
-              </PieChart>
+                <Area
+                  type="monotone"
+                  dataKey="stockIn"
+                  stroke="none"
+                  fill="url(#stockInFill)"
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="stockIn"
+                  stroke="#22c55e"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="stockOut"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
 
-        {/* BAR CHART */}
-
-        <div className="erp-card erp-section">
-          <div className="flex items-center gap-3 mb-6">
-            <BarChart3 size={24} className="text-gray-700" />
-
+          <div className="erp-stock-distribution">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                Top Products by Quantity
-              </h2>
+              <h4>
+                Inventory Status
+              </h4>
 
-              <p className="text-sm text-gray-500 mt-1">
-                Products with the highest inventory quantities.
-              </p>
+              <ResponsiveContainer
+                width="100%"
+                height={190}
+              >
+                <PieChart>
+                  <Pie
+                    data={inventoryStatus}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={48}
+                    outerRadius={72}
+                    paddingAngle={3}
+                  >
+                    {inventoryStatus.map(
+                      (_, index) => (
+                        <Cell
+                          key={index}
+                          fill={
+                            CHART_COLORS[
+                              index
+                            ]
+                          }
+                        />
+                      ),
+                    )}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="erp-donut-legend">
+              {inventoryStatus.map(
+                (item, index) => (
+                  <div key={item.name}>
+                    <span>
+                      <i
+                        className="dot"
+                        style={{
+                          background:
+                            CHART_COLORS[
+                              index
+                            ],
+                        }}
+                      />
+                      {item.name}
+                    </span>
+
+                    <strong>
+                      {item.value.toLocaleString()}
+                    </strong>
+                  </div>
+                ),
+              )}
             </div>
           </div>
+        </DashboardCard>
 
-          <div className="h-[320px]">
-            <ResponsiveContainer>
-              <BarChart data={inventoryData}>
-                <CartesianGrid strokeDasharray="3 3" />
+        <DashboardCard
+          title="Low Stock Alerts"
+          badge={Number(
+            report?.lowStockProducts ??
+              lowStockItems.length,
+          )}
+          action="View all"
+        >
+          <div className="erp-list">
+            {lowStockItems
+              .slice(0, 6)
+              .map(
+                (
+                  product: any,
+                  index: number,
+                ) => (
+                  <div
+                    className="erp-list-row"
+                    key={product.id}
+                  >
+                    <span
+                      className={`erp-alert-dot ${
+                        index === 0
+                          ? "critical"
+                          : "warning"
+                      }`}
+                    />
 
-                <XAxis dataKey="name" />
+                    <div className="erp-list-main">
+                      <strong>
+                        {product.name}
+                      </strong>
 
-                <YAxis />
+                      <small>
+                        SKU:{" "}
+                        {product.sku ||
+                          "—"}
+                      </small>
+                    </div>
 
-                <Tooltip />
+                    <div className="erp-list-qty">
+                      <small>
+                        Quantity
+                      </small>
 
-                <Legend />
-
-                <Bar dataKey="Quantity" fill="#111827" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* LOW STOCK ALERTS */}
-
-      <div className="erp-table-container mt-8">
-        <div className="erp-section border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Low Stock Alerts
-            </h2>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Products requiring immediate inventory attention.
-            </p>
-          </div>
-
-          <div className="erp-badge-danger">
-            {report?.lowStockProducts ?? lowStockItems.length} Alert(s)
-          </div>
-        </div>
-
-        <div className="erp-table-scroll">
-          <table className="erp-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-
-                <th>Brand</th>
-
-                <th>Quantity</th>
-
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {lowStockItems.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center py-8 text-gray-500">
-                    No low stock alerts detected.
-                  </td>
-                </tr>
+                      <strong>
+                        {product.quantity}
+                      </strong>
+                    </div>
+                  </div>
+                ),
               )}
 
-              {lowStockItems.map((product) => (
-                <tr key={product.id}>
-                  <td>{product.name}</td>
-
-                  <td>{product.brand}</td>
-
-                  <td>{product.quantity}</td>
-
-                  <td>
-                    <span className="erp-badge-danger">Low Stock</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* RECENT ACTIVITY */}
-
-      <div className="erp-table-container mt-8">
-        <div className="erp-section border-b border-gray-200 flex items-center gap-3">
-          <Clock3 size={24} className="text-gray-700" />
-
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Recent Inventory Movements
-            </h2>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Latest stock movements recorded in the ERP.
-            </p>
-          </div>
-        </div>
-
-        <div className="divide-y divide-gray-100">
-          {recentMovements.length === 0 && (
-            <div className="p-8 text-center text-gray-500">
-              No recent inventory movements.
-            </div>
-          )}
-
-          {recentMovements.slice(0, 12).map((movement: any) => (
-            <div
-              key={movement.id}
-              className="flex items-center justify-between p-5 hover:bg-gray-50 transition"
-            >
-              <div>
-                <p className="font-semibold text-gray-900">
-                  {movement.product_name}
-                </p>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  {movement.type} • Qty {movement.quantity}
-                </p>
-              </div>
-
-              <div className="text-sm text-gray-500">
-                {new Date(movement.created_at).toLocaleString("en-GB")}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RECENT PRODUCTS */}
-
-      <div className="erp-table-container mt-8">
-        <div className="erp-table-scroll"></div>
-
-        <div className="erp-section border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Recent Products</h2>
-        </div>
-
-        <table className="erp-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-
-              <th>Brand</th>
-
-              <th>Quantity</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={3} className="text-center text-gray-500 py-8">
-                  No inventory products available yet.
-                </td>
-              </tr>
+            {lowStockItems.length ===
+              0 && (
+              <EmptyPanel text="No low-stock products." />
             )}
+          </div>
+        </DashboardCard>
 
-            {products.slice(0, 5).map((product) => (
-              <tr key={product.id}>
-                <td>{product.name}</td>
+        <DashboardCard
+          title="Top Fast Moving Items"
+          action="View all"
+        >
+          <div className="erp-list">
+            {fastMovingProducts
+              .slice(0, 5)
+              .map(
+                (
+                  product: any,
+                  index: number,
+                ) => (
+                  <div
+                    className="erp-ranked-row"
+                    key={product.id}
+                  >
+                    <span
+                      className={`rank rank-${
+                        index + 1
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
 
-                <td>{product.brand}</td>
+                    <strong>
+                      {product.name}
+                    </strong>
 
-                <td>
-                  {product.track_serial
-                    ? `${product.quantity} Serials`
-                    : product.quantity}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <span className="erp-positive">
+                      {Number(
+                        product.totalOut ||
+                          0,
+                      ).toLocaleString()}{" "}
+                      out
+                    </span>
+                  </div>
+                ),
+              )}
+
+            {fastMovingProducts.length ===
+              0 && (
+              <EmptyPanel text="No movement data yet." />
+            )}
+          </div>
+        </DashboardCard>
+      </section>
+
+      <section className="erp-dashboard-grid erp-dashboard-grid-bottom">
+        <DashboardCard
+          title="Recent Activity"
+          action="View all"
+        >
+          <div className="erp-activity-list">
+            {recentMovements
+              .slice(0, 5)
+              .map(
+                (movement: any) => (
+                  <div
+                    className="erp-activity-row"
+                    key={movement.id}
+                  >
+                    <span className="erp-activity-icon">
+                      <Activity size={16} />
+                    </span>
+
+                    <div>
+                      <strong>
+                        {
+                          movement.product_name
+                        }
+                      </strong>
+
+                      <small>
+                        {movement.type} ·
+                        Qty{" "}
+                        {movement.quantity}
+                      </small>
+                    </div>
+
+                    <time>
+                      {new Date(
+                        movement.created_at,
+                      ).toLocaleString(
+                        "en-GB",
+                      )}
+                    </time>
+                  </div>
+                ),
+              )}
+
+            {recentMovements.length ===
+              0 && (
+              <EmptyPanel text="No recent activity." />
+            )}
+          </div>
+        </DashboardCard>
+
+        <DashboardCard
+          title="Warehouse Summary"
+          action="View all"
+        >
+          <div className="erp-warehouse-list">
+            {warehouseSummary
+              .slice(0, 5)
+              .map(
+                (
+                  warehouse: any,
+                ) => {
+                  const quantity =
+                    Number(
+                      warehouse.totalQuantity ||
+                        0,
+                    );
+
+                  const percent =
+                    Math.round(
+                      (quantity /
+                        maxWarehouseQuantity) *
+                        100,
+                    );
+
+                  return (
+                    <div
+                      className="erp-warehouse-row"
+                      key={
+                        warehouse.id ||
+                        warehouse.name
+                      }
+                    >
+                      <span className="erp-warehouse-icon">
+                        <Warehouse size={16} />
+                      </span>
+
+                      <strong>
+                        {
+                          warehouse.name
+                        }
+                      </strong>
+
+                      <span>
+                        {quantity.toLocaleString()}
+                      </span>
+
+                      <div className="erp-progress">
+                        <span
+                          style={{
+                            width: `${Math.max(
+                              percent,
+                              3,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {percent}%
+                      </small>
+                    </div>
+                  );
+                },
+              )}
+
+            {warehouseSummary.length ===
+              0 && (
+              <EmptyPanel text="No warehouse summary available." />
+            )}
+          </div>
+        </DashboardCard>
+
+        <DashboardCard title="Inventory Status">
+          <div className="erp-status-card">
+            <ResponsiveContainer
+              width="100%"
+              height={220}
+            >
+              <PieChart>
+                <Pie
+                  data={inventoryStatus}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={62}
+                  outerRadius={90}
+                  paddingAngle={2}
+                >
+                  {inventoryStatus.map(
+                    (_, index) => (
+                      <Cell
+                        key={index}
+                        fill={
+                          CHART_COLORS[
+                            index
+                          ]
+                        }
+                      />
+                    ),
+                  )}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+
+            <div className="erp-status-legend">
+              {inventoryStatus.map(
+                (item, index) => (
+                  <div key={item.name}>
+                    <span>
+                      <i
+                        className="dot"
+                        style={{
+                          background:
+                            CHART_COLORS[
+                              index
+                            ],
+                        }}
+                      />
+                      {item.name}
+                    </span>
+
+                    <strong>
+                      {item.value.toLocaleString()}
+                    </strong>
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+        </DashboardCard>
+      </section>
+    </div>
+  );
+}
+
+function DashboardKpi({
+  icon,
+  label,
+  value,
+  trend,
+  tone,
+}: any) {
+  return (
+    <article
+      className={`erp-kpi-card tone-${tone}`}
+    >
+      <div className="erp-kpi-top">
+        <span className="erp-kpi-icon">
+          {icon}
+        </span>
+
+        <div>
+          <p>{label}</p>
+
+          <strong>{value}</strong>
+
+          <small>{trend}</small>
+        </div>
       </div>
+
+      <div className="erp-kpi-spark" />
+    </article>
+  );
+}
+
+function DashboardCard({
+  title,
+  action,
+  badge,
+  children,
+  className = "",
+}: any) {
+  return (
+    <article
+      className={`erp-dashboard-card ${className}`}
+    >
+      <header>
+        <div>
+          <h2>
+            {title}
+
+            {badge !== undefined && (
+              <span className="erp-card-badge">
+                {badge}
+              </span>
+            )}
+          </h2>
+        </div>
+
+        {action && (
+          <button
+            type="button"
+            className="erp-card-action"
+          >
+            {action}
+          </button>
+        )}
+      </header>
+
+      {children}
+    </article>
+  );
+}
+
+function EmptyPanel({
+  text,
+}: {
+  text: string;
+}) {
+  return (
+    <div className="erp-empty-panel">
+      <Search size={16} />
+      {text}
     </div>
   );
 }

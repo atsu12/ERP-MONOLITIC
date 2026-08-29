@@ -1,7 +1,8 @@
-const db = require('../configs/db');
+const logger = require("../utils/logger");
+
+const db = require("../configs/db");
 
 exports.getProductItems = (req, res) => {
-
   const { productId } = req.params;
 
   const query = `
@@ -15,25 +16,17 @@ exports.getProductItems = (req, res) => {
     ORDER BY created_at DESC
   `;
 
-  db.query(
-    query,
-    [productId],
-    (err, results) => {
+  db.query(query, [productId], (err, results) => {
+    if (err) {
+      logger.error(err);
 
-      if (err) {
-
-        return res.status(500).json({
-          error: err.message
-        });
-
-      }
-
-      res.json({
-        items: results
+      return res.status(500).json({
+        error: "Internal server error",
       });
-
     }
-  );
+
+    res.json({
+      items: results,
+    });
+  });
 };
-
-

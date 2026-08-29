@@ -163,7 +163,7 @@ function WarehouseInventory() {
   return (
     <div>
       <PageHeader
-        icon={<Warehouse size={32} className="text-gray-800" />}
+        icon={<Warehouse size={32} className="text-slate-800" />}
         title={warehouse?.name || "Warehouse Inventory"}
         description="Allocate company inventory and manage warehouse stock."
         actions={
@@ -179,9 +179,9 @@ function WarehouseInventory() {
 
       {/* WAREHOUSE INVENTORY */}
       <div className="erp-table-container mb-8">
-        <div className="erp-section border-b border-gray-200">
+        <div className="erp-section border-b border-slate-200">
           <h2 className="text-2xl font-bold">Warehouse Inventory</h2>
-          <p className="text-gray-500 mt-1">
+          <p className="text-slate-500 mt-1">
             Products currently allocated to this warehouse.
           </p>
         </div>
@@ -197,7 +197,7 @@ function WarehouseInventory() {
             <tbody>
               {inventory.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="text-center py-10 text-gray-500">
+                  <td colSpan={3} className="text-center py-10 text-slate-500">
                     No allocated inventory yet.
                   </td>
                 </tr>
@@ -208,7 +208,7 @@ function WarehouseInventory() {
                       <div>
                         <p className="font-semibold">{item.name}</p>
 
-                        <p className="text-xs text-gray-500">{item.brand}</p>
+                        <p className="text-xs text-slate-500">{item.brand}</p>
                       </div>
                     </td>
 
@@ -248,10 +248,10 @@ function WarehouseInventory() {
         {/* =========================COMPANY INVENTORY========================= */}
 
         <div className="erp-table-container mb-8">
-          <div className="erp-section border-b border-gray-200">
+          <div className="erp-section border-b border-slate-200">
             <h2 className="text-2xl font-bold">Company Inventory</h2>
 
-            <p className="text-gray-500 mt-1">
+            <p className="text-slate-500 mt-1">
               Search products and allocate inventory to this warehouse.
             </p>
 
@@ -277,7 +277,7 @@ function WarehouseInventory() {
               <tbody>
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="text-center py-10 text-gray-500">
+                    <td colSpan={3} className="text-center py-10 text-slate-500">
                       No matching products found.
                     </td>
                   </tr>
@@ -288,7 +288,7 @@ function WarehouseInventory() {
                         <div>
                           <p className="font-semibold">{product.name}</p>
 
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-500">
                             {product.brand}
                           </p>
                         </div>
@@ -324,13 +324,13 @@ function WarehouseInventory() {
 
             <div className="space-y-5">
               <div>
-                <p className="text-sm text-gray-500">Product</p>
+                <p className="text-sm text-slate-500">Product</p>
 
                 <p className="font-semibold">{allocatingProduct.name}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Company Available Quantity
                 </p>
 
@@ -338,7 +338,7 @@ function WarehouseInventory() {
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Quantity to Allocate</p>
+                <p className="text-sm text-slate-500">Quantity to Allocate</p>
 
                 <input
                   type="number"
@@ -387,19 +387,19 @@ function WarehouseInventory() {
 
             <div className="space-y-5">
               <div>
-                <p className="text-sm text-gray-500">Product</p>
+                <p className="text-sm text-slate-500">Product</p>
 
                 <p className="font-semibold">{adjustingItem.name}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Current Allocation</p>
+                <p className="text-sm text-slate-500">Current Allocation</p>
 
                 <p className="font-semibold">{adjustingItem.quantity}</p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">New Quantity</p>
+                <p className="text-sm text-slate-500">New Quantity</p>
 
                 <input
                   type="number"
