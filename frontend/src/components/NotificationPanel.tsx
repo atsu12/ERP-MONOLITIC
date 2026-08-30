@@ -117,20 +117,20 @@ function NotificationPanel() {
 
   return (
 
-    <div className="absolute right-0 top-14 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+    <div className="absolute right-0 top-14 z-50 w-[380px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12PX_35PX_RGBA(15,23,42,0.12)]">
 
       {/* HEADER */}
 
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
 
         <div className="flex items-center gap-2">
 
           <Bell
-            size={18}
-            className="text-gray-700"
-          />
+  size={18}
+  className="text-slate-600"
+/>
 
-          <h3 className="font-bold text-gray-900">
+          <h3 className="text-sm font-extrabold text-slate-900">
 
             Notifications
 
@@ -144,7 +144,7 @@ function NotificationPanel() {
 
             <button
               onClick={clearNotifications}
-              className="text-xs text-gray-500 hover:text-red-600 transition"
+              className="text-xs font-semibold text-slate-500 transition hover:text-red-600"
             >
 
               Clear all
@@ -153,7 +153,7 @@ function NotificationPanel() {
 
           )}
 
-          <span className="text-sm text-gray-500">
+          <span className="text-xs font-bold text-slate-500">
 
             {notifications.length}
 

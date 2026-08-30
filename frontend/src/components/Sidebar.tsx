@@ -247,28 +247,30 @@ function Sidebar() {
           </nav>
         </div>
 
-        <div className="shrink-0 border-t border-white/[0.06] p-3">
-          <button
-            onClick={() => navigate("/my-account")}
-            className={`mb-1.5 flex w-full items-center rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white ${
-              sidebarCollapsed ? "justify-center" : "gap-3"
-            }`}
-          >
-            <UserCog size={17} />
+        <div className="shrink-0 border-t border-white/[0.08] bg-[#0f1b3d] p-3">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-2">
+            <button
+              onClick={() => navigate("/my-account")}
+              className={`mb-1 flex w-full items-center rounded-xl px-3 py-3 text-xs font-semibold text-slate-200 transition-all duration-200 hover:bg-white/[0.08] hover:text-white ${
+                sidebarCollapsed ? "justify-center" : "gap-3"
+              }`}
+            >
+              <UserCog size={18} strokeWidth={2} />
 
-            {!sidebarCollapsed && "My Account"}
-          </button>
+              {!sidebarCollapsed && "My Account"}
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className={`flex w-full items-center rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-400 transition hover:bg-white/[0.05] hover:text-white ${
-              sidebarCollapsed ? "justify-center" : "gap-3"
-            }`}
-          >
-            <LogOut size={17} />
+            <button
+              onClick={handleLogout}
+              className={`flex w-full items-center rounded-xl border border-red-400/20 bg-red-500 px-3 py-3 text-xs font-bold text-white-300 transition-all duration-200 hover:border-red-400/40 hover:bg-red-500/[0.16] hover:text-red-200 ${
+                sidebarCollapsed ? "justify-center" : "gap-3"
+              }`}
+            >
+              <LogOut size={18} strokeWidth={2} />
 
-            {!sidebarCollapsed && "Logout"}
-          </button>
+              {!sidebarCollapsed && "Logout"}
+            </button>
+          </div>
         </div>
       </div>
     </aside>

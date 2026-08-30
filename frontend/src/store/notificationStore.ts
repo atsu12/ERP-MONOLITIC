@@ -44,6 +44,55 @@ interface NotificationState {
 
 const MAX_NOTIFICATIONS = 20;
 
+const playNotificationTone = () => {
+  try {
+    const AudioContext =
+      window.AudioContext ||
+      (window as any).webkitAudioContext;
+
+    const audioContext = new AudioContext();
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(
+      880,
+      audioContext.currentTime,
+    );
+
+    oscillator.frequency.exponentialRampToValueAtTime(
+      660,
+      audioContext.currentTime + 0.12,
+    );
+
+    gainNode.gain.setValueAtTime(
+      0.0001,
+      audioContext.currentTime,
+    );
+
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.12,
+      audioContext.currentTime + 0.01,
+    );
+
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.0001,
+      audioContext.currentTime + 0.18,
+    );
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(
+      audioContext.currentTime + 0.18,
+    );
+  } catch {
+    // Audio is optional; notification must still work.
+  }
+};
+
 export const useNotificationStore =
   create<NotificationState>((set) => ({
 
@@ -70,6 +119,8 @@ export const useNotificationStore =
 
         };
 
+        playNotificationTone();
+
         set((state) => {
 
           const updated = [
@@ -89,24 +140,6 @@ export const useNotificationStore =
           };
 
         });
-
-        /* =========================
-           AUTO REMOVE
-        ========================= */
-
-        setTimeout(() => {
-
-          set((state) => ({
-
-            notifications:
-              state.notifications.filter(
-                (n) => n.id !== id
-              ),
-
-          }));
-
-        }, 7000);
-
       },
 
     /* =========================
