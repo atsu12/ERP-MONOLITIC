@@ -27,13 +27,13 @@
 /* GLOBAL APP STYLING */
 
 body {
-  background: var(--erp-background);
-
-  color: var(--erp-text-primary);
-
-  @apply antialiased;
+  background-color: var(--erp-background);
+  background-image: radial-gradient(
+    rgba(15, 23, 42, 0.055) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
 }
-
 /* SCROLLBAR */
 
 ::-webkit-scrollbar {
@@ -1169,6 +1169,11 @@ body {
 
 .erp-dashboard {
   width: 100%;
+  background-image: radial-gradient(
+    rgba(15, 23, 42, 0.055) 1px,
+    transparent 1px
+  );
+  background-size: 20px 20px;
 }
 
 .erp-dashboard-loading {
@@ -1265,9 +1270,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 47px;
-  height: 47px;
-  flex: 0 0 47px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   border-radius: 50%;
   color: #fff;
 }
@@ -1282,7 +1287,7 @@ body {
 .erp-kpi-card strong {
   display: block;
   color: #101828;
-  font-size: 25px;
+  font-size: 15px;
   line-height: 1.15;
   font-weight: 800;
   letter-spacing: -0.025em;
@@ -1433,6 +1438,12 @@ body {
   font-weight: 600;
 }
 
+.erp-chart-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .erp-donut-legend span,
 .erp-status-legend span {
   display: inline-flex;
@@ -1452,6 +1463,10 @@ body {
 }
 .dot-red {
   background: #ef4444;
+}
+
+.dot-blue {
+  background: #2563eb;
 }
 
 .erp-chart-large {
@@ -1697,9 +1712,9 @@ body {
 
 .erp-warehouse-row {
   display: grid;
-  grid-template-columns: 29px minmax(90px, 1fr) 52px minmax(65px, 0.7fr) 28px;
+  grid-template-columns: 26px minmax(70px, 1fr) 45px minmax(55px, 0.7fr) 24px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-height: 51px;
   border-bottom: 1px solid #eef1f5;
   font-size: 11px;
@@ -2115,4 +2130,27 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+
+.erp-workspace {
+  position: relative;
+  overflow: hidden;
+}
+
+.erp-workspace::before {
+  content: "";
+  position: absolute;
+  top: 100px;
+  right: 24px;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+  background-image: radial-gradient(
+    rgba(15, 23, 42, 0.35) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 16px 16px;
 }

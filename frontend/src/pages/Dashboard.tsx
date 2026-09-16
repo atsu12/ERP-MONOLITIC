@@ -121,36 +121,56 @@ function Dashboard() {
         value: outOfStock,
       },
       {
-        name: "Incoming",
-        value: Number(report?.incomingQuantity ?? 0),
+        name: "Stock Out",
+        value: stockOut,
       },
     ];
   }, [products, report]);
 
   const movementChart = useMemo(() => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const days = Array.from({ length: 14 }, (_, index) => {
+      const date = new Date();
 
-    const result = days.map((day) => ({
-      day,
+      date.setDate(date.getDate() - (13 - index));
+
+      return date;
+    });
+
+    const result = days.map((date) => ({
+      day: date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+      }),
       stockIn: 0,
       stockOut: 0,
+      netMovement: 0,
     }));
 
     recentMovements.forEach((movement: any) => {
-      const date = new Date(movement.created_at);
+      const movementDate = new Date(movement.created_at);
 
-      const index = (date.getDay() + 6) % 7;
+      const index = days.findIndex(
+        (date) =>
+          date.getFullYear() === movementDate.getFullYear() &&
+          date.getMonth() === movementDate.getMonth() &&
+          date.getDate() === movementDate.getDate(),
+      );
+
+      if (index === -1) {
+        return;
+      }
 
       const quantity = Number(movement.quantity || 0);
-
       const type = String(movement.type || "").toUpperCase();
 
       if (type.includes("IN") || type === "RECEIVED") {
         result[index].stockIn += quantity;
+        result[index].netMovement += quantity;
       }
 
       if (type.includes("OUT")) {
         result[index].stockOut += quantity;
+        result[index].netMovement -= quantity;
       }
     });
 
@@ -228,16 +248,16 @@ function Dashboard() {
 
         <DashboardKpi
           icon={<ArrowDown />}
-          label="Stock In (Today)"
+          label="Stock In — Last 30 Days"
           value={stockIn.toLocaleString()}
           trend="Received inventory"
-          tone="teal"
+          tone="green"
           spark="stock-in"
         />
 
         <DashboardKpi
           icon={<ArrowUp />}
-          label="Stock Out (Today)"
+          label="Stock Out — Last 30 Days"
           value={stockOut.toLocaleString()}
           trend="Issued inventory"
           tone="red"
@@ -261,6 +281,11 @@ function Dashboard() {
               <i className="dot dot-red" />
               Stock Out
             </span>
+
+            <span>
+              <i className="dot dot-blue" />
+              Net Movement
+            </span>
           </div>
 
           <div className="erp-chart-large">
@@ -278,7 +303,32 @@ function Dashboard() {
 
                 <YAxis axisLine={false} tickLine={false} width={34} />
 
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "10px",
+                    border: "1px solid #e5e9f2",
+                    background: "#ffffff",
+                    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.10)",
+                    padding: "10px 12px",
+                  }}
+                  labelStyle={{
+                    color: "#101828",
+                    fontWeight: 800,
+                    marginBottom: "6px",
+                  }}
+                  itemStyle={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                  }}
+                  formatter={(value, name) => [
+                    Number(value ?? 0).toLocaleString(),
+                    name === "netMovement"
+                      ? "Net Movement"
+                      : name === "stockIn"
+                        ? "Stock In"
+                        : "Stock Out",
+                  ]}
+                />
 
                 <Area
                   type="monotone"
@@ -302,6 +352,15 @@ function Dashboard() {
                   strokeWidth={3}
                   dot={{ r: 4 }}
                 />
+
+                <Line
+                  type="monotone"
+                  dataKey="netMovement"
+                  stroke="#2563eb"
+                  strokeWidth={2.5}
+                  strokeDasharray="6 4"
+                  dot={{ r: 3 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -315,7 +374,7 @@ function Dashboard() {
                   data={inventoryStatus}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={62}
+                  innerRadius={50}
                   outerRadius={90}
                   paddingAngle={2}
                 >
@@ -479,17 +538,16 @@ function Dashboard() {
 
 function DashboardKpi({ icon, label, value, trend, tone, spark }: any) {
   const sparkPaths: Record<string, string> = {
-    products:
-      "M2 20 L12 17 L22 19 L32 13 L42 15 L52 9 L62 11 L72 5 L82 8 L94 2",
-    quantity:
-      "M2 17 L12 19 L22 14 L32 16 L42 10 L52 12 L62 7 L72 10 L82 4 L94 7",
-    value: "M2 19 L12 16 L22 17 L32 11 L42 14 L52 7 L62 10 L72 5 L82 7 L94 2",
-    "stock-in":
-      "M2 18 L12 15 L22 17 L32 10 L42 12 L52 8 L62 9 L72 4 L82 6 L94 2",
-    "stock-out":
-      "M2 4 L12 8 L22 6 L32 12 L42 10 L52 15 L62 12 L72 18 L82 14 L94 20",
-  };
+    products: "2,20 12,17 22,19 32,13 42,15 52,9 62,11 72,5 82,8 94,2",
 
+    quantity: "2,17 12,19 22,14 32,16 42,10 52,12 62,7 72,10 82,4 94,7",
+
+    value: "2,19 12,16 22,17 32,11 42,14 52,7 62,10 72,5 82,7 94,2",
+
+    "stock-in": "2,18 12,15 22,17 32,10 42,12 52,8 62,9 72,4 82,6 94,2",
+
+    "stock-out": "2,4 12,8 22,6 32,12 42,10 52,15 62,12 72,18 82,14 94,20",
+  };
   return (
     <article className={`erp-kpi-card tone-${tone}`}>
       <div className="erp-kpi-top">
@@ -505,20 +563,51 @@ function DashboardKpi({ icon, label, value, trend, tone, spark }: any) {
       </div>
 
       <svg
-        className="erp-kpi-spark"
-        viewBox="0 0 96 24"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <polyline
-          points={sparkPaths[spark]}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+  className="erp-kpi-spark"
+  viewBox="0 0 96 24"
+  preserveAspectRatio="none"
+  aria-hidden="true"
+>
+  <defs>
+    <linearGradient
+      id={`spark-gradient-${spark}`}
+      x1="0"
+      y1="0"
+      x2="0"
+      y2="1"
+    >
+      <stop
+        offset="0%"
+        stopColor="currentColor"
+        stopOpacity="0.42"
+      />
+      <stop
+        offset="65%"
+        stopColor="currentColor"
+        stopOpacity="0.16"
+      />
+      <stop
+        offset="100%"
+        stopColor="currentColor"
+        stopOpacity="0"
+      />
+    </linearGradient>
+  </defs>
+
+  <polygon
+    points={`${sparkPaths[spark]} 94,24 2,24`}
+    fill={`url(#spark-gradient-${spark})`}
+  />
+
+  <polyline
+    points={sparkPaths[spark]}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+</svg>
     </article>
   );
 }

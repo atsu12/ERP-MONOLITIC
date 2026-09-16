@@ -28,16 +28,6 @@ function Login() {
 
   const [telephone, setTelephone] = useState("");
 
-  const [baseCurrency, setBaseCurrency] = useState("USD");
-
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
-
-  const [currencySymbol, setCurrencySymbol] = useState("$");
-
-  const [usdExchangeRate, setUsdExchangeRate] = useState("1.00");
-
-  const [companyMultiplier, setCompanyMultiplier] = useState("1.25");
-
   const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -110,11 +100,6 @@ function Login() {
           username,
           telephone,
           password,
-          base_currency: baseCurrency,
-          display_currency: displayCurrency,
-          currency_symbol: currencySymbol,
-          usd_exchange_rate: Number(usdExchangeRate),
-          company_multiplier: Number(companyMultiplier),
         }),
       });
 
@@ -202,13 +187,13 @@ function Login() {
                   setTelephone(e.target.value.replace(/\D/g, ""))
                 }
                 className="
-                w-full
-                h-12
-                px-4
-                rounded-xl
-                border
-                border-slate-200
-              "
+    w-full
+    h-12
+    px-4
+    rounded-xl
+    border
+    border-slate-200
+  "
               />
             </div>
 
@@ -232,131 +217,6 @@ function Login() {
               />
             </div>
 
-            <div className="pt-2">
-              <div className="mb-4 border-t border-slate-200 pt-5">
-                <h2 className="text-base font-bold text-slate-900">
-                  Currency Configuration
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  These values will become the initial system currency settings.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Base Currency
-                  </label>
-
-                  <input
-                    type="text"
-                    value={baseCurrency}
-                    onChange={(e) =>
-                      setBaseCurrency(e.target.value.toUpperCase())
-                    }
-                    placeholder="USD"
-                    className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    border
-                    border-slate-200
-                  "
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Display Currency
-                  </label>
-
-                  <input
-                    type="text"
-                    value={displayCurrency}
-                    onChange={(e) =>
-                      setDisplayCurrency(e.target.value.toUpperCase())
-                    }
-                    placeholder="USD"
-                    className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    border
-                    border-slate-200
-                  "
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Currency Symbol
-                  </label>
-
-                  <input
-                    type="text"
-                    value={currencySymbol}
-                    onChange={(e) => setCurrencySymbol(e.target.value)}
-                    placeholder="$"
-                    className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    border
-                    border-slate-200
-                  "
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    USD Exchange Rate
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={usdExchangeRate}
-                    onChange={(e) => setUsdExchangeRate(e.target.value)}
-                    className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    border
-                    border-slate-200
-                  "
-                />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold mb-2">
-                    Company Multiplier
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={companyMultiplier}
-                    onChange={(e) => setCompanyMultiplier(e.target.value)}
-                    className="
-                    w-full
-                    h-12
-                    px-4
-                    rounded-xl
-                    border
-                    border-slate-200
-                  "
-                  />
-                </div>
-              </div>
-            </div>
-
             <button
               onClick={handleCreateAdmin}
               disabled={loading}
@@ -370,7 +230,7 @@ function Login() {
               disabled:opacity-50 disabled:cursor-not-allowed
             "
             >
-              {loading ? "Creating..." : "Create Administrator & Finish Setup"}
+              {loading ? "Creating..." : "Create Administrator"}
             </button>
           </div>
         </div>

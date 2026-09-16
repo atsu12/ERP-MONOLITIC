@@ -1,108 +1,73 @@
-import {
-  useEffect,
-  useRef
-} from "react";
+import { useEffect, useRef } from "react";
+
+import { useProductStore } from "../store/productStore";
 
 import {
-  useProductStore
-} from "../store/productStore";
-
-import {
-  useNotificationStore
+  playNotificationTone,
+  useNotificationStore,
 } from "../store/notificationStore";
 
 export function useLowStockAlerts() {
+  const products = useProductStore((state) => state.products);
 
-  const products =
-    useProductStore(
-      (state) =>
-        state.products
-    );
-
-  const addNotification =
-    useNotificationStore(
-      (state) =>
-        state.addNotification
-    );
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification,
+  );
 
   /* =========================
      TRACK ALERTED PRODUCTS
   ========================= */
 
-  const alertedProducts =
-    useRef<
-      Set<number>
-    >(new Set());
+  const alertedProducts = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-
     /* =========================
        LOW STOCK CHECK
     ========================= */
 
-    const lowStockProducts =
-      products.filter(
-        (product) =>
+    const lowStockProducts = products.filter(
+      (product) => !product.track_serial && Number(product.quantity) <= 5,
+    );
 
-          !product.track_serial &&
+    let addedLowStockNotification = false;
 
-          Number(product.quantity) <= 5
+    lowStockProducts.forEach((product) => {
+      // PREVENT DUPLICATES
+
+      if (alertedProducts.current.has(product.id)) {
+        return;
+      }
+
+      alertedProducts.current.add(product.id);
+
+      addNotification(
+        {
+          type: "warning",
+          title: "Low Stock Alert",
+          message: `${product.name} inventory is running low (${product.quantity} remaining).`,
+        },
+        false,
       );
 
-    lowStockProducts.forEach(
-      (product) => {
+      addedLowStockNotification = true;
+    });
 
-        // PREVENT DUPLICATES
+    /* =========================
+       PLAY ONE TONE FOR BATCH
+    ========================= */
 
-        if (
-          alertedProducts.current.has(
-            product.id
-          )
-        ) {
-
-          return;
-
-        }
-
-        alertedProducts.current.add(
-          product.id
-        );
-
-        addNotification({
-
-          type: "warning",
-
-          title:
-            "Low Stock Alert",
-
-          message:
-            `${product.name} inventory is running low (${product.quantity} remaining).`,
-
-        });
-
-      }
-    );
+    if (addedLowStockNotification) {
+      playNotificationTone();
+    }
 
     /* =========================
        RESET IF STOCK RECOVERS
     ========================= */
 
-    products.forEach(
-      (product) => {
-
-        if (
-          Number(product.quantity) > 5
-        ) {
-
-          alertedProducts.current.delete(
-            product.id
-          );
-
-        }
-
+    products.forEach((product) => {
+      if (Number(product.quantity) > 5) {
+        alertedProducts.current.delete(product.id);
       }
-    );
-
+    });
   }, [products]);
-
 }

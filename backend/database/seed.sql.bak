@@ -5,20 +5,16 @@ USE inventory_app;
 -- =============================================================================
 
 INSERT INTO settings (
-    base_currency,
     display_currency,
     currency_symbol,
     usd_exchange_rate,
-    company_multiplier,
-    setup_completed
+    company_multiplier
 )
 VALUES (
-    'USD',
-    'USD',
-    '$',
-    1.00,
-    1.25,
-    0
+    'GHS',
+    'GH₵',
+    8.20,
+    1.25
 );
 
 -- =============================================================================

@@ -181,6 +181,9 @@ function StockOut() {
   const handleProductChange = (productId: string) => {
     const product = products.find((p) => String(p.id) === productId);
 
+    console.log("Selected product:", product);
+    console.log("track_serial:", product?.track_serial);
+
     setSelectedProduct(product || null);
 
     setQuantity("");
@@ -607,9 +610,7 @@ function StockOut() {
           </div>
 
           <div>
-            <h2 className="erp-section-title">
-              Inventory Dispatch
-            </h2>
+            <h2 className="erp-section-title">Inventory Dispatch</h2>
 
             <p className="text-sm text-slate-500 mt-1">
               Remove inventory from warehouse stock.

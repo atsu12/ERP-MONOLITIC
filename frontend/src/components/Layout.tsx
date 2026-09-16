@@ -1,6 +1,15 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 
-import { Bell, Menu, Search, X, Wifi, WifiOff } from "lucide-react";
+import {
+  Bell,
+  Menu,
+  Search,
+  X,
+  Wifi,
+  WifiOff,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 
 import { useLayoutStore } from "../store/layoutStore";
 
@@ -33,11 +42,16 @@ function Layout({ children }: LayoutProps) {
   const {
     sidebarCollapsed,
     mobileMenuOpen,
+    toggleSidebar,
     toggleMobileMenu,
     closeMobileMenu,
   } = useLayoutStore();
 
   const notifications = useNotificationStore((state) => state.notifications);
+
+  const toneEnabled = useNotificationStore((state) => state.toneEnabled);
+
+  const toggleTone = useNotificationStore((state) => state.toggleTone);
 
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -171,7 +185,7 @@ function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
+    <div className="relative min-h-screen bg-[#f7f9fc]">
       <Sidebar />
 
       {mobileMenuOpen && (
@@ -186,7 +200,7 @@ function Layout({ children }: LayoutProps) {
           sidebarCollapsed ? "lg:ml-[84px]" : "lg:ml-[252px]"
         }`}
       >
-        <header className="sticky top-0 z-20 h-[76px] border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 h-[76px] overflow-visible border-b border-slate-200 bg-white/95 backdrop-blur-xl">
           <div className="flex h-full items-center gap-5 px-5 lg:px-7">
             <button
               onClick={toggleMobileMenu}
@@ -197,10 +211,16 @@ function Layout({ children }: LayoutProps) {
 
             <div className="hidden items-center gap-3 lg:flex">
               <button
-                onClick={toggleMobileMenu}
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    toggleMobileMenu();
+                  } else {
+                    toggleSidebar();
+                  }
+                }}
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100"
               >
-                <Menu size={22} />
+                {sidebarCollapsed ? <X size={22} /> : <Menu size={22} />}
               </button>
 
               <h1 className="text-[20px] font-extrabold tracking-[-0.02em] text-slate-900">
@@ -253,18 +273,42 @@ function Layout({ children }: LayoutProps) {
 
             <div className="ml-auto flex items-center gap-1.5">
               <div
-                className={`hidden items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold sm:flex ${
-                  apiOnline ? "text-emerald-600" : "text-red-600"
+                aria-hidden="true"
+                className="pointer-events-none hidden h-10 w-24 opacity-50 xl:block"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(rgba(15, 23, 42, 0.32) 1.5px, transparent 1.5px)",
+                  backgroundSize: "14px 14px",
+                }}
+              />
+              {/* TONE */}
+              <button
+                type="button"
+                onClick={toggleTone}
+                title={
+                  toneEnabled
+                    ? "Notification sound on"
+                    : "Notification sound off"
+                }
+                aria-label={
+                  toneEnabled
+                    ? "Turn notification sound off"
+                    : "Turn notification sound on"
+                }
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
+                  toneEnabled
+                    ? "text-slate-700 hover:bg-slate-100"
+                    : "bg-red-100 text-red-600 hover:bg-red-200"
                 }`}
-                title={apiOnline ? "API Online" : "API Offline"}
               >
-                {apiOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-              </div>
+                {toneEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+              </button>
 
-              <div className="relative">
+              {/* NOTIFICATIONS */}
+              <div className="relative z-[60]">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100"
+                  className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100"
                 >
                   <Bell size={21} />
 
@@ -278,11 +322,22 @@ function Layout({ children }: LayoutProps) {
                 {showNotifications && <NotificationPanel />}
               </div>
 
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
+                  apiOnline
+                    ? "bg-green-100 text-green-600 hover:bg-green-200"
+                    : "bg-red-100 text-red-600 hover:bg-red-200"
+                }`}
+                title={apiOnline ? "API Online" : "API Offline"}
+              >
+                {apiOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+              </div>
+
               <button
                 onClick={() => (window.location.href = "/my-account")}
-                className="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition hover:bg-slate-100"
+                className="flex items-center gap-2.5 rounded-xl border border-transparent px-2.5 py-1.5 transition hover:border-slate-200 hover:bg-slate-50"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3155d9] text-sm font-bold text-white shadow-sm">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3155d9] text-sm font-extrabold text-white shadow-[0_3px_10px_rgba(49,85,217,0.25)]">
                   {(user?.username || "U").charAt(0).toUpperCase()}
                 </span>
 
