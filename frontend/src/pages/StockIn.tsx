@@ -6,7 +6,7 @@ import { socket } from "../socket/socket";
 
 import { useProductStore } from "../store/productStore";
 
-import { PackagePlus, Boxes, ScanLine, Hash } from "lucide-react";
+import { PackagePlus, Boxes, ScanLine, Hash, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -26,6 +26,10 @@ function StockIn() {
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
+  const [showProductModal, setShowProductModal] = useState(false);
+
+  const [productSearch, setProductSearch] = useState("");
+
   const [quantity, setQuantity] = useState("");
 
   const [serialInput, setSerialInput] = useState("");
@@ -35,6 +39,24 @@ function StockIn() {
   /* =========================
      LOAD PRODUCTS
   ========================= */
+
+  const filteredProducts = products.filter((product) => {
+    const search = productSearch.trim().toLowerCase();
+
+    if (!search) return true;
+
+    return (
+      String(product.name || "")
+        .toLowerCase()
+        .includes(search) ||
+      String(product.brand || "")
+        .toLowerCase()
+        .includes(search) ||
+      String(product.category || "")
+        .toLowerCase()
+        .includes(search)
+    );
+  });
 
   const fetchProducts = async () => {
     try {
@@ -81,7 +103,14 @@ function StockIn() {
 
     setSelectedProduct(product || null);
 
-    setTrackSerial(null);
+    setTrackSerial(
+      product?.track_serial === true || product?.track_serial === 1
+        ? true
+        : product?.track_serial === false || product?.track_serial === 0
+          ? false
+          : null,
+    );
+
     setStockUnit("Unit");
     setPackageSize(1);
 
@@ -241,9 +270,7 @@ function StockIn() {
           </div>
 
           <div>
-            <h2 className="erp-section-title">
-              Inventory Receiving
-            </h2>
+            <h2 className="erp-section-title">Inventory Receiving</h2>
 
             <p className="text-sm text-slate-500 mt-1">
               Add stock into inventory.
@@ -258,24 +285,140 @@ function StockIn() {
             Product
           </label>
 
-          <select
-            className="erp-select"
-            value={selectedProduct?.id || ""}
-            onChange={(e) => handleProductChange(e.target.value)}
+          <button
+            type="button"
+            onClick={() => {
+              setProductSearch("");
+              setShowProductModal(true);
+            }}
+            className="erp-select flex w-full items-center justify-between text-left"
           >
-            <option value="">Select Product</option>
+            <span
+              className={
+                selectedProduct ? "truncate text-slate-900" : "text-slate-400"
+              }
+            >
+              {selectedProduct ? selectedProduct.name : "Select Product"}
+            </span>
 
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name}
-
-                {" — "}
-
-                {product.track_serial ? "Serialized" : "Standard"}
-              </option>
-            ))}
-          </select>
+            <span className="ml-3 shrink-0 text-slate-400">▼</span>
+          </button>
         </div>
+
+        {showProductModal && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+            onClick={() => setShowProductModal(false)}
+          >
+            <div
+              className="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.22)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* MODAL HEADER */}
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Select Product
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Select a product for inventory receiving.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                  aria-label="Close product selector"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="border-b border-slate-200 px-6 py-4">
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Search product, brand or category..."
+                  className="erp-input"
+                  autoFocus
+                />
+              </div>
+
+              {/* PRODUCT LIST */}
+              <div className="max-h-[360px] overflow-y-auto">
+                {filteredProducts.map((product) => {
+                  const productType =
+                    product.track_serial === true || product.track_serial === 1
+                      ? "Serialized"
+                      : product.track_serial === false ||
+                          product.track_serial === 0
+                        ? "Standard"
+                        : "Not Set";
+
+                  return (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => {
+                        handleProductChange(String(product.id));
+                        setShowProductModal(false);
+                      }}
+                      className={`flex w-full items-center gap-4 border-b border-slate-100 px-6 py-4 text-left transition hover:bg-slate-50 ${
+                        selectedProduct?.id === product.id
+                          ? "bg-blue-50"
+                          : "bg-white"
+                      }`}
+                    >
+                      {/* PRODUCT */}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium text-slate-900">
+                          {product.name}
+                        </div>
+
+                        <div className="mt-1 truncate text-xs text-slate-500">
+                          {product.brand || "No brand"}
+                          {product.category ? ` • ${product.category}` : ""}
+                        </div>
+                      </div>
+
+                      {/* TYPE */}
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                          productType === "Serialized"
+                            ? "bg-blue-100 text-blue-700"
+                            : productType === "Standard"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {productType}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* MODAL FOOTER */}
+              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3">
+                <span className="text-xs font-medium text-slate-500">
+                  {filteredProducts.length} of {products.length} product
+                  {products.length === 1 ? "" : "s"}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setShowProductModal(false)}
+                  className="erp-secondary-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* INVENTORY TYPE */}
 

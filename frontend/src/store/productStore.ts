@@ -20,7 +20,7 @@ interface Product {
 
   quantity: number;
 
-  track_serial: boolean;
+  track_serial: boolean | number | null;
 
   price?: number;
 

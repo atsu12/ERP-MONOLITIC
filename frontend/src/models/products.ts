@@ -8,7 +8,7 @@ export interface Product {
 
   quantity: number;
 
-  track_serial: boolean;
+  track_serial: boolean | null;
 
   price?: number;
 
