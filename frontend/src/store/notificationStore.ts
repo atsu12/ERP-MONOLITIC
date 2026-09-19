@@ -157,20 +157,31 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     ========================= */
 
   addNotification: (notification, playTone = true) => {
-    const id = Date.now();
-
-    const newNotification = {
-      ...notification,
-
-      id,
-
-      createdAt: new Date().toISOString(),
-    };
-
     set((state) => {
+      const isDuplicate = state.notifications.some(
+        (existing) =>
+          existing.type === notification.type &&
+          existing.title === notification.title &&
+          existing.message === notification.message &&
+          Date.now() - new Date(existing.createdAt).getTime() < 5000,
+      );
+
+      if (isDuplicate) {
+        return state;
+      }
+
+      const id = Date.now();
+
+      const newNotification = {
+        ...notification,
+        id,
+        createdAt: new Date().toISOString(),
+      };
+
       if (playTone && state.toneEnabled) {
         playNotificationTone();
       }
+
       const updated = [newNotification, ...state.notifications].slice(
         0,
         MAX_NOTIFICATIONS,

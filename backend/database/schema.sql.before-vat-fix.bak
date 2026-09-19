@@ -116,7 +116,6 @@ CREATE TABLE `dispatch_transactions` (
   `status` enum('PENDING_PAYMENT','PAYMENT_CONFIRMED','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PENDING_PAYMENT',
   `subtotal` decimal(12,2) NOT NULL DEFAULT '0.00',
   `discount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `vat` decimal(12,2) NOT NULL DEFAULT '0.00',
   `grand_total` decimal(12,2) NOT NULL DEFAULT '0.00',
   `currency` varchar(10) NOT NULL DEFAULT 'USD',
   `staff_id` int NOT NULL,
