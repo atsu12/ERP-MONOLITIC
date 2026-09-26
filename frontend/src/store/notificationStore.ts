@@ -62,6 +62,11 @@ const loadNotifications = (): Notification[] => {
           now - new Date(notification.createdAt).getTime() <
           NOTIFICATION_RETENTION_MS,
       )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime(),
+      )
       .slice(0, MAX_NOTIFICATIONS);
   } catch {
     return [];
@@ -182,10 +187,13 @@ export const useNotificationStore = create<NotificationState>((set) => ({
         playNotificationTone();
       }
 
-      const updated = [newNotification, ...state.notifications].slice(
-        0,
-        MAX_NOTIFICATIONS,
-      );
+      const updated = [newNotification, ...state.notifications]
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime(),
+        )
+        .slice(0, MAX_NOTIFICATIONS);
 
       saveNotifications(updated);
 

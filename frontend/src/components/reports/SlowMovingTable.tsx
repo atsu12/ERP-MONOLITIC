@@ -43,7 +43,7 @@ function SlowMovingTable({ products, filters = {} }: Props) {
   </button>
 </div>
 
-      <table className="w-full">
+      <div className="max-h-72 overflow-y-auto"><table className="w-full">
         <thead>
           <tr className="border-b">
             <th className="text-left py-2">Product</th>
@@ -60,8 +60,7 @@ function SlowMovingTable({ products, filters = {} }: Props) {
               <td className="py-2 text-right">{product.totalOut}</td>
             </tr>
           ))}
-        </tbody>
-      </table>
+        </tbody></table></div>
     </div>
   );
 }

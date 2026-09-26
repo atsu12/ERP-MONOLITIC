@@ -47,7 +47,7 @@ function InventoryValuationTable({ items, filters = {} }: Props) {
         </button>
       </div>
 
-      <div className="erp-table-container">
+      <div className="erp-table-container"><div className="erp-table-scroll max-h-72 overflow-y-auto">
         <table className="min-w-full">
           <thead>
             <tr className="border-b">
@@ -93,6 +93,7 @@ function InventoryValuationTable({ items, filters = {} }: Props) {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

@@ -7,12 +7,6 @@ interface Settings {
 
   // Templates
 
-  quotation_template_path?: string;
-
-  purchase_order_template_path?: string;
-
-  delivery_note_template_path?: string;
-
   // Currency & Pricing
   base_currency: string;
   display_currency: string;
@@ -27,11 +21,6 @@ interface Settings {
   company_email: string | null;
   company_website: string | null;
   company_vat: string | null;
-
-  // Branding
-  company_logo_path: string | null;
-  company_header: string | null;
-  company_footer: string | null;
 
   // Invoice Numbering
   invoice_prefix: string;

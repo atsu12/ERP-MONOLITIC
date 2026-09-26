@@ -14,7 +14,6 @@ import PageHeader from "../components/PageHeader";
 
 import PageLoader from "../components/PageLoader";
 
-import BrandingSection from "../components/settings/BrandingSection";
 
 import DocumentNumberingSection from "../components/settings/DocumentNumberingSection";
 
@@ -57,20 +56,10 @@ function Adjustments() {
     invoiceNumberLength: 6,
   });
 
-  const [companyLogoPath, setCompanyLogoPath] = useState("");
 
-  const [companyHeader, setCompanyHeader] = useState("");
 
-  const [companyFooter, setCompanyFooter] = useState("");
 
   const [invoiceTemplatePath, setInvoiceTemplatePath] = useState("");
-
-  const [quotationTemplatePath, setQuotationTemplatePath] = useState("");
-
-  const [purchaseOrderTemplatePath, setPurchaseOrderTemplatePath] =
-    useState("");
-
-  const [deliveryNoteTemplatePath, setDeliveryNoteTemplatePath] = useState("");
 
   useEffect(() => {
     fetchSettings();
@@ -95,19 +84,10 @@ function Adjustments() {
     setCompanyWebsite(settings.company_website ?? "");
     setCompanyVat(settings.company_vat ?? "");
 
-    setCompanyLogoPath(settings.company_logo_path ?? "");
 
-    setCompanyHeader(settings.company_header ?? "");
 
-    setCompanyFooter(settings.company_footer ?? "");
 
     setInvoiceTemplatePath(settings.invoice_template_path ?? "");
-
-    setQuotationTemplatePath(settings.quotation_template_path ?? "");
-
-    setPurchaseOrderTemplatePath(settings.purchase_order_template_path ?? "");
-
-    setDeliveryNoteTemplatePath(settings.delivery_note_template_path ?? "");
 
     setDocumentNumbering({
       invoicePrefix: settings.invoice_prefix ?? "INV",
@@ -139,16 +119,8 @@ function Adjustments() {
       company_website: companyWebsite,
       company_vat: companyVat,
 
-      // Branding
-      company_logo_path: companyLogoPath,
-      company_header: companyHeader,
-      company_footer: companyFooter,
-
-      // Document Templates
+      // Document Template
       invoice_template_path: invoiceTemplatePath,
-      quotation_template_path: quotationTemplatePath,
-      purchase_order_template_path: purchaseOrderTemplatePath,
-      delivery_note_template_path: deliveryNoteTemplatePath,
 
       // Document Numbering
       invoice_prefix: documentNumbering.invoicePrefix,
@@ -195,7 +167,7 @@ function Adjustments() {
 
       <div className="erp-card erp-section">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Invoice Validity</h2>
+          <h2 className="erp-section-title">Invoice Validity</h2>
 
           <p className="text-sm text-slate-500">
             Set the default validity period for Proforma Invoices.
@@ -203,7 +175,7 @@ function Adjustments() {
         </div>
 
         <div className="max-w-sm">
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Validity Period (Days)
           </label>
 
@@ -212,7 +184,7 @@ function Adjustments() {
             min="1"
             value={invoiceValidityDays}
             onChange={(e) => setInvoiceValidityDays(Number(e.target.value))}
-            className="w-full rounded-2xl border border-slate-200 px-4 py-2"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
 
           <p className="mt-2 text-xs text-slate-500">
@@ -221,24 +193,9 @@ function Adjustments() {
         </div>
       </div>
 
-      <BrandingSection
-        companyLogoPath={companyLogoPath}
-        setCompanyLogoPath={setCompanyLogoPath}
-        companyHeader={companyHeader}
-        setCompanyHeader={setCompanyHeader}
-        companyFooter={companyFooter}
-        setCompanyFooter={setCompanyFooter}
-      />
-
       <DocumentTemplatesSection
         invoiceTemplatePath={invoiceTemplatePath}
         setInvoiceTemplatePath={setInvoiceTemplatePath}
-        quotationTemplatePath={quotationTemplatePath}
-        setQuotationTemplatePath={setQuotationTemplatePath}
-        purchaseOrderTemplatePath={purchaseOrderTemplatePath}
-        setPurchaseOrderTemplatePath={setPurchaseOrderTemplatePath}
-        deliveryNoteTemplatePath={deliveryNoteTemplatePath}
-        setDeliveryNoteTemplatePath={setDeliveryNoteTemplatePath}
       />
 
       <CurrencyPricingSection
@@ -258,7 +215,7 @@ function Adjustments() {
       <div className="mt-8 flex justify-end">
         <button
           onClick={handleSave}
-          className="rounded-2xl bg-black px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-gray-800"
+          className="rounded-xl bg-[#3155d9] px-6 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-[#2848bd] hover:shadow-md"
         >
           Save Settings
         </button>

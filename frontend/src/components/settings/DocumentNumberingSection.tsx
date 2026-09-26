@@ -22,14 +22,14 @@ function DocumentNumberingSection({
     .padStart(invoiceNumberLength, "0")}`;
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-200 p-8 max-w-3xl">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
+    <div className="erp-card max-w-5xl">
+      <h2 className="erp-section-title mb-6">
         Document Numbering
       </h2>
 
       <div className="grid gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Invoice Prefix
           </label>
 
@@ -41,12 +41,12 @@ function DocumentNumberingSection({
                 invoicePrefix: e.target.value.toUpperCase(),
               })
             }
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Next Invoice Number
           </label>
 
@@ -60,12 +60,12 @@ function DocumentNumberingSection({
                 invoiceNextNumber: Number(e.target.value),
               })
             }
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Number Length
           </label>
 
@@ -80,19 +80,19 @@ function DocumentNumberingSection({
                 invoiceNumberLength: Number(e.target.value),
               })
             }
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Preview
           </label>
 
           <input
             value={preview}
             disabled
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-gray-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700"
           />
         </div>
       </div>

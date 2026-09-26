@@ -73,6 +73,7 @@ function Login() {
   }, [clearNotifications]);
 
   const handleLogin = async () => {
+    if (loading) return;
     setLoading(true);
 
     const toastId = toast.loading("Signing in...");
@@ -84,7 +85,7 @@ function Login() {
 
       toast.dismiss(toastId);
 
-      toast.success("Login successful");
+      console.log("LOGIN SUCCESS TOAST CALLED"); toast.success("Login successful");
 
       navigate("/dashboard");
     } catch (err) {
@@ -330,7 +331,7 @@ function Login() {
                     border
                     border-slate-200
                   "
-                />
+                  />
                 </div>
 
                 <div className="sm:col-span-2">

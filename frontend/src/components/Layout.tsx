@@ -18,7 +18,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import NotificationPanel from "./NotificationPanel";
 import { useRealtimeInventory } from "../hooks/useRealtimeInventory";
-import { useLowStockAlerts } from "../hooks/useLowStockAlerts";
 import { useApiHealth } from "../hooks/useApiHealth";
 import { useAuthStore } from "../store/authStore";
 import { useNotificationStore } from "../store/notificationStore";
@@ -33,7 +32,6 @@ function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
 
   useRealtimeInventory();
-  useLowStockAlerts();
 
   const { apiOnline } = useApiHealth();
 

@@ -38,83 +38,81 @@ function CompanyInformationSection({
   setCompanyVat,
 }: CompanyInformationSectionProps) {
   return (
-    <div className="bg-white rounded-3xl border border-gray-200 p-8 max-w-3xl">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">
-        Company Information
-      </h2>
+    <div className="erp-card erp-section">
+      <div className="mb-6">
+        <h2 className="erp-section-title">Company Information</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Manage the company details used throughout the ERP and business
+          documents.
+        </p>
+      </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Company Name
           </label>
-
           <input
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Address
-          </label>
-
-          <textarea
-            rows={3}
-            value={companyAddress}
-            onChange={(e) => setCompanyAddress(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Phone
           </label>
-
           <input
             value={companyPhone}
             onChange={(e) => setCompanyPhone(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Email
           </label>
-
           <input
             type="email"
             value={companyEmail}
             onChange={(e) => setCompanyEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Website
           </label>
-
           <input
             value={companyWebsite}
             onChange={(e) => setCompanyWebsite(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
             Tax (VAT/TIN)
           </label>
-
           <input
             value={companyVat}
             onChange={(e) => setCompanyVat(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Address
+          </label>
+          <textarea
+            rows={3}
+            value={companyAddress}
+            onChange={(e) => setCompanyAddress(e.target.value)}
+            className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#3155d9] focus:ring-2 focus:ring-[#3155d9]/10"
           />
         </div>
       </div>

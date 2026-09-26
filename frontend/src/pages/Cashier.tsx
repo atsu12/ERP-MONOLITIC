@@ -160,17 +160,25 @@ function Cashier() {
 
       const blob = await response.blob();
 
+      if (!blob.size) {
+        throw new Error("Sales Invoice file is empty.");
+      }
+
       const url = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
       link.href = url;
       link.download = `Sales-Invoice-${dispatchId}.xlsx`;
+      link.style.display = "none";
 
       document.body.appendChild(link);
       link.click();
       link.remove();
 
-      window.URL.revokeObjectURL(url);
+      // Give the browser time to start the download.
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
 
       toast.success("Sales Invoice generated successfully");
     } catch (error: any) {
@@ -178,7 +186,7 @@ function Cashier() {
       toast.error(error.message || "Unable to create sales invoice.");
     }
   };
-
+  
   const adjustPricing = async (
     dispatchId: number,
     discount: number,

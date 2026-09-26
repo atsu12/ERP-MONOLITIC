@@ -13,64 +13,6 @@ type ExportOptions = {
   rows: Record<string, any>[];
 };
 
-function getFileExtension(path: string): "png" | "jpeg" | "gif" {
-  const extension = path
-    .split("?")[0]
-    .split(".")
-    .pop()
-    ?.toLowerCase();
-
-  if (extension === "png") {
-    return "png";
-  }
-
-  if (extension === "gif") {
-    return "gif";
-  }
-
-  return "jpeg";
-}
-
-async function loadCompanyLogo(
-  logoPath: string | null | undefined,
-): Promise<ArrayBuffer | null> {
-  if (!logoPath) {
-    return null;
-  }
-
-  try {
-    const apiUrl = import.meta.env.VITE_API_URL as string;
-
-    const backendUrl = apiUrl.replace(/\/api\/?$/, "");
-
-    const normalizedPath = logoPath.startsWith("/")
-      ? logoPath
-      : `/${logoPath}`;
-
-    const response = await fetch(
-      `${backendUrl}/${normalizedPath.replace(/^\/+/, "")}`,
-    );
-
-    if (!response.ok) {
-      console.warn(
-        "Could not load company logo for Excel export:",
-        response.status,
-      );
-
-      return null;
-    }
-
-    return await response.arrayBuffer();
-  } catch (error) {
-    console.warn(
-      "Could not load company logo for Excel export:",
-      error,
-    );
-
-    return null;
-  }
-}
-
 export async function exportExcel({
   title,
   company,
@@ -87,10 +29,6 @@ export async function exportExcel({
     company ??
     settings?.company_name ??
     "Company";
-
-  const logoBuffer = await loadCompanyLogo(
-    settings?.company_logo_path,
-  );
 
   const workbook = new ExcelJS.Workbook();
 
@@ -156,7 +94,6 @@ export async function exportExcel({
     worksheet.getCell("A1");
 
   /*
-   * General exports are branded with the ERP company logo.
    * The company name is retained as workbook metadata/footer,
    * but is not displayed as a hard-coded report heading.
    */
@@ -167,43 +104,6 @@ export async function exportExcel({
     vertical: "middle",
     horizontal: "center",
   };
-
-  /* =========================
-     COMPANY LOGO
-  ========================= */
-
-  if (logoBuffer) {
-    try {
-      const imageId = workbook.addImage({
-        buffer: logoBuffer,
-        extension: getFileExtension(
-          settings?.company_logo_path ?? "",
-        ),
-      });
-
-      worksheet.addImage(imageId, {
-        tl: {
-          col: 0.15,
-          row: 0.15,
-        },
-        ext: {
-          width: 120,
-          height: 65,
-        },
-      });
-
-      companyCell.alignment = {
-        vertical: "middle",
-        horizontal: "center",
-      };
-    } catch (error) {
-      console.warn(
-        "Could not embed company logo:",
-        error,
-      );
-    }
-  }
-
   /* =========================
      REPORT TITLE
   ========================= */

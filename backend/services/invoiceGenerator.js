@@ -387,39 +387,6 @@ function updateTotalFormulas(worksheet, itemCount) {
 }
 
 /* =========================
-   INSERT COMPANY LOGO
-========================= */
-
-const fs = require("fs");
-
-async function insertCompanyLogo(workbook, worksheet, settings) {
-  if (!settings.company_logo_path) {
-    return;
-  }
-
-  const logoPath = path.join(__dirname, "..", settings.company_logo_path);
-
-  if (!fs.existsSync(logoPath)) {
-    return;
-  }
-
-  const extension = path.extname(logoPath).replace(".", "").toLowerCase();
-
-  const imageId = workbook.addImage({
-    filename: logoPath,
-    extension,
-  });
-
-  worksheet.addImage(imageId, {
-    tl: { col: 0.3, row: 0.3 },
-    ext: {
-      width: 140,
-      height: 80,
-    },
-  });
-}
-
-/* =========================
    GENERATE PROFORMA
 ========================= */
 
@@ -462,7 +429,6 @@ async function generateProformaInvoice(
       email: settings.company_email,
       website: settings.company_website,
       vat: settings.company_vat,
-      logo: settings.company_logo_path,
       currency: settings.currency_symbol,
     },
 
@@ -515,8 +481,6 @@ async function generateProformaInvoice(
   populateLineItems(worksheet, invoiceData.items);
 
   updateTotalFormulas(worksheet, invoiceData.items.length);
-
-  await insertCompanyLogo(workbook, worksheet, settings);
 
   return {
     workbook,

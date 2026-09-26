@@ -58,7 +58,7 @@ function RecentMovementsTable({ movements, filters = {} }: Props) {
         </button>
       </div>
 
-      <table className="min-w-full">
+      <div className="max-h-72 overflow-y-auto"><table className="min-w-full">
         <thead>
           <tr className="border-b">
             <th className="text-left py-2">Product</th>
@@ -85,8 +85,7 @@ function RecentMovementsTable({ movements, filters = {} }: Props) {
               </td>
             </tr>
           ))}
-        </tbody>
-      </table>
+        </tbody></table></div>
     </div>
   );
 }

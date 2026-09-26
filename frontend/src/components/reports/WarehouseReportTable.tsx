@@ -39,8 +39,8 @@ function WarehouseReportTable({ warehouses, filters = {} }: Props) {
         </button>
       </div>
 
-      <div className="erp-table-container">
-        <div className="erp-table-scroll">
+      <div className="erp-table-container max-h-72 overflow-y-auto">
+        <div className="erp-table-scroll max-h-72 overflow-auto">
           <table className="erp-table">
             <thead>
               <tr>

@@ -4,12 +4,10 @@ import toast from "react-hot-toast";
 import { apiRequest } from "../../services/api";
 import { useSettingsStore } from "../../store/settingsStore";
 
-const API_URL = import.meta.env.VITE_API_URL.replace("/api", "");
-
 type FileUploadFieldProps = {
   label: string;
   value: string;
-  type: "logo" | "invoice" | "quotation" | "purchase_order" | "delivery_note";
+  type: "invoice";
   accept: string;
   onUploaded: (path: string) => void;
 };
@@ -122,26 +120,14 @@ function FileUploadField({
       </h3>
 
       <p className="mt-1 text-sm text-gray-500">
-        {type === "logo"
-          ? "Upload your company logo. It will appear on invoices, quotations, purchase orders, delivery notes and reports."
-          : "Upload an Excel template (.xlsx or .xlsm). This template will be used when printing documents."}
+        Upload an Excel template (.xlsx or .xlsm). This template will be used when printing documents.
       </p>
 
       {value && (
         <div className="mt-6">
-          {type === "logo" ? (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-8">
-              <img
-                src={`${API_URL}/${value}`}
-                alt="Company Logo"
-                className="mx-auto max-h-48 object-contain"
-              />
-            </div>
-          ) : (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <span className="text-2xl">📄</span>
-            </div>
-          )}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <span className="text-2xl">📄</span>
+          </div>
 
           <div className="mt-4">
             <p className="text-xs uppercase tracking-wide text-gray-500">

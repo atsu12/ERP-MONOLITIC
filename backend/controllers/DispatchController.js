@@ -36,13 +36,31 @@ exports.cancelDispatch = (req, res) => {
       });
     }
 
-    logActivity(req.user.id, req.user.username, `Cancelled dispatch #${id}`);
+    db.query(
+      `SELECT reference FROM dispatch_transactions WHERE id = ?`,
+      [id],
+      (referenceErr, rows) => {
+        if (referenceErr) {
+          return res.status(500).json({
+            error: "Internal server error",
+          });
+        }
 
-    getIO().emit("dispatch-updated");
+        const reference = rows[0]?.reference || `#${id}`;
 
-    return res.json({
-      message: "Dispatch cancelled",
-    });
+        logActivity(
+          req.user.id,
+          req.user.username,
+          `Cancelled dispatch ${reference}`,
+        );
+
+        getIO().emit("dispatch-updated", { reference });
+
+        return res.json({
+          message: "Dispatch cancelled",
+        });
+      },
+    );
   });
 };
 
@@ -235,7 +253,7 @@ exports.createDispatch = (req, res) => {
               `Created dispatch ${reference}`,
             );
 
-            getIO().emit("dispatch-updated");
+            getIO().emit("dispatch-updated", { reference });
 
             return res.status(201).json({
               message: "Dispatch created successfully",
@@ -294,7 +312,7 @@ exports.createDispatch = (req, res) => {
                   `Created dispatch ${reference}`,
                 );
 
-                getIO().emit("dispatch-updated");
+                getIO().emit("dispatch-updated", { reference });
 
                 return res.status(201).json({
                   message: "Dispatch created successfully",
@@ -491,6 +509,7 @@ exports.confirmPayment = (req, res) => {
   const getDispatchQuery = `
     SELECT
       customer_name,
+      reference,
       contact,
       contact_person,
       location
@@ -607,7 +626,9 @@ exports.confirmPayment = (req, res) => {
                   `Confirmed payment for dispatch #${id}`,
                 );
 
-                getIO().emit("dispatch-paid");
+                getIO().emit("dispatch-paid", {
+                  reference: dispatch.reference,
+                });
 
                 return res.json({
                   message: "Payment confirmed successfully",
@@ -650,7 +671,7 @@ exports.confirmPayment = (req, res) => {
                 `Confirmed payment for dispatch #${id}`,
               );
 
-              getIO().emit("dispatch-paid");
+              getIO().emit("dispatch-paid", { reference: dispatch.reference });
 
               return res.json({
                 message: "Payment confirmed successfully",
@@ -757,7 +778,7 @@ exports.adjustDispatchPricing = (req, res) => {
           `Adjusted pricing for dispatch #${id}`,
         );
 
-        getIO().emit("dispatch-updated");
+        getIO().emit("dispatch-updated", { reference: dispatch.reference });
 
         return res.json({
           message: "Dispatch pricing updated successfully",
@@ -1259,7 +1280,9 @@ exports.completeDispatch = (req, res) => {
                             `Completed dispatch ${dispatch.reference}`,
                           );
 
-                          getIO().emit("dispatch-completed");
+                          getIO().emit("dispatch-completed", {
+                            reference: dispatch.reference,
+                          });
                           getIO().emit("product-updated");
 
                           return res.json({

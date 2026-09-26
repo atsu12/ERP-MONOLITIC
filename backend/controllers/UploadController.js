@@ -18,11 +18,7 @@ exports.uploadSettingsAsset = (req, res) => {
     .join("/");
 
   const columnMap = {
-    logo: "company_logo_path",
     invoice: "invoice_template_path",
-    quotation: "quotation_template_path",
-    purchase_order: "purchase_order_template_path",
-    delivery_note: "delivery_note_template_path",
   };
 
   const column = columnMap[type];
@@ -83,11 +79,7 @@ exports.deleteSettingsAsset = (req, res) => {
   const { type } = req.params;
 
   const columnMap = {
-    logo: "company_logo_path",
     invoice: "invoice_template_path",
-    quotation: "quotation_template_path",
-    purchase_order: "purchase_order_template_path",
-    delivery_note: "delivery_note_template_path",
   };
 
   const column = columnMap[type];

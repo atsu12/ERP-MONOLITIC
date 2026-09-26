@@ -37,10 +37,6 @@ exports.updateSettings = (req, res) => {
     company_website,
     company_vat,
 
-    company_logo_path,
-    company_header,
-    company_footer,
-
     invoice_prefix,
     invoice_next_number,
     invoice_number_length,
@@ -48,10 +44,6 @@ exports.updateSettings = (req, res) => {
     invoice_vat_rate,
 
     invoice_template_path,
-
-    quotation_template_path,
-    purchase_order_template_path,
-    delivery_note_template_path,
   } = req.body;
 
   db.query(
@@ -71,26 +63,18 @@ exports.updateSettings = (req, res) => {
         company_website = ?,
         company_vat = ?,
 
-        company_logo_path = ?,
-        company_header = ?,
-        company_footer = ?,
-
         invoice_prefix = ?,
         invoice_next_number = ?,
         invoice_number_length = ?,
         invoice_validity_days = ?,
         invoice_vat_rate = ?,
 
-        invoice_template_path = ?,
-
-        quotation_template_path = ?,
-        purchase_order_template_path = ?,
-        delivery_note_template_path = ?
+        invoice_template_path = ?
 
         WHERE id = 1
       `,
-    
-      [
+
+    [
       base_currency,
       display_currency,
       currency_symbol,
@@ -104,10 +88,6 @@ exports.updateSettings = (req, res) => {
       company_website,
       company_vat,
 
-      company_logo_path,
-      company_header,
-      company_footer,
-
       invoice_prefix,
       invoice_next_number,
       invoice_number_length,
@@ -115,10 +95,6 @@ exports.updateSettings = (req, res) => {
       invoice_vat_rate,
 
       invoice_template_path,
-
-      quotation_template_path,
-      purchase_order_template_path,
-      delivery_note_template_path,
     ],
     (err, result) => {
       if (err) {
