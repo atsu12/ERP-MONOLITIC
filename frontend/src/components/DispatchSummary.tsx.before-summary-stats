@@ -199,25 +199,23 @@ function DispatchSummary({
       </div>
 
       <div className="border-t mt-8 pt-6">
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
-            <p className="text-sm font-bold uppercase tracking-wide text-green-700">
-              Products
-            </p>
+        <div className="grid grid-cols-3 gap-6 text-center">
+          <div>
+            <p className="text-sm text-slate-500">Products</p>
 
-            <p className="mt-1 text-3xl font-extrabold text-green-700">
-              {totalProducts}
-            </p>
+            <p className="text-2xl font-bold">{totalProducts}</p>
           </div>
 
-          <div className="rounded-2xl border border-green-200 bg-green-50 px-5 py-4">
-            <p className="text-sm font-bold uppercase tracking-wide text-green-700">
-              Total Units
-            </p>
+          <div>
+            <p className="text-sm text-slate-500">Total Units</p>
 
-            <p className="mt-1 text-3xl font-extrabold text-green-700">
-              {totalUnits}
-            </p>
+            <p className="text-2xl font-bold">{totalUnits}</p>
+          </div>
+
+          <div>
+            <p className="text-sm text-slate-500">Serialized Units</p>
+
+            <p className="text-2xl font-bold">{serializedUnits}</p>
           </div>
         </div>
 

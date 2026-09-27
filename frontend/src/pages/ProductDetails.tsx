@@ -158,6 +158,16 @@ function ProductDetails() {
             </p>
           </div>
 
+          {!product.track_serial && (
+            <div>
+              <p className="text-sm text-gray-500">Barcode</p>
+
+              <p className="font-semibold">
+                {product.barcode || "Not assigned"}
+              </p>
+            </div>
+          )}
+
           <div>
             <p className="text-sm text-slate-500">Quantity</p>
             <p className="font-semibold">{product.quantity}</p>

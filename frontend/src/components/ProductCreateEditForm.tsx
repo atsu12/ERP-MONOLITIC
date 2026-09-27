@@ -24,8 +24,6 @@ function ProductCreateEditForm({
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
 
-    barcode: initialData?.barcode || "",
-
     brand: initialData?.brand || "",
 
     category: initialData?.category || "",
@@ -116,22 +114,6 @@ function ProductCreateEditForm({
         {errors.name && (
           <p className="text-sm text-red-500 mt-1">{errors.name}</p>
         )}
-      </div>
-
-      {/* BARCODE */}
-
-      <div>
-        <label className="block text-sm font-semibold mb-2">Barcode</label>
-
-        <input
-          type="text"
-          name="barcode"
-          value={formData.barcode}
-          onChange={handleChange}
-          className="erp-input"
-          placeholder="Enter product barcode"
-          maxLength={100}
-        />
       </div>
 
       {/* BRAND */}

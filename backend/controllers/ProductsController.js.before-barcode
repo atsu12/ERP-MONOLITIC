@@ -17,7 +17,6 @@ exports.getProducts = (req, res) => {
 SELECT
 p.id,
 p.name,
-p.barcode,
 p.brand,
 p.category,
 p.price,
@@ -46,7 +45,6 @@ WHERE
 LOWER(p.name) LIKE ?
 OR LOWER(p.brand) LIKE ?
 OR LOWER(COALESCE(p.category, '')) LIKE ?
-OR LOWER(COALESCE(p.barcode, '')) LIKE ?
 OR EXISTS (
   SELECT 1
   FROM product_items spi
@@ -57,7 +55,7 @@ OR EXISTS (
 
     const term = `%${search.toLowerCase()}%`;
 
-    params.push(term, term, term, term, term);
+    params.push(term, term, term, term);
   }
 
   query += `
@@ -157,7 +155,6 @@ CREATE PRODUCT
 exports.createProduct = (req, res) => {
   let {
     name,
-    barcode,
     brand,
     category,
     price,
@@ -189,8 +186,6 @@ NORMALIZE
 ========================= */
 
   name = name.trim();
-
-  barcode = barcode?.trim() || null;
 
   brand = brand.trim();
 
@@ -232,8 +227,6 @@ SERIALIZED PRODUCTS
 ========================= */
 
   if (track_serial) {
-    barcode = null;
-
     quantity = 0;
 
     stock_unit = "Unit";
@@ -275,7 +268,6 @@ INSERT PRODUCT
 INSERT INTO products
 (
 name,
-barcode,
 brand,
 category,
 price,
@@ -284,14 +276,13 @@ quantity,
 stock_unit,
 package_size
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
     db.query(
       productQuery,
       [
         name,
-        barcode,
         brand,
         category,
         price,
@@ -409,7 +400,7 @@ UPDATE PRODUCT
 exports.updateProduct = (req, res) => {
   const productId = req.params.id;
 
-  let { name, barcode, brand, category, price, stock_unit, package_size } = req.body;
+  let { name, brand, category, price, stock_unit, package_size } = req.body;
 
   /* =========================
 VALIDATION
@@ -432,8 +423,6 @@ NORMALIZE
 ========================= */
 
   name = name.trim();
-
-  barcode = barcode?.trim() || null;
 
   brand = brand.trim();
 
@@ -493,7 +482,6 @@ UPDATE PRODUCT
 UPDATE products
 SET
 name = ?,
-barcode = CASE WHEN track_serial = FALSE THEN ? ELSE barcode END,
 brand = ?,
 category = ?,
 price = ?,
@@ -504,7 +492,7 @@ WHERE id = ?
 
     db.query(
       updateQuery,
-      [name, barcode, brand, category, price, stock_unit, package_size, productId],
+      [name, brand, category, price, stock_unit, package_size, productId],
       (err, result) => {
         if (err) {
           logger.error(err);

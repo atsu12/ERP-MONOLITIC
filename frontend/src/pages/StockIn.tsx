@@ -32,6 +32,8 @@ function StockIn() {
 
   const [quantity, setQuantity] = useState("");
 
+  const [barcodeInput, setBarcodeInput] = useState("");
+
   const [serialInput, setSerialInput] = useState("");
 
   const [serials, setSerials] = useState<string[]>([]);
@@ -115,6 +117,8 @@ function StockIn() {
     setPackageSize(1);
 
     setQuantity("");
+
+    setBarcodeInput("");
 
     setSerialInput("");
 
@@ -200,6 +204,14 @@ function StockIn() {
       }
 
       payload.quantity = Number(quantity) * (packageSize || 1);
+
+      if (barcodeInput.trim()) {
+        payload.barcode = barcodeInput.trim();
+      } else if (selectedProduct.barcode) {
+        toast.error("Scan the product barcode");
+
+        return;
+      }
     }
 
     try {
@@ -228,7 +240,20 @@ function StockIn() {
       await refreshProducts();
       await fetchProducts();
 
+      const refreshedProduct = products.find(
+        (product) => product.id === selectedProduct.id,
+      );
+
+      if (refreshedProduct) {
+        setSelectedProduct({
+          ...refreshedProduct,
+          barcode: barcodeInput.trim() || refreshedProduct.barcode || null,
+        });
+      }
+
       setQuantity("");
+
+      setBarcodeInput("");
 
       setSerialInput("");
 
@@ -455,80 +480,122 @@ function StockIn() {
         {selectedProduct && trackSerial === false && (
           <div className="mb-6">
             <label className="block mb-2 font-semibold text-slate-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block mb-2 font-semibold text-slate-700">
-                    Stock Unit
-                  </label>
+              Barcode
+            </label>
 
-                  <select
-                    className="erp-select"
-                    value={stockUnit}
-                    onChange={(e) => setStockUnit(e.target.value)}
-                  >
-                    <option value="Unit">Unit</option>
-                    <option value="Piece">Piece</option>
-                    <option value="Pair">Pair</option>
-                    <option value="Bottle">Bottle</option>
-                    <option value="Pack">Pack</option>
-                    <option value="Box">Box</option>
-                  </select>
-                </div>
+            <div className="relative mb-6">
+              <ScanLine
+                size={22}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
 
-                <div>
-                  <label className="block mb-2 font-semibold text-slate-700">
-                    Package Size
-                  </label>
+              <input
+                type="text"
+                value={barcodeInput}
+                onChange={(e) => setBarcodeInput(e.target.value)}
+                placeholder={
+                  selectedProduct.barcode
+                    ? "Scan barcode to verify..."
+                    : "Scan barcode (optional)..."
+                }
+                className="erp-input text-lg font-semibold tracking-wide"
+                style={{ paddingLeft: "56px" }}
+              />
+            </div>
 
-                  <input
-                    type="number"
-                    min="1"
-                    className="erp-input"
-                    value={packageSize}
-                    onChange={(e) => setPackageSize(Number(e.target.value))}
-                  />
-                </div>
+            {selectedProduct.barcode && (
+              <div className="mb-6 rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                <p className="font-semibold text-blue-900">
+                  Barcode verification required
+                </p>
+
+                <p className="text-sm text-blue-700 mt-1">
+                  Scan the barcode assigned to this product before receiving
+                  stock.
+                </p>
               </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block mb-2 font-semibold text-slate-700">
+                  Stock Unit
+                </label>
+
+                <select
+                  className="erp-select"
+                  value={stockUnit}
+                  onChange={(e) => setStockUnit(e.target.value)}
+                >
+                  <option value="Unit">Unit</option>
+                  <option value="Piece">Piece</option>
+                  <option value="Pair">Pair</option>
+                  <option value="Bottle">Bottle</option>
+                  <option value="Pack">Pack</option>
+                  <option value="Box">Box</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block mb-2 font-semibold text-slate-700">
+                  Package Size
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  className="erp-input"
+                  value={packageSize}
+                  onChange={(e) => setPackageSize(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <label className="block mb-2 font-semibold text-slate-700">
               Packages Received
             </label>
+
+            <div className="mb-4 rounded-2xl bg-blue-50 border border-blue-100 p-4">
+              <p className="font-semibold text-blue-900">
+                Packaging Information
+              </p>
+
+              <p className="text-sm text-blue-700 mt-1">
+                1 Package = {packageSize} {stockUnit}
+                {packageSize > 1 ? "s" : ""}
+              </p>
+            </div>
 
             <div className="relative">
               <Hash
                 size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               />
-
-              <div className="mb-4 rounded-2xl bg-blue-50 border border-blue-100 p-4">
-                <p className="font-semibold text-blue-900">
-                  Packaging Information
-                </p>
-
-                <p className="text-sm text-blue-700 mt-1">
-                  1 Package = {packageSize} {stockUnit}
-                  {packageSize > 1 ? "s" : ""}
-                </p>
-              </div>
 
               <input
                 type="number"
+                min="1"
+                step="1"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 placeholder="Enter quantity"
-                className="erp-input pl-12"
+                className="erp-input"
+                style={{ paddingLeft: "48px" }}
               />
-              {quantity && Number(quantity) > 0 && (
-                <div className="mt-4 rounded-2xl bg-green-50 border border-green-100 p-4">
-                  <p className="font-semibold text-green-900">
-                    Inventory To Add
-                  </p>
-
-                  <p className="text-lg font-bold text-green-700">
-                    {Number(quantity) * packageSize} {stockUnit}
-                    {Number(quantity) * packageSize > 1 ? "s" : ""}
-                  </p>
-                </div>
-              )}
             </div>
+
+            {quantity && Number(quantity) > 0 && (
+              <div className="mt-4 rounded-2xl bg-green-50 border border-green-100 p-4">
+                <p className="font-semibold text-green-900">
+                  Inventory To Add
+                </p>
+
+                <p className="text-lg font-bold text-green-700">
+                  {Number(quantity) * packageSize} {stockUnit}
+                  {Number(quantity) * packageSize > 1 ? "s" : ""}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

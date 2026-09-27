@@ -294,17 +294,9 @@ function Cashier() {
                       {dispatch.location && (
                         <span>Location: {dispatch.location}</span>
                       )}
+
+                      <span>Staff: {dispatch.staff_name}</span>
                     </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-right shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      Handled By
-                    </p>
-
-                    <p className="mt-1 font-bold text-slate-800">
-                      {dispatch.staff_name}
-                    </p>
                   </div>
                 </div>
               </div>

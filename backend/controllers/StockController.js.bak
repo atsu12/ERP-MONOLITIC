@@ -16,7 +16,6 @@ exports.addStock = (req, res) => {
     track_serial,
     stock_unit,
     package_size,
-    barcode,
   } = req.body;
 
   quantity = Number(quantity) || 0;
@@ -39,8 +38,7 @@ exports.addStock = (req, res) => {
     SELECT
       id,
       name,
-      track_serial,
-      barcode
+      track_serial
     FROM products
     WHERE id = ?
   `;
@@ -184,18 +182,6 @@ exports.addStock = (req, res) => {
          STANDARD PRODUCTS
       ========================= */
 
-    /* =========================
-       STANDARD PRODUCT BARCODE
-    ========================= */
-
-    barcode = typeof barcode === "string" ? barcode.trim() : "";
-
-    if (product.barcode && barcode && product.barcode !== barcode) {
-      return res.status(400).json({
-        error: "Scanned barcode does not match this product",
-      });
-    }
-
     if (quantity <= 0) {
       return res.status(400).json({
         error: "Quantity must be greater than zero",
@@ -206,7 +192,6 @@ exports.addStock = (req, res) => {
       UPDATE products
       SET
         track_serial = FALSE,
-        barcode = COALESCE(NULLIF(?, ''), barcode),
         quantity = quantity + ?,
         stock_unit = ?,
         package_size = ?
@@ -215,13 +200,7 @@ exports.addStock = (req, res) => {
 
     db.query(
       stockQuery,
-      [
-        barcode,
-        quantity,
-        stock_unit || "Unit",
-        Number(package_size) || 1,
-        product_id,
-      ],
+      [quantity, stock_unit || "Unit", Number(package_size) || 1, product_id],
       (stockErr) => {
         if (stockErr) {
           return res.status(500).json({
