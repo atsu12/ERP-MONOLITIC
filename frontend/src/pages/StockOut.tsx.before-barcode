@@ -39,18 +39,6 @@ function StockOut() {
 
   const [serialInput, setSerialInput] = useState("");
 
-  const [barcodeInput, setBarcodeInput] = useState("");
-
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
-
-  const barcodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const barcodeLastKeyRef = useRef(0);
-
-  const serialTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const serialLastKeyRef = useRef(0);
-
   const [customerName, setCustomerName] = useState("");
 
   const [customerContact, setCustomerContact] = useState("");
@@ -473,102 +461,8 @@ function StockOut() {
      SERIALIZED SCAN OUT
   ========================= */
 
-  const addStandardBarcodeToCart = (barcode: string) => {
-    const cleaned = barcode.trim();
-
-    if (!cleaned) return;
-
-    const matches = products.filter(
-      (product) =>
-        Number(product.track_serial) === 0 &&
-        String(product.barcode || "").trim() === cleaned,
-    );
-
-    if (matches.length === 0) {
-      toast.error("Product barcode not found");
-      return;
-    }
-
-    if (matches.length > 1) {
-      toast.error("Barcode matches multiple products");
-      return;
-    }
-
-    const product = matches[0];
-
-    setCartItems((prev) => {
-      const existing = prev.find(
-        (item) => item.product_id === product.id,
-      );
-
-      if (existing) {
-        return prev.map((item) =>
-          item.product_id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-                unit_price: Number(product.price),
-              }
-            : item,
-        );
-      }
-
-      return [
-        ...prev,
-        {
-          product_id: product.id,
-          name: product.name,
-          quantity: 1,
-          unit_price: Number(product.price),
-        },
-      ];
-    });
-
-    toast.success(`${product.name} added`);
-
-    setBarcodeInput("");
-    barcodeInputRef.current?.focus();
-  };
-
-  const handleBarcodeInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value = e.target.value;
-
-    setBarcodeInput(value);
-
-    const now = Date.now();
-    const interval = now - barcodeLastKeyRef.current;
-
-    barcodeLastKeyRef.current = now;
-
-    if (value.length >= 4 && interval > 0 && interval < 60) {
-      if (barcodeTimerRef.current) {
-        clearTimeout(barcodeTimerRef.current);
-      }
-
-      barcodeTimerRef.current = setTimeout(() => {
-        addStandardBarcodeToCart(value);
-      }, 80);
-    }
-  };
-
-  const handleBarcodeKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-
-      if (barcodeTimerRef.current) {
-        clearTimeout(barcodeTimerRef.current);
-      }
-
-      addStandardBarcodeToCart(barcodeInput);
-    }
-  };
-
-  const addSerialToCart = async (serialOverride?: string) => {
-    const cleaned = (serialOverride ?? serialInput).trim();
+  const addSerialToCart = async () => {
+    const cleaned = serialInput.trim();
 
     if (!cleaned) {
       return;
@@ -619,38 +513,9 @@ function StockOut() {
      SERIAL ENTER
   ========================= */
 
-  const handleSerialInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const value = e.target.value;
-
-    setSerialInput(value);
-
-    const now = Date.now();
-    const interval = now - serialLastKeyRef.current;
-
-    serialLastKeyRef.current = now;
-
-    if (value.length >= 4 && interval > 0 && interval < 60) {
-      if (serialTimerRef.current) {
-        clearTimeout(serialTimerRef.current);
-      }
-
-      serialTimerRef.current = setTimeout(() => {
-        addSerialToCart(value);
-      }, 80);
-    }
-  };
-
-  const handleSerialKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleSerialKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-
-      if (serialTimerRef.current) {
-        clearTimeout(serialTimerRef.current);
-      }
 
       addSerialToCart();
     }
@@ -823,35 +688,6 @@ function StockOut() {
           </div>
         </div>
 
-        {/* BARCODE SCANNER */}
-
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold text-slate-700">
-            Barcode Scanner
-          </label>
-
-          <div className="relative">
-            <ScanLine
-              size={22}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
-            <input
-              ref={barcodeInputRef}
-              type="text"
-              value={barcodeInput}
-              onChange={handleBarcodeInputChange}
-              onKeyDown={handleBarcodeKeyDown}
-              placeholder="Scan standard product barcode..."
-              className="erp-input pl-14 text-xl font-semibold tracking-wide"
-            />
-          </div>
-
-          <p className="text-xs text-slate-500 mt-2">
-            Scan directly, or enter the barcode and press Enter.
-          </p>
-        </div>
-
         {/* PRODUCT */}
 
         <div className="mb-6">
@@ -933,7 +769,7 @@ function StockOut() {
                   ref={inputRef}
                   type="text"
                   value={serialInput}
-                  onChange={handleSerialInputChange}
+                  onChange={(e) => setSerialInput(e.target.value)}
                   onKeyDown={handleSerialKeyDown}
                   placeholder="Scan serial number..."
                   className="erp-input pl-14 text-xl font-semibold tracking-wide"
@@ -980,7 +816,6 @@ function StockOut() {
               setSelectedProduct(null);
               setQuantity("");
               setSerialInput("");
-              setBarcodeInput("");
               setScannedSerials([]);
             }}
             onExportInvoice={exportInvoice}

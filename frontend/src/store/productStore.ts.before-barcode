@@ -14,8 +14,6 @@ interface Product {
 
   name: string;
 
-  barcode?: string | null;
-
   brand: string;
 
   category?: string;
