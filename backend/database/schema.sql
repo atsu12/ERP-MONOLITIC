@@ -213,6 +213,7 @@ DROP TABLE IF EXISTS `products`;
 CREATE TABLE `products` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
+  `barcode` varchar(100) DEFAULT NULL,
   `brand` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `track_serial` tinyint(1) DEFAULT NULL,
@@ -224,6 +225,7 @@ CREATE TABLE `products` (
   `package_size` int NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `idx_products_name` (`name`),
+  KEY `idx_products_barcode` (`barcode`),
   CONSTRAINT `products_chk_1` CHECK ((`price` >= 0)),
   CONSTRAINT `products_chk_2` CHECK ((`quantity` >= 0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
